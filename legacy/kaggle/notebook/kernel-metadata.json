@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "kernelType": "notebook",
+    "isInternetConnected": true,
+    "enableGpu": true,
+    "enableTpu": false,
+    "acceleratorCount": 2
+  }
+}
