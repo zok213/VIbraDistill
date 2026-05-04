@@ -171,4 +171,4 @@ sequenceDiagram
 * `data/` - Consolidated datasets (CWRU, XJTU-SY, Ottawa UORED).
 
 ---
-**Prepared For:** AIWARE Lab | Edge AI R&D Proof-of-Concept | 2026 Edition
+**Prepared By:** Personal Research Project | Edge AI R&D Proof-of-Concept | 2026 Edition

@@ -20,6 +20,18 @@ var/
 .installed.cfg
 *.egg
 
+# Virtual Environments and IDEs
+venv/
+.venv/
+.vscode/
+.idea/
+
+# Logs and W&B
+wandb/
+runs/
+*.log
+*.csv
+
 # Data and Notebook checkpoints
 data/
 .ipynb_checkpoints/

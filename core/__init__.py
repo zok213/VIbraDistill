@@ -1,7 +1,7 @@
 """
 VIbraDistill Core Library
 Personal Research Project: Edge-Native Bearing Fault Diagnosis
-Author: AIWARE Lab
+Author: Personal Research
 
 This module contains the core PyTorch, DSP, and Distillation logic.
 """
