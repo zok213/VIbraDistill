@@ -55,3 +55,6 @@ data/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Legacy Notebooks
+legacy/notebooks/*.ipynb

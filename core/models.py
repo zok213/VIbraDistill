@@ -5,10 +5,10 @@ class SELayer(nn.Module):
     """
     Squeeze-and-Excitation (SE) Block using Hardsigmoid for NVDLA INT8 Native execution.
     """
-    def __init__(self, channel, reduction=16):
+    def __init__(self, channel, length, reduction=16):
         super(SELayer, self).__init__()
         # Use static pooling instead of AdaptiveAvgPool1d to avoid CUDA fallbacks
-        self.avg_pool = nn.AvgPool1d(257) 
+        self.avg_pool = nn.AvgPool1d(length) 
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
@@ -33,20 +33,20 @@ class Student1DCNN(nn.Module):
             nn.Conv1d(1, 16, kernel_size=15, stride=2, padding=7),
             nn.BatchNorm1d(16),
             nn.ReLU(inplace=True),
-            SELayer(16, reduction=4),
+            SELayer(16, length=128, reduction=4),
             nn.MaxPool1d(2),
             
             nn.Conv1d(16, 32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(32),
             nn.ReLU(inplace=True),
-            SELayer(32, reduction=8),
+            SELayer(32, length=64, reduction=8),
             nn.MaxPool1d(2),
             
             nn.Conv1d(32, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(64),
             nn.ReLU(inplace=True),
-            SELayer(64, reduction=16),
-            nn.AvgPool1d(32) # Static pool
+            SELayer(64, length=32, reduction=16),
+            nn.AvgPool1d(32) # Static pool (32 -> 1)
         )
         self.classifier = nn.Linear(64, num_classes)
         
