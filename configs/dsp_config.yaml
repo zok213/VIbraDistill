@@ -1,0 +1,29 @@
+# Hardware-Faithful Causal DSP Configuration
+sampling:
+  fs: 12000.0                  # CWRU Drive End Accelerometer Sample Rate (Hz)
+  window_size: 512             # Analysis window size (samples)
+  train_stride: 256            # 50% overlap for train augmentation
+  test_stride: 512             # 0% overlap for zero-leakage evaluation
+
+fir_filter:
+  num_taps: 32                 # Gowin 4-MAC folded architecture (8 clock cycles @ 100 MHz)
+  passband: [2000.0, 5000.0]   # Resonance excitation band (Hz)
+  use_rtl_coeffs: true         # Use exact Q1.15 coefficients from fir_minphase_32.v
+
+envelope_demodulator:
+  rectifier: "full_wave_abs"   # |x[n]|
+  filter_type: "iir_butterworth"
+  order: 2
+  cutoff_fc: 1000.0            # Baseband demodulation cutoff (Hz)
+
+fft:
+  points: 512
+  output_bins: 257             # Positive frequencies [0 .. fs/2]
+  window: "hann"
+
+bearing_geometry:
+  model: "SKF 6205-2RS JEM"
+  n_balls: 9
+  ball_diameter_mm: 7.94
+  pitch_diameter_mm: 39.04
+  contact_angle_deg: 0.0

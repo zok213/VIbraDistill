@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill - Rotating Machine Faults Dataset",
+  "id": "yourusername/vibradistill-rotating-machine-faults",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "Laboratory rotor testbed vibration signals across normal, unbalance, misalignment, and bearing faults."
+}

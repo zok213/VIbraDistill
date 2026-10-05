@@ -1,0 +1,55 @@
+[1] MẪU ĐĂNG KÝ ĐỀ TÀI VÒNG CHUNG KẾT
+[2] CUỘC THI THIẾT KẾ FPGA VÀ MCU MỞ RỘNG
+[3] KHU VỰC MIỀN TRUNG 2026
+[4] I. THÔNG TIN CHUNG
+[5] Tên đội thi:
+[6] Trường / Viện:
+[7] Tên đề tài:  Hệ thống Giám sát Tài xế Nâng cao DMS dựa trên Gowin GW5AT & Sonix MCU)
+[8] Trưởng nhóm (Họ tên - SĐT - Email):
+[9] Tên Thành viên & Giảng viên hướng dẫn (nếu có):
+[10] II. TỔNG QUAN GIẢI PHÁP & MỤC TIÊU
+[11] Mục tiêu đề tài: (Tóm tắt từ 3–5 dòng về bài toán cần giải quyết và giá trị thực tễ).
+[12] Sơ đồ khối hệ thống (System Block Diagram): (Đính kèm file ảnh/sơ đồ thể hiện luồng dữ liệu giữa FPGA, MCU, Peripherals và Sensors).
+[13] III. CẤU HÌNH PHẦN CỨNG (HARDWARE ARCHITECTURE)
+[14] 1. Bo mạch chính sử dụng:
+[15] [ ] Gowin FPGA Board (Tên dòng chip/board:...)
+[16] [ ] Sonix MCU Board (Tên dòng chip/board: ...)
+[17] [ ] Phối hợp FPGA Gowin + MCU Sonix (Hybrid System)
+[18] 2. Dự toán tài nguyên Gowin FPGA (FPGA Resource Budgeting):
+[19] Ước tính Logic Elements / LUTs:
+[20] BRAM / Block RAM:
+[21] DSP Blocks (nếu có):
+[22] Tần số xung clock hệ thống (System Clock Frequency):
+[23] 3. Danh sách ngoại vi & Cổng giao tiếp (Peripherals & Interfaces):
+[24] Thiết bị / Ngoại vi
+[25] Chuẩn giao tiếp (I2C/SPI/UART/PMOD/MIPI...)
+[26] Kết nối với (FPGA / MCU)
+[27] Yêu cầu nguồn (3.3V / 5V / 1.8V)
+[28] Ví dụ: Camera OV5640
+[29] MIPI CSI-2
+[30] Gowin FPGA
+[31] 3.3V
+[32] Ví dụ: Màn hình LCD
+[33] SPI
+[34] Sonix MCU
+[35] 5V
+[36] Ví dụ: Cảm biến IMU
+[37] I2C
+[38] Sonix MCU
+[39] 3.3V
+[40] 4. Thiết bị & Linh kiện đề nghị BTC hỗ trợ (Hardware Requests):
+[41] Dải bo mạch / Mạch nạp cần cấp:
+[42] Cảm biến / Module mở rộng đề nghị hỗ trợ (nếu có):
+[43] IV. PHÂN CHIA KIẾN TRÚC PHẦN MỀM & RTL (SOFTWARE & RTL ARCHITECTURE)
+[44] 1. Phân chia nhiệm vụ xử lý (Task Allocation):
+[45] Gowin FPGA (Hardware Acceleration / RTL): (Mô tả khối IP Core, logic xử lý tốc độ cao, xử lý tín hiệu/hình ảnh, DSP...)
+[46] Sonix MCU (Firmware / Application Control): (Mô tả luồng điểu khiển chính, giao tiếp GUI/OLED, xử lý thuật toán quản lý, đọc cảm biến...)
+[47] Giao tiếp FPGA – MCU: (Mô tả protocol truyền dữ liệu giữa Gowin & Sonix: UART, SPI, Parallel bus...)
+[48] 2. Công cụ & Môi trường phát triển (Toolchain & IP Cores):
+[49] Gowin EDA Version:
+[50] Sonix IDE / Compiler:
+[51] Các IP Cores kiến trúc dự định dùng: (Ví dụ: Gowin MIPI D-PHY Receiver, FIFO Core, PLL Core, UART IP...)
+[52] V. KẾ HOẠCH TRIỂN KHAI & TIẾN ĐỘ (MILESTONES)
+[53] Tuần 1 - 2: Đóng gói RTL cơ bản & Viết Firmware giao tiếp MCU-FPGA.
+[54] Tuần 3 - 4: Tích hợp phần cứng, thử nghiệm với cảm biến thực tế.
+[55] Tuần 5: Tối ưu hóa tài nguyên FPGA/Code MCU & Đóng gói sản phẩm demo.

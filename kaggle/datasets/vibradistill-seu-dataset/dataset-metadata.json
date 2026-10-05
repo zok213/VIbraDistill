@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill - SEU Drivetrain Dynamic Simulator Dataset",
+  "id": "yourusername/vibradistill-seu-dataset",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "Southeast University (SEU) gearbox and bearing vibration fault dataset under varying speeds and loads."
+}

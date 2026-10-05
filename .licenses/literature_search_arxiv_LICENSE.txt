@@ -1,0 +1,4 @@
+Notice: This workspace uses the literature-search-arxiv skill.
+Terms of use: https://info.arxiv.org/help/api/index.html
+Always check the license of papers retrieved for any restrictions.
+Timestamp: 2026-10-03T10:57:00+07:00

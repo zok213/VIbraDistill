@@ -40,6 +40,7 @@ data/
 *.npy
 
 # Model Checkpoints and Exported Binaries
+checkpoints/
 *.pt
 *.pth
 *.onnx
@@ -58,3 +59,6 @@ Thumbs.db
 
 # Legacy Notebooks
 legacy/notebooks/*.ipynb
+
+# Kaggle Dataset Archives
+kaggle/datasets/*/*.zip

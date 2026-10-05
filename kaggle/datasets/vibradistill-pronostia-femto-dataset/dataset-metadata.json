@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill - PRONOSTIA FEMTO-ST Run-to-Failure Dataset",
+  "id": "yourusername/vibradistill-pronostia-femto-dataset",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "IEEE PHM 2012 Prognostic Challenge PRONOSTIA bearing run-to-failure acceleration signals."
+}

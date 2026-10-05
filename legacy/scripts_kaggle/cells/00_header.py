@@ -69,8 +69,8 @@ except Exception:
         import wandb
         # Fallback to user-provided key if Kaggle secrets are missing
         wandb_key = "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"
-            wandb.login(key=wandb_key)
-            _wb = True
+        wandb.login(key=wandb_key)
+        _wb = True
     except ImportError:
         _wb = False
         class _W:

@@ -1,0 +1,492 @@
+[
+  {
+    "title": "[HTML][HTML] An efficient lightweight multi-scale CNN framework with CBAM and SPP for bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S2667305326000037",
+    "pub_info": "TT Luu, DA Huynh - Intelligent Systems with Applications, 2026 - Elsevier",
+    "snippet": "… Experiments on the CWRU and HUST bearing datasets demonstrate over 99% accuracy … \nfault-frequency features, offering a compact and adaptive solution for intelligent bearing fault …",
+    "page_start": 40
+  },
+  {
+    "title": "A robust ATUB-net for bearing fault diagnosis under unbalanced sample scenarios",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0019057826003320",
+    "pub_info": "Y Wei, Y Xie, H Peng, X Chen - ISA transactions, 2026 - Elsevier",
+    "snippet": "… for bearing fault diagnosis using two datasets in this study: the rolling bearing dataset from \nthe Case Western Reserve University and the high-speed rail bogie axlebox bearing fault …",
+    "page_start": 40
+  },
+  {
+    "title": "Dynamic response of an inner ring fault bearing considering fluid–solid coupled lubrication under thermal environment",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0020746226000235",
+    "pub_info": "Z Yuan, Z Rongzheng, Z Hao, Z Zhaowei… - International Journal of …, 2026 - Elsevier",
+    "snippet": "… inner ring (IR) fault bearings with … fault bearings under different temperature conditions. \nFirst, based on the force relationships between bearing components and incorporating local fault …",
+    "page_start": 40
+  },
+  {
+    "title": "MF-MSRNet: a fault diagnosis method for train bogie bearing based on multi-source data fusion and multi-scale residual network",
+    "link": "https://www.tandfonline.com/doi/abs/10.1080/10589759.2025.2542388",
+    "pub_info": "H Sun, D He, Z Lao, Z Jin, Z Wei… - Nondestructive Testing and …, 2026 - Taylor & Francis",
+    "snippet": "… signal containing a large amount of sensitive bearing status information. However, the … of \nbearing fault information. At the same time, in the actual operation scenario of bogie bearings, …",
+    "page_start": 40
+  },
+  {
+    "title": "A Novel Angle-Domain Deep Deconvolution Method for Bearing Fault Diagnosis under Speed-Varying Condition",
+    "link": "https://ieeexplore.ieee.org/abstract/document/11535599/",
+    "pub_info": "Y Miao, S Hu, X Wang, Y Kong… - IEEE Transactions on …, 2026 - ieeexplore.ieee.org",
+    "snippet": "… Simulated bearing fault cases in this section demonstrate the effectiveness of ADD under \nSVC, and highlight the advantage of the ADD method in deeply extracting fault characteristics …",
+    "page_start": 40
+  },
+  {
+    "title": "Global-local contrastive learning: A multi-operating-condition guided approach for few-shot cross-domain bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0952197625034062",
+    "pub_info": "Y Zhang, X Chen, J Lai, B Zhang, Z Chen… - … Applications of Artificial …, 2026 - Elsevier",
+    "snippet": "… In the field of fault diagnosis, significant progress has been made in bearing fault diagnosis \n… Feature extraction-based methods have been extensively employed for mechanical fault …",
+    "page_start": 40
+  },
+  {
+    "title": "A digital twin-driven cross-domain adaptation method for bearing intelligent fault diagnosis",
+    "link": "https://www.tandfonline.com/doi/abs/10.1080/10589759.2025.2610726",
+    "pub_info": "S Ning, Z Qiao, B Peng, R Zhu… - … Testing and Evaluation, 2026 - Taylor & Francis",
+    "snippet": "… a virtual model of bearing faults based on mechanical fault knowledge, and updates the … \nimprove the accuracy of rolling bearing fault diagnosis under small sample conditions and …",
+    "page_start": 40
+  },
+  {
+    "title": "Bearing fault diagnosis method based on IMSE-CNN-Transformer and immune genetic algorithm optimization",
+    "link": "https://www.sciencedirect.com/science/article/pii/S1568494626003662",
+    "pub_info": "L Xia, D Wang, C Chen, C Xie, J Deng - Applied Soft Computing, 2026 - Elsevier",
+    "snippet": "… machinery, yet accurate fault diagnosis remains challenging due to … Experimental results \non the CWRU and MFPT bearing … bearing fault diagnosis in complex industrial environments. …",
+    "page_start": 40
+  },
+  {
+    "title": "[HTML][HTML] Towards a more realistic evaluation of machine learning models for bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0888327026007971",
+    "pub_info": "JP Vieira, VA Bauler, RK Rosa, D Silva - Mechanical Systems and Signal …, 2026 - Elsevier",
+    "snippet": "Abstract Reliable detection of bearing faults is essential for … in vibration-based bearing fault \ndiagnosis and its impact on … -free evaluation methodology centered on bearing-wise data …",
+    "page_start": 40
+  },
+  {
+    "title": "Cross-domain bearing fault diagnosis based on image fusion and multi-scale feature fusion under time-varying speed conditions",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126000333",
+    "pub_info": "H Qin, Z Zhang, X Li, D Zhai, X Dai, L Zhao - Measurement, 2026 - Elsevier",
+    "snippet": "… As a result, this article proposes a novel DA fault diagnosis model based on image fusion \nand multi-scale feature fusion to realize cross-domain fault diagnosis of bearings under time-…",
+    "page_start": 40
+  },
+  {
+    "title": "A novel transfer learning method for bearing fault diagnosis based on squeeze-excitation dilated SincNet combined with physics-informed subdomain adaptation",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0952197625033342",
+    "pub_info": "J Zhong, L Chen, S Qiu, C Wang, Y Zheng - Engineering Applications of …, 2026 - Elsevier",
+    "snippet": "… are widely applied to rolling bearing fault diagnosis under varying … bearing fault mechanisms, \nphysics-informed transfer metrics characterizing impulsiveness, transient impacts, and fault …",
+    "page_start": 50
+  },
+  {
+    "title": "Speed-invariant prototypical network for rolling bearing fault diagnosis under variable speed conditions",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0957417426010249",
+    "pub_info": "J Xing, X Sun, Y Song, Y Li, D Wang - Expert Systems with Applications, 2026 - Elsevier",
+    "snippet": "… Rolling bearing fault diagnosis is crucial for ensuring the safety and reliability of … fault \npattern recognition from limited labeled data. Extensive experiments on two benchmark bearing …",
+    "page_start": 50
+  },
+  {
+    "title": "An Improved Physics-Guided Interpretable Inception Network and Its Application in Bearing Fault Diagnosis",
+    "link": "https://ieeexplore.ieee.org/abstract/document/11370474/",
+    "pub_info": "J Wu, D Ruan, Y Qian - IEEE Transactions on Instrumentation …, 2026 - ieeexplore.ieee.org",
+    "snippet": "… To improve the accuracy of RUL prediction for bearings, … the fault mechanism, using an \nanalysis of the bearing vibration … on the physical characteristics of bearing vibration signals, …",
+    "page_start": 50
+  },
+  {
+    "title": "A new bearing fault diagnosis method based on digital twin-assisted domain adaptation transfer learning",
+    "link": "https://journals.sagepub.com/doi/abs/10.1177/14759217251330518",
+    "pub_info": "K Jiang, Y Cai, D Han, Y Su… - Structural Health …, 2026 - journals.sagepub.com",
+    "snippet": "… and fault diagnosis technologies for critical mechanical components is growing rapidly. Early \ndetection of rolling bearing faults is … This article presents a novel fault diagnosis method that …",
+    "page_start": 50
+  },
+  {
+    "title": "AeroGPT: Leveraging large-scale audio model for aero-engine bearing fault diagnosis",
+    "link": "https://ieeexplore.ieee.org/abstract/document/11430185/",
+    "pub_info": "J Liu, D Peng, H Wang, C Liu, YF Li… - IEEE Transactions on …, 2026 - ieeexplore.ieee.org",
+    "snippet": "… Fault diagnosis of aero-engine bearings has consequently … Early and accurate bearing fault \ndetection can significantly … Traditionally, bearing fault diagnosis approaches rely on a two-…",
+    "page_start": 50
+  },
+  {
+    "title": "Robust and interpretable bearing fault diagnosis via multi-scale differential-enhanced convolution with dual-dimensional redundancy suppression and dynamic …",
+    "link": "https://www.sciencedirect.com/science/article/pii/S1474034626000893",
+    "pub_info": "C Chen, Z Wang, J Shi, D Yue, D Bao, G Shi… - Advanced Engineering …, 2026 - Elsevier",
+    "snippet": "… bearing fault diagnosis models suffer significant performance degradation under strong noise \nconditions, where fault … and locally interpretable intelligent bearing fault diagnosis model (…",
+    "page_start": 50
+  },
+  {
+    "title": "VMD-DCA-BiGRU wind turbine bearing fault diagnosis method with attention mechanism integration",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126001752",
+    "pub_info": "Y Yuan, W Wei - Measurement, 2026 - Elsevier",
+    "snippet": "… Minor faults in rolling bearings often manifest in the time domain as low-energy, weak-… \nalgorithms and fault signal characteristics, this paper proposes a rolling bearing fault diagnosis …",
+    "page_start": 50
+  },
+  {
+    "title": "Hybrid IGWO-DNN approach for bearing fault diagnosis using time domain features from empirical mode decomposition",
+    "link": "https://link.springer.com/article/10.1007/s00170-026-17817-z",
+    "pub_info": "S Selami, S Ataya, Y Karmi, Y Debbah… - … International Journal of …, 2026 - Springer",
+    "snippet": "… data representing three bearing conditions (healthy, inner-race fault, and outer-race fault). \nThe … DNN optimization provides an effective and reliable solution for bearing fault diagnosis. …",
+    "page_start": 50
+  },
+  {
+    "title": "Multi-sensor signals augmented multimodal MAML-1DCNN-RBEAM deep transfer learning algorithm for wind turbine bearing fault diagnosis",
+    "link": "https://www.tandfonline.com/doi/abs/10.1080/10589759.2025.2487927",
+    "pub_info": "Z Xu, X Chen, J Xu, B Zhao - Nondestructive Testing and …, 2026 - Taylor & Francis",
+    "snippet": "… ring bearing faults. Jin et al. [17] introduced an adaptive multi-steady-state random resonance \nmethod validated in experiments for extracting weak fault features in rolling bearing faults. …",
+    "page_start": 50
+  },
+  {
+    "title": "Vibration signal models for fault diagnosis of rolling element bearing",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126000126",
+    "pub_info": "Y Liu, Y Cheng, S Yang, J Wu - Measurement, 2026 - Elsevier",
+    "snippet": "… for rolling element bearings by analogizing their … bearing defects, and a simplified \nreconstruction method is introduced to calculate fault characteristic frequencies based on bearing …",
+    "page_start": 50
+  },
+  {
+    "title": "[HTML][HTML] A Lightweight 1D-CNN-transformer for bearing fault diagnosis under limited data and AWGN interference",
+    "link": "https://www.mdpi.com/1424-8220/26/9/2574",
+    "pub_info": "Y Guo, Y Zhi, R Qi, M Cai - Sensors, 2026 - mdpi.com",
+    "snippet": "Intelligent bearing fault diagnosis is essential for maintaining the reliability of rotating \nmachinery. However, deploying deep learning models in industrial environments is often …",
+    "page_start": 60
+  },
+  {
+    "title": "Federated open-set fault diagnosis for unknown bearing fault detection",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0888327026000749",
+    "pub_info": "D Xu, M Jia, T Chen, Y Liu, D Chen, T Chai… - Mechanical Systems and …, 2026 - Elsevier",
+    "snippet": "… are computed to identify known or unknown faults. Experiments on Case Western Reserve \nUniversity and Paderborn University bearing fault diagnosis datasets demonstrate that our …",
+    "page_start": 60
+  },
+  {
+    "title": "Prototype‐attention domain adaptation for explainable bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S2452321626001447",
+    "pub_info": "N Rezazadeh, F Caputo, A Aversano… - Procedia Structural …, 2026 - Elsevier",
+    "snippet": "This study presents a prototype attention domain adaptation framework for explainable \nbearing fault diagnosis under varying operating conditions. The method aligns class centroids …",
+    "page_start": 60
+  },
+  {
+    "title": "Step robust mode decomposition method and its application in rolling bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0019057826000856",
+    "pub_info": "H Zhou, J Zheng, H Pan, J Tong, J Cheng - ISA Transactions, 2026 - Elsevier",
+    "snippet": "… In this section, rolling bearing fault signal data collected from the test bench in the laboratory \nof Anhui University of Technology are used for validation. The bearing employed in the …",
+    "page_start": 60
+  },
+  {
+    "title": "BearGen: LLM-guided signal generation framework for bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S1474034626000923",
+    "pub_info": "J Lee, H Jeon, U Kim, M Kim - Advanced Engineering Informatics, 2026 - Elsevier",
+    "snippet": "… Signal data are essential for condition monitoring, fault … labeling, and the scarcity of fault \ndata. Moreover, collected data … We evaluated BearGen on eight publicly available bearing fault …",
+    "page_start": 60
+  },
+  {
+    "title": "Multimodal bearing fault diagnosis based on semantic-aware and enhanced cross-attention",
+    "link": "https://iopscience.iop.org/article/10.1088/1361-6501/ae3b5e/meta",
+    "pub_info": "X Zhu, J Dong, J Wang, G Liu, L Zong… - Measurement Science …, 2026 - iopscience.iop.org",
+    "snippet": "… capability across different fault scenarios. DiagLLM [24] … and interpretability of bearing fault \ndiagnosis. These paradigms … proposes a multimodal bearing fault diagnosis method based …",
+    "page_start": 60
+  },
+  {
+    "title": "SA-ConSinGAN and reservoir computing fusion for accurate bearing fault classification and severity identification using GAF-based techniques",
+    "link": "https://www.nature.com/articles/s41598-026-39807-7",
+    "pub_info": "A Shah, V Vakharia, Y Kumar, M Woźniak, MF Ijaz - Scientific Reports, 2026 - nature.com",
+    "snippet": "… compared and analyzed for bearing fault classification and severity … fault dataset, SA-ConSinGAN \nwas employed to increase the number of transformed images of different bearing fault …",
+    "page_start": 60
+  },
+  {
+    "title": "Research on bearing vibration response and operational safety of heavy-haul freight vehicles under the coupling of bearing faults and wheel-rail damage",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0020746226000776",
+    "pub_info": "Y Qi, X Ding, Z Chen, L Li, Q Wu, J Wang - International Journal of Non …, 2026 - Elsevier",
+    "snippet": "… of bearing faults and wheel-rail damage. The results show that when internal bearing faults \n… impacts can exacerbate bearing fault characteristics, while bearing faults deteriorate wheel-…",
+    "page_start": 60
+  },
+  {
+    "title": "A transferable bearing fault diagnosis method by FM-WGAN-GP under limited samples",
+    "link": "https://www.tandfonline.com/doi/abs/10.1080/10589759.2025.2512561",
+    "pub_info": "C Zhang, Z Qiao, H Li, J Lin - Nondestructive Testing and …, 2026 - Taylor & Francis",
+    "snippet": "… , bearings are vulnerable to various faults such as wear, corrosion and cracking. These faults \ncan … As a result, accurate bearing fault diagnosis is essential for maintaining the safe and …",
+    "page_start": 60
+  },
+  {
+    "title": "A machine learning approach for bearing fault identification using ifwht, glcm, and feature ranking",
+    "link": "https://www.adeletters.com/no-1-1-2026/",
+    "pub_info": "V Dave, PK Karsh, U Soni, VM Dabhi, K Zalawadia… - Adv. Eng. Lett, 2026 - adeletters.com",
+    "snippet": "… A bearing fault diagnosis model is proposed that combines … the effective representation of \ntransient and fault- related data. … structural patterns of various bearing health conditions. The …",
+    "page_start": 60
+  },
+  {
+    "title": "MEHD-Net: A multimodal-enhanced hybrid denoising network for marine gearbox bearing fault diagnosis under extreme noise",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126002137",
+    "pub_info": "Y Zou, S Luo, X Wu, Q Jiang, P Zhang, T Du, Y Zhang… - Measurement, 2026 - Elsevier",
+    "snippet": "… Network (MEHD-Net) for robust bearing fault diagnosis in marine gearboxes. MEHD-Net is \n… public KAIST bearing dataset and a self-constructed Multimodal Bearing Fault Diagnosis (…",
+    "page_start": 70
+  },
+  {
+    "title": "A lightweight CNN-ISO collaborative optimization framework addressing high-dimensional redundancy and class imbalance in rolling bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126006214",
+    "pub_info": "S Chen, B Zhang, X He, X Chang, Y Shao, Z Gao - Measurement, 2026 - Elsevier",
+    "snippet": "… Rolling bearings are critical support components in rotating … high-precision identification of \nbearing faults under complex dynamic … Existing intelligent bearing diagnostic methods can be …",
+    "page_start": 70
+  },
+  {
+    "title": "A unified cross-modal adaptive contrastive learning framework for acoustic fault diagnosis of rolling bearing under limited & imbalanced data",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0888327025014451",
+    "pub_info": "L Peng, F Liu, A Lu, Y Liu, C Shen, M Xia - Mechanical Systems and Signal …, 2026 - Elsevier",
+    "snippet": "… fault discriminator (DGFD) is developed to jointly perform coarse-grained health assessment \nand fine-grained fault … Results on two rolling bearing acoustic datasets across six imbalance …",
+    "page_start": 70
+  },
+  {
+    "title": "A class-aware supervised contrastive quadratic neural network for imbalanced bearing fault diagnosis",
+    "link": "https://ieeexplore.ieee.org/abstract/document/11415404/",
+    "pub_info": "WE Yu, S Zhang, J Sun, C Li, JX Liao… - IEEE Transactions on …, 2026 - ieeexplore.ieee.org",
+    "snippet": "… in Table I along with their fault sizes/depths. During the test, the … bearing vibration data \ntotaling 561,152 data points per fault … greater similarity among different fault types compared to …",
+    "page_start": 70
+  },
+  {
+    "title": "An interpretable vibration-enhanced BRB model for rolling bearing fault diagnosis",
+    "link": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0342757",
+    "pub_info": "Z Fan, K Li, H Zhu, C Yang, W He - Plos one, 2026 - journals.plos.org",
+    "snippet": "… diagnosis via BRB: This study utilizes the BRB model’s advantages in interpretability for \nbearingfault diagnosis. By integrating rule-based reasoning with a transparent evidential fusion …",
+    "page_start": 70
+  },
+  {
+    "title": "A confident cross-domain mixup–based network with dynamic label-distribution-aware margin regularization for bearing fault diagnosis under variable working …",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0952197625029951",
+    "pub_info": "C He, Z Fu, P Chen, X Xu, AP Daga, S Lu - Engineering Applications of …, 2026 - Elsevier",
+    "snippet": "… advanced unsupervised cross-domain bearing fault diagnosis. Nevertheless, these methods \n… proposed network is demonstrated through experimental data from two bearing systems. …",
+    "page_start": 70
+  },
+  {
+    "title": "Machine learning algorithms for optimization of bearing fault diagnosis in wind systems: a comparative study",
+    "link": "https://link.springer.com/article/10.1007/s00170-025-17124-z",
+    "pub_info": "N Talbi, EH Boussaha, R Terbah, FL Rashid… - … International Journal of …, 2026 - Springer",
+    "snippet": "… signals to classify faults and recurrent neural … of the bearing degradation processes [13]. \nRandom forest algorithms have proved so effective in fault diagnosis especially in bearing faults …",
+    "page_start": 70
+  },
+  {
+    "title": "A digital twin guided physical-virtual denoising method for early fault detection of rolling element bearings",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0888327026002657",
+    "pub_info": "Z Qiao, S Ning, Y Gai, C Xie - Mechanical Systems and Signal Processing, 2026 - Elsevier",
+    "snippet": "… , which seriously restrict the early fault feature extraction. For this reason, … fault detection of \nrolling bearings by considering the knowledge of the intrinsic fault mechanism of the bearings…",
+    "page_start": 70
+  },
+  {
+    "title": "[HTML][HTML] Parallel Axial Attention and ResNet-Based Bearing Fault Diagnosis Method",
+    "link": "https://www.mdpi.com/2079-9292/15/4/899",
+    "pub_info": "H Wang, G Fang, X Cui, X An - Electronics, 2026 - mdpi.com",
+    "snippet": "… Inspired by these developments, this paper proposes a rolling bearing fault diagnosis \nmethod integrating continuous wavelet transform, improved axial attention, and ResNet. The …",
+    "page_start": 70
+  },
+  {
+    "title": "Rolling bearing fault diagnosis based on MDBO-SVMD",
+    "link": "https://link.springer.com/article/10.1007/s12206-026-0202-4",
+    "pub_info": "C Lei, J Zhou, M Li, D Hao, X Li, C Li… - Journal of Mechanical …, 2026 - Springer",
+    "snippet": "… fault diagnosis [5]. Among various vibration signal processing methods for rolling bearings, \n… [7]applied EMD to fault diagnosis and successfully identified bearing fault states using the …",
+    "page_start": 70
+  },
+  {
+    "title": "Data-driven approach under varying operating conditions for bearing fault diagnosis: Sandeep S. Udmale et al.",
+    "link": "https://link.springer.com/article/10.1007/s10479-026-07055-7",
+    "pub_info": "SS Udmale, AG Nath, D Singh, SK Singh - Annals of Operations Research, 2026 - Springer",
+    "snippet": "… The bearing fault diagnosis is one of the application areas of … The performance of bearing \nfault diagnosis is dependent on … to represent faults under varying operating conditions for fault …",
+    "page_start": 80
+  },
+  {
+    "title": "A real-time VMD-CNN-DANet framework for intelligent fault diagnosis in aero-engine bearings",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126013631",
+    "pub_info": "A Wan, J Feng, ALB Khalil, R Yin, J Yuan, X Cheng… - Measurement, 2026 - Elsevier",
+    "snippet": "… fault diagnosis system for aero-engine bearings, … fault-sensitive patterns while suppressing \nirrelevant interference. Validated on a helicopter gearbox test rig simulating five bearing …",
+    "page_start": 80
+  },
+  {
+    "title": "Efficient rolling element bearing fault diagnostics in the presence of highly leptokurtic non-Gaussian noise",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0888327026000099",
+    "pub_info": "M Yazdanianasr, R Zimroz, A Wyłomańska… - Mechanical Systems and …, 2026 - Elsevier",
+    "snippet": "… Reliable and efficient fault diagnosis of rolling element bearings … Bearing fault signatures \nexhibit both impulsiveness and … the optimal frequency band for fault detection, especially amidst …",
+    "page_start": 80
+  },
+  {
+    "title": "[HTML][HTML] Multifractal characterization of bearing fault progression: Persistent-to-anti-persistent dynamics transition and cross-dataset validation of complexity-based …",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0960077926000500",
+    "pub_info": "PRL Almeida, TLV Lima, AV Brito… - Chaos, Solitons & …, 2026 - Elsevier",
+    "snippet": "Bearing vibration signatures during fault progression exhibit complex multiscale temporal \ncorrelations quantifiable through fractal and entropy-based analysis. We demonstrate …",
+    "page_start": 80
+  },
+  {
+    "title": "[HTML][HTML] Fault diagnosis and classification of rolling bearings using ICEEMDAN–CNN–BiLSTM and acoustic emission",
+    "link": "https://www.mdpi.com/1424-8220/26/2/507",
+    "pub_info": "J Li, H Sheng, B Liu, X Liu - Sensors, 2026 - mdpi.com",
+    "snippet": "… the time-domain features of bearing faults. Subsequently, the … fault data for classifying and \nidentifying rolling bearing faults. … on rolling bearing experimental data under 5 fault modes. …",
+    "page_start": 80
+  },
+  {
+    "title": "Feature extraction of rolling bearing fault signal based on adaptive feature mode decomposition algorithm",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0003682X26000319",
+    "pub_info": "M Li, Y Fan, Y Lin - Applied Acoustics, 2026 - Elsevier",
+    "snippet": "… bearing vibration-acoustic signals (a key carrier of fault information via acoustic radiation of \ndefective bearings… proposed for acoustic fault feature extraction of rolling bearings. Because …",
+    "page_start": 80
+  },
+  {
+    "title": "Optimal feature complexity for small-sample bearing fault detection in manufacturing",
+    "link": "https://link.springer.com/article/10.1007/s00170-025-17296-8",
+    "pub_info": "PRL Almeida, TLV Lima, AV Brito, ACL Filho - The International Journal of …, 2026 - Springer",
+    "snippet": "… that provide early fault detection while … of bearing systems with localized faults are complex, \ninvolving time-dependent contact zone excitations and interactions between rotor, bearing, …",
+    "page_start": 80
+  },
+  {
+    "title": "[HTML][HTML] Rolling bearing fault diagnosis method based on an improved 1DCNN-Transformer",
+    "link": "https://www.mdpi.com/2075-1702/14/6/629",
+    "pub_info": "S Liu, Z Wu, J Gao, W Sun, Y Yuan, L Fan - Machines, 2026 - mdpi.com",
+    "snippet": "… Case Western Reserve University bearing fault dataset, with … -precision performance across \nmultiple fault categories. Tests … for intelligent fault diagnosis of rolling bearings in complex …",
+    "page_start": 80
+  },
+  {
+    "title": "Cross-domain bearing fault diagnosis using multi-loss deep adaptation with pseudo-label refinement and maximum mean discrepancy-based alignment",
+    "link": "https://www.sciencedirect.com/science/article/pii/S156849462600390X",
+    "pub_info": "W Zeng, J Wu, Y Chen, J Lan, J Lu, X Li, T Guo… - Applied Soft …, 2026 - Elsevier",
+    "snippet": "… Accurate and robust fault diagnosis of rolling bearings under … a novel cross-domain bearing \nfault diagnosis framework that … industrial challenges in bearing fault diagnosis under varying …",
+    "page_start": 80
+  },
+  {
+    "title": "[HTML][HTML] A multimodal three-channel bearing fault diagnosis method based on CNN fusion attention mechanism under strong noise conditions",
+    "link": "https://www.mdpi.com/1999-4893/19/2/144",
+    "pub_info": "Y Zou, C Li, Y Zhang, Z Si, L Li - Algorithms, 2026 - mdpi.com",
+    "snippet": "… bearing fault diagnosis under industrial high-noise conditions and the difficulty of extracting \nfault features from a single modality, this study proposes a three-channel multimodal fault …",
+    "page_start": 80
+  },
+  {
+    "title": "WSCIConvNet: a dual-path time-frequency fusion network for bearing fault diagnosis under complex operating conditions",
+    "link": "https://www.tandfonline.com/doi/abs/10.1080/10589759.2026.2627630",
+    "pub_info": "Q Song, Y Jiang, Y Shi, D Yang, D Liu… - … testing and evaluation, 2026 - Taylor & Francis",
+    "snippet": "… faults and normal conditions; most healthy bearings are classified correctly, with only a small \nnumber incorrectly labelled as inner race faults and some as outer race faults. … race faults, …",
+    "page_start": 90
+  },
+  {
+    "title": "LightKD-MRN: Hierarchical knowledge distillation with multi-task learning for bearing fault diagnosis and damage localization",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0952197625029458",
+    "pub_info": "L Gao, J Huang, Z Fan, S Liu, J Chang - Engineering Applications of …, 2026 - Elsevier",
+    "snippet": "… fault diagnosis and prediction for bearings are crucial in industrial applications. Previous \nmethods often neglected fault severity (fault … interference of different fault categories and levels. …",
+    "page_start": 90
+  },
+  {
+    "title": "Progressive Knowledge-Guided Large Language Model Framework for Bearing Fault Diagnosis",
+    "link": "https://arxiv.org/abs/2606.16684",
+    "pub_info": "J Wang, G Peng, Y Chen, W Zhang, W Wu… - arXiv preprint arXiv …, 2026 - arxiv.org",
+    "snippet": "… alone, bearing faults constitute 40… bearing fault diagnosis is to identify fault type and severity \nat the earliest detectable stage, given vibration signals acquired continuously from bearings …",
+    "page_start": 90
+  },
+  {
+    "title": "A bearing fault diagnosis method based on Hopfield network stochastic resonance and a multi-feature fusion health index",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126002095",
+    "pub_info": "Z Cao, L He, J Hou - Measurement, 2026 - Elsevier",
+    "snippet": "… of faults. For example, while the Root Mean Square (RMS) is sensitive to energy changes, it \nmay not effectively identify early faults … and robust assessment of bearing health, this paper …",
+    "page_start": 90
+  },
+  {
+    "title": "DSBRD: A Dual-Stream Neural Network Based on Novel Residual Convolution and Dynamic Pre-Activation Convolution for Bearing Fault Diagnosis.",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0925231226008726",
+    "pub_info": "X Zhao, W Zheng, R Shen, C Wang, M Yuan, G Wang - Neurocomputing, 2026 - Elsevier",
+    "snippet": "… Specifically, ResConv autonomously captures the core fault … the specificity of different local \nfault modes through dynamic pre-… on mechanical bearing fault datasets and component fault …",
+    "page_start": 90
+  },
+  {
+    "title": "An UDA bearing fault diagnosis method based on synergistic optimization of unbalanced data",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0888327025014013",
+    "pub_info": "S Li, X Zhao, J Cao - Mechanical Systems and Signal Processing, 2026 - Elsevier",
+    "snippet": "… fault categories and reduces probability bias. Using the Case Western Reserve University \n(CWRU) bearing dataset, roller gear dataset and wind power bearing … and fault samples under …",
+    "page_start": 90
+  },
+  {
+    "title": "A Comprehensive Study on Fault Detection Techniques for Wheel Bearings in Rotating Machinery: Assessment of the LBF-MABAC model Based on Power Strategies",
+    "link": "https://kadsa.org/index.php/kadsa/article/view/14809",
+    "pub_info": "M Asif, Z Ali, H Zafar, YT Chun… - Knowledge and Decision …, 2026 - kadsa.org",
+    "snippet": "… We can detect the fault in the wheel bearing in a very good and accurate way, especially \nin an inaccessible bearing system. This technique is very helpful for the motor industry. 5) …",
+    "page_start": 90
+  },
+  {
+    "title": "ARAM-Swin: A hybrid architecture with an adaptive residual attention module and Swin Transformer for rolling bearing fault diagnosis",
+    "link": "https://iopscience.iop.org/article/10.1088/1361-6501/ae5330/meta",
+    "pub_info": "X Cao, Q Zhang, Q Liu, J Li - Measurement Science and …, 2026 - iopscience.iop.org",
+    "snippet": "… 3.2 Overall Architecture of ARAM-Swin To effectively enhance the diagnostic precision and \noperational reliability of rolling bearing fault diagnosis, this paper proposes a novel hybrid …",
+    "page_start": 90
+  },
+  {
+    "title": "Digital Twin Synthetic Dataset for Bearing Fault Diagnosis in Industrial Spindles",
+    "link": "https://ieeexplore.ieee.org/abstract/document/11408194/",
+    "pub_info": "M Zeynivand, A Kermansaravi, H Vahedi… - IEEE …, 2026 - ieeexplore.ieee.org",
+    "snippet": "… BEARING FAULT TYPE The fault scenarios explored in this study were exclusively focused \non electrospindle bearing faults, … Bearing degradation leads to mechanical imbalance, torque …",
+    "page_start": 90
+  },
+  {
+    "title": "[HTML][HTML] Transformer-Based Bearing Fault Classification with VMD-Based Noise Suppression and rCCA-Enhanced Correlation Modeling",
+    "link": "https://www.mdpi.com/2075-1702/14/5/507",
+    "pub_info": "T Koca, MB Er, A Çıtlak - Machines, 2026 - mdpi.com",
+    "snippet": "… for automatic classification of bearing faults from vibration signals. … CWRU) Bearing Dataset. \nThe dataset includes vibration recordings corresponding to inner race, outer race, ball faults, …",
+    "page_start": 90
+  },
+  {
+    "title": "TF-ProFM: Prototype-Based Time–Frequency Foundation Model for Generalizable Industrial Bearing Fault Diagnosis",
+    "link": "https://ieeexplore.ieee.org/abstract/document/11457686/",
+    "pub_info": "S Pi, B Chen, X Zhang, Z Song - IEEE Transactions on Industrial …, 2026 - ieeexplore.ieee.org",
+    "snippet": "… models for intelligent bearing fault diagnosis is critical for … that aligns with downstream fault \nclassification tasks. Extensive … -of-the-art fault diagnosis performance, outperforming existing …",
+    "page_start": 100
+  },
+  {
+    "title": "Logarithmic reordering kurtogram: An automatic resonance demodulation method for bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0263224126006846",
+    "pub_info": "X Zhang, X Xiong, S Feng, J Wang, L Yang - Measurement, 2026 - Elsevier",
+    "snippet": "… evaluation for bearing fault diagnosis. … bearing fault characteristics from a series of signals \nwith a wide range of signal-to-impulse noise ratios, highlighting its potential for bearing fault …",
+    "page_start": 100
+  },
+  {
+    "title": "A novel approach for motor bearing fault detection using EMD-based denoising and detrended fluctuation analysis & LSTM multimodal hybrid features with k-means …",
+    "link": "https://link.springer.com/article/10.1007/s42417-026-02366-2",
+    "pub_info": "MB Er, T Koca - Journal of Vibration Engineering & Technologies, 2026 - Springer",
+    "snippet": "… This study proposes a compact five-stage hybrid framework for bearing fault diagnosis. \nFirst, empirical mode decomposition (EMD) is applied to suppress high-frequency noise and …",
+    "page_start": 100
+  },
+  {
+    "title": "[HTML][HTML] A few-shot bearing fault diagnosis method integrating improved generative adversarial network and cnn-bilstm-attention hybrid network",
+    "link": "https://www.mdpi.com/2076-3417/16/6/2660",
+    "pub_info": "S Liu, X Liu, Z Jiang - Applied Sciences, 2026 - mdpi.com",
+    "snippet": "… and weak model generalization capability in bearing fault diagnosis under few-shot \nconditions, this paper proposes a few-shot bearing fault diagnosis method that integrates an …",
+    "page_start": 100
+  },
+  {
+    "title": "A dual-condition cost-sensitive optimization framework for intelligent bearing fault diagnosis",
+    "link": "https://link.springer.com/article/10.1007/s40430-026-06435-1",
+    "pub_info": "S Kumar, BB Sinha, P Das - Journal of the Brazilian Society of Mechanical …, 2026 - Springer",
+    "snippet": "… Among these, bearing faults are most prevalent due to the continuous … to bearing faults, \nemphasizing the necessity of reliable fault detection and prevention strategies. Existing fault …",
+    "page_start": 100
+  },
+  {
+    "title": "A time-frequency interpretable framework for bearing fault diagnosis via global channel-region information interaction and weight-CAM",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0925231226000196",
+    "pub_info": "S Du, Q Tong, X Jiang, B Wang, F Liu, X Du, J Xu… - Neurocomputing, 2026 - Elsevier",
+    "snippet": "… exhibits distinct strengths in bearing fault diagnosis. However, … poses a significant limitation \nin fault diagnosis scenarios. Additionally, … To address these challenges, an interpretable fault …",
+    "page_start": 100
+  },
+  {
+    "title": "Investigation on Characteristic Behaviors of Outer-Ring Local Fault Bearings with Grease Lubrication across Wide Temperature Ranges",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0301679X26005992",
+    "pub_info": "Y Zhou, W An, R Zou, Z Zhang, Y Dong - Tribology International, 2026 - Elsevier",
+    "snippet": "… response and fault diagnosis accuracy of bearings over a … is developed for deep groove \nball bearings with an outer-race … -friction model into the fault dynamic analysis. Based on this …",
+    "page_start": 100
+  },
+  {
+    "title": "Validated chaos theory for robust bearing fault diagnosis",
+    "link": "https://link.springer.com/article/10.1007/s40430-026-06390-x",
+    "pub_info": "PRL Almeida, TLV Lima, AV Brito - Journal of the Brazilian Society of …, 2026 - Springer",
+    "snippet": "… We provide the first comprehensive mathematical proof that bearing faults induce genuine \ndeterministic chaos rather than stochastic complexity, addressing a critical gap where chaos …",
+    "page_start": 100
+  },
+  {
+    "title": "Symmetric Positive Definite manifold deep metric learning for bearing fault diagnosis",
+    "link": "https://www.sciencedirect.com/science/article/pii/S0952197626001028",
+    "pub_info": "J Cheng, R Ran, B Fang, B Li - Engineering Applications of Artificial …, 2026 - Elsevier",
+    "snippet": "… Consequently, bearing fault diagnosis has become a crucial … to capture nonlinear features \nin bearing signals Additionally, … metric learning method for bearing fault diagnosis, based on a …",
+    "page_start": 100
+  },
+  {
+    "title": "Multi-condition bearing fault diagnosis method based on RP–MBRN",
+    "link": "https://journals.sagepub.com/doi/abs/10.1177/14759217241296779",
+    "pub_info": "L Meng, J Xie, L Cheng, L Yu, Y Jiang… - Structural Health …, 2026 - journals.sagepub.com",
+    "snippet": "… variable speed bearing fault data through RP to generate the fault dataset. The dataset is \nthen divided into a training set and a testing set in a 7:3 ratio, and feature extraction and fault …",
+    "page_start": 100
+  }
+]

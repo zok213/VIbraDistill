@@ -1,0 +1,8 @@
+Paragraphs: 40
+Tables: 1
+
+=== Table 1 (4 rows, 4 cols) ===
+Row 0: Thiết bị / Ngoại vi | Chuẩn giao tiếp (I2C/SPI/UART/PMOD/MIPI...) | Kết nối với (FPGA / MCU) | Yêu cầu nguồn (3.3V / 5V / 1.8V)
+Row 1: Ví dụ: Camera OV5640 | MIPI CSI-2 | Gowin FPGA | 3.3V
+Row 2: Ví dụ: Màn hình LCD | SPI | Sonix MCU | 5V
+Row 3: Ví dụ: Cảm biến IMU | I2C | Sonix MCU | 3.3V

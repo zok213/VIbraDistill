@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill - CWRU Bearing Dataset",
+  "id": "yourusername/vibradistill-cwru-dataset",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "Case Western Reserve University (CWRU) 12k/48k Drive End vibration signals with zero-leakage partitions."
+}

@@ -1,0 +1,47 @@
+{
+  "seed": 42,
+  "epochs": 1,
+  "device": "cpu",
+  "act_ranges": {
+    "input": 1.0,
+    "stage1": 8.703878629684468,
+    "stage2": 7.228096869945616,
+    "stage3": 6.958752583980743,
+    "prior3": 2.6252488501071998,
+    "fc": 8.698866199493425,
+    "logits": 22.271724176406877
+  },
+  "train_log": [
+    {
+      "epoch": 1,
+      "train_loss": 4.523648977622547,
+      "val_f1_fakequant": 96.08
+    }
+  ],
+  "splits": {
+    "val": {
+      "fp32_f1": 99.13,
+      "qat_fakequant_f1": 96.08,
+      "int8_emulator_f1": 96.27,
+      "int8_emulator_acc": 97.12,
+      "emulator_vs_fakequant_agreement_pct": 99.66,
+      "n": 2085
+    },
+    "test_14mil": {
+      "fp32_f1": 29.49,
+      "qat_fakequant_f1": 28.05,
+      "int8_emulator_f1": 28.2,
+      "int8_emulator_acc": 40.98,
+      "emulator_vs_fakequant_agreement_pct": 99.29,
+      "n": 3797
+    },
+    "test_21mil": {
+      "fp32_f1": 48.06,
+      "qat_fakequant_f1": 47.65,
+      "int8_emulator_f1": 47.76,
+      "int8_emulator_acc": 52.21,
+      "emulator_vs_fakequant_agreement_pct": 98.58,
+      "n": 3802
+    }
+  }
+}

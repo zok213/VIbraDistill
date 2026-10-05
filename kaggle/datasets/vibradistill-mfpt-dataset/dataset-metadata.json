@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill - MFPT Bearing Dataset",
+  "id": "yourusername/vibradistill-mfpt-dataset",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "Machinery Failure Prevention Technology (MFPT) baseline and fault condition vibration data."
+}

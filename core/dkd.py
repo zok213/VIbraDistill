@@ -28,7 +28,9 @@ def dkd_loss(logits_student, logits_teacher, target, alpha, beta, temperature):
     
     nckd_loss = F.kl_div(torch.log(pred_student_other + 1e-8), pred_teacher_other, reduction='batchmean')
     
-    return alpha * tckd_loss + beta * nckd_loss
+    # Scale by temperature^2 to match DKD gradient normalization (CVPR 2022; tau^2 = 25.0)
+    tau2 = temperature * temperature
+    return tau2 * (alpha * tckd_loss + beta * nckd_loss)
 
 def _get_gt_mask(logits, target):
     target = target.reshape(-1)

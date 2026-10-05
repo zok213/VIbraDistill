@@ -1,0 +1,36 @@
+# Student VibraDistillMicro DKD Distillation Configuration
+model:
+  name: "VibraDistillMicro"
+  in_bins: 257
+  num_classes: 4
+  physics_dim: 4
+  target_params: 8677
+
+distillation:
+  teacher_checkpoint: "checkpoints/teacher/best_teacher.pt"
+  temperature: 5.0
+  tau2_scale: 25.0
+  alpha: 1.0            # Target-Class Knowledge Distillation (TCKD) weight
+  beta: 2.0             # Non-Target Class Knowledge Distillation (NCKD) weight
+  ce_weight: 1.0        # Hard Cross-Entropy weight
+  edl_weight: 0.5       # Evidential Deep Learning uncertainty weight
+  annealing_epochs: 10
+
+training:
+  seed: 42
+  batch_size: 64
+  epochs: 45
+  learning_rate: 0.002
+  weight_decay: 0.00005
+  lr_scheduler: "cosine"
+  min_lr: 0.00002
+
+data:
+  dataset: "CWRU"
+  data_dir: "data/CWRU_Dataset"
+  cache_dir: "data/cache"
+  use_augmentation: true
+
+checkpoint:
+  save_dir: "checkpoints/student_dkd"
+  save_best_only: true

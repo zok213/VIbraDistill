@@ -1,0 +1,171 @@
+{
+  "total_trials": 100,
+  "suites": {
+    "Architecture": {
+      "BiLSTMModel": {
+        "params": 8469,
+        "macs": 97664,
+        "sram_bytes": 4608,
+        "cortex_m0_ms": 16.28,
+        "val_f1_mean": 66.23,
+        "val_f1_std": 2.18,
+        "test_14mil_mean": 35.72,
+        "test_14mil_std": 1.41,
+        "test_21mil_mean": 46.62,
+        "test_21mil_std": 2.07,
+        "ece_mean": 33.74,
+        "ece_std": 2.89
+      },
+      "GRUModel": {
+        "params": 6933,
+        "macs": 82048,
+        "sram_bytes": 3072,
+        "cortex_m0_ms": 10.94,
+        "val_f1_mean": 61.24,
+        "val_f1_std": 5.87,
+        "test_14mil_mean": 35.3,
+        "test_14mil_std": 5.11,
+        "test_21mil_mean": 48.15,
+        "test_21mil_std": 5.06,
+        "ece_mean": 32.03,
+        "ece_std": 0.83
+      },
+      "MLPBaseline": {
+        "params": 9525,
+        "macs": 8764,
+        "sram_bytes": 512,
+        "cortex_m0_ms": 0.44,
+        "val_f1_mean": 81.24,
+        "val_f1_std": 2.96,
+        "test_14mil_mean": 45.78,
+        "test_14mil_std": 5.57,
+        "test_21mil_mean": 63.1,
+        "test_21mil_std": 7.79,
+        "ece_mean": 34.21,
+        "ece_std": 1.85
+      },
+      "SingleKernelCNN": {
+        "params": 7933,
+        "macs": 524664,
+        "sram_bytes": 3328,
+        "cortex_m0_ms": 30.61,
+        "val_f1_mean": 89.26,
+        "val_f1_std": 11.8,
+        "test_14mil_mean": 34.5,
+        "test_14mil_std": 5.24,
+        "test_21mil_mean": 51.96,
+        "test_21mil_std": 3.49,
+        "ece_mean": 37.42,
+        "ece_std": 6.01
+      },
+      "VibraDistillMicro": {
+        "params": 8677,
+        "macs": 560144,
+        "sram_bytes": 4352,
+        "cortex_m0_ms": 32.68,
+        "val_f1_mean": 15.8,
+        "val_f1_std": 9.3,
+        "test_14mil_mean": 10.73,
+        "test_14mil_std": 1.27,
+        "test_21mil_mean": 12.66,
+        "test_21mil_std": 5.2,
+        "ece_mean": 52.06,
+        "ece_std": 15.32
+      }
+    },
+    "Prior_Ablation": {
+      "Prior_detuned": {
+        "val_f1_mean": 98.95,
+        "test_21mil_mean": 45.88,
+        "mean_vacuity": 0.282
+      },
+      "Prior_none": {
+        "val_f1_mean": 98.41,
+        "test_21mil_mean": 42.79,
+        "mean_vacuity": 0.289
+      },
+      "Prior_normal": {
+        "val_f1_mean": 99.13,
+        "test_21mil_mean": 48.06,
+        "mean_vacuity": 0.276
+      },
+      "Prior_shuffled": {
+        "val_f1_mean": 99.03,
+        "test_21mil_mean": 44.54,
+        "mean_vacuity": 0.28
+      }
+    },
+    "Distillation": {
+      "Loss_ce": {
+        "val_f1_mean": 18.47,
+        "test_21mil_mean": 15.38,
+        "ece_mean": 40.6
+      },
+      "Loss_dkd": {
+        "val_f1_mean": 29.08,
+        "test_21mil_mean": 22.81,
+        "ece_mean": 34.63
+      },
+      "Loss_dkd_edl": {
+        "val_f1_mean": 45.78,
+        "test_21mil_mean": 28.36,
+        "ece_mean": 30.05
+      },
+      "Loss_hinton": {
+        "val_f1_mean": 41.9,
+        "test_21mil_mean": 29.52,
+        "ece_mean": 35.49
+      }
+    },
+    "Noise_Robustness": {
+      "Clean": {
+        "val_f1_mean": 99.13,
+        "retention_pct": 100.0
+      },
+      "SNR_0dB": {
+        "val_f1_mean": 15.62,
+        "retention_pct": 15.8
+      },
+      "SNR_12dB": {
+        "val_f1_mean": 52.49,
+        "retention_pct": 53.0
+      },
+      "SNR_6dB": {
+        "val_f1_mean": 16.16,
+        "retention_pct": 16.3
+      }
+    },
+    "Quantization": {
+      "FP32_Baseline": {
+        "val_f1_mean": 99.13,
+        "delta_f1": 0.0
+      },
+      "Folded_BatchNorm": {
+        "val_f1_mean": 99.13,
+        "delta_f1": 0.0
+      },
+      "INT8_Gowin_NPU": {
+        "val_f1_mean": 15.62,
+        "delta_f1": -83.51
+      }
+    }
+  },
+  "statistical_tests": {
+    "SingleKernelCNN": {
+      "val_p_value": 7.797414978132326e-05,
+      "test_21m_p_value": 0.00011348761042071592
+    },
+    "GRUModel": {
+      "val_p_value": 0.0005575910264701,
+      "test_21m_p_value": 0.0001971655383367118
+    },
+    "BiLSTMModel": {
+      "val_p_value": 0.0001762472168653403,
+      "test_21m_p_value": 0.0002737392394058027
+    },
+    "MLPBaseline": {
+      "val_p_value": 0.00021432126751595425,
+      "test_21m_p_value": 0.00024127030425664714
+    }
+  }
+}

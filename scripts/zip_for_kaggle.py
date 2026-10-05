@@ -1,130 +1,195 @@
+"""
+VibraDistill-Edge: Kaggle Dataset Packaging Utility.
+
+Packages dataset folders from data/ into clean, Linux-compliant .zip archives
+and generates Kaggle `dataset-metadata.json` for direct 1-click upload
+via Kaggle Web UI or Kaggle CLI (`kaggle datasets create -p <dir>`).
+"""
+
 import os
+import sys
+import json
 import zipfile
-import shutil
+import argparse
+import time
 
-VIBRA_DIR = r"D:\Gitrepo\VIbraDistill"
-KAGGLE_DIR = r"D:\Gitrepo\VIbraDistill\kaggle"
+DATA_REGISTRY = {
+    'cwru': {
+        'folder': 'CWRU_Dataset',
+        'title': 'VibraDistill - CWRU Bearing Dataset',
+        'slug': 'vibradistill-cwru-dataset',
+        'desc': 'Case Western Reserve University (CWRU) 12k/48k Drive End vibration signals with zero-leakage partitions.'
+    },
+    'mfpt': {
+        'folder': 'MFPT_Dataset',
+        'title': 'VibraDistill - MFPT Bearing Dataset',
+        'slug': 'vibradistill-mfpt-dataset',
+        'desc': 'Machinery Failure Prevention Technology (MFPT) baseline and fault condition vibration data.'
+    },
+    'seu': {
+        'folder': 'SEU_Dataset',
+        'title': 'VibraDistill - SEU Drivetrain Dynamic Simulator Dataset',
+        'slug': 'vibradistill-seu-dataset',
+        'desc': 'Southeast University (SEU) gearbox and bearing vibration fault dataset under varying speeds and loads.'
+    },
+    'phm2009': {
+        'folder': 'PHM2009_Gearbox_Dataset',
+        'title': 'VibraDistill - PHM 2009 Gearbox Challenge Dataset',
+        'slug': 'vibradistill-phm2009-dataset',
+        'desc': 'PHM 2009 Gearbox data with helical and spur gears under 30-50 Hz loads.'
+    },
+    'rotating': {
+        'folder': 'Rotating_Machine_Faults_Dataset',
+        'title': 'VibraDistill - Rotating Machine Faults Dataset',
+        'slug': 'vibradistill-rotating-machine-faults',
+        'desc': 'Laboratory rotor testbed vibration signals across normal, unbalance, misalignment, and bearing faults.'
+    },
+    'xjtu_sy': {
+        'folder': 'XJTU-SY_Dataset',
+        'title': 'VibraDistill - XJTU-SY Bearing Run-to-Failure Dataset',
+        'slug': 'vibradistill-xjtu-sy-dataset',
+        'desc': 'Xi\'an Jiaotong University & Changxing Sumyoung run-to-failure bearing vibration dataset across 15 full lifespans.'
+    },
+    'pronostia': {
+        'folder': 'PRONOSTIA_FEMTO_Dataset',
+        'title': 'VibraDistill - PRONOSTIA FEMTO-ST Run-to-Failure Dataset',
+        'slug': 'vibradistill-pronostia-femto-dataset',
+        'desc': 'IEEE PHM 2012 Prognostic Challenge PRONOSTIA bearing run-to-failure acceleration signals.'
+    },
+    'nasa_ims': {
+        'folder': 'NASA_IMS_Dataset',
+        'title': 'VibraDistill - NASA IMS Bearing Degradation Dataset',
+        'slug': 'vibradistill-nasa-ims-dataset',
+        'desc': 'NASA Intelligent Maintenance Systems (IMS) endurance run-to-failure vibration data.'
+    },
+    'paderborn': {
+        'folder': 'Paderborn_Dataset',
+        'title': 'VibraDistill - Paderborn University Bearing Dataset',
+        'slug': 'vibradistill-paderborn-dataset',
+        'desc': 'Paderborn University modular bearing testbench data with artificially induced and real accelerated damage.'
+    },
+    'mafaulda': {
+        'folder': 'MaFaulDa_Dataset',
+        'title': 'VibraDistill - MaFaulDa Machinery Fault Database',
+        'slug': 'vibradistill-mafaulda-dataset',
+        'desc': 'Machinery Fault Database (MaFaulDa) 6-accelerometer signals under multiple operating regimes.'
+    },
+    'ottawa': {
+        'folder': 'Ottawa_Dataset',
+        'title': 'VibraDistill - Ottawa University Bearing Dataset',
+        'slug': 'vibradistill-ottawa-dataset',
+        'desc': 'University of Ottawa bearing vibration dataset under time-varying rotational speeds.'
+    }
+}
 
-# Discover Ottawa root dynamically to avoid encoding issues with special chars
-OTTAWA_ROOT = None
-for d in os.listdir(VIBRA_DIR):
-    if "UORED" in d and os.path.isdir(os.path.join(VIBRA_DIR, d)):
-        OTTAWA_ROOT = os.path.join(VIBRA_DIR, d)
-        break
 
-if not OTTAWA_ROOT:
-    raise RuntimeError("Ottawa dataset folder not found! Check D:\\Gitrepo\\VIbraDistill")
-
-print(f"Ottawa root resolved: {OTTAWA_ROOT}")
-print()
-
-def zip_dir(source_dir, zip_path):
-    """Zip a directory with Linux-compliant forward slash paths."""
-    print(f"  Zipping: {os.path.basename(source_dir)} -> {os.path.basename(zip_path)}")
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(source_dir):
+def zip_directory(source_dir: str, output_zip: str):
+    """Zips a folder with Unix forward slashes for native Kaggle compatibility."""
+    t0 = time.time()
+    total_files = sum(len(fs) for _, _, fs in os.walk(source_dir))
+    print(f"  Compressing {total_files} files from: {source_dir}")
+    print(f"  Target: {output_zip}")
+    
+    os.makedirs(os.path.dirname(output_zip), exist_ok=True)
+    with zipfile.ZipFile(output_zip, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as zipf:
+        count = 0
+        for root, _, files in os.walk(source_dir):
             for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, os.path.dirname(source_dir))
-                arcname = arcname.replace(os.sep, '/')
-                zipf.write(file_path, arcname)
-    size_mb = os.path.getsize(zip_path) / 1024 / 1024
-    print(f"  Done -> {size_mb:.1f} MB")
+                abs_path = os.path.join(root, file)
+                rel_path = os.path.relpath(abs_path, os.path.dirname(source_dir))
+                rel_path = rel_path.replace(os.sep, '/')
+                zipf.write(abs_path, rel_path)
+                count += 1
+                if count % 2000 == 0 or count == total_files:
+                    sys.stdout.write(f"\r  Progress: {count}/{total_files} files ({count/total_files*100:.1f}%)")
+                    sys.stdout.flush()
+    print()
+    size_mb = os.path.getsize(output_zip) / (1024 * 1024)
+    print(f"  Completed in {time.time()-t0:.1f}s -> Archive Size: {size_mb:.2f} MB\n")
+    return size_mb
 
-# =======================================================
-# STEP 1: CWRU Dataset
-# =======================================================
-print("=" * 60)
-print("STEP 1: CWRU Dataset (zero-leakage bearing-wise partition)")
-print("=" * 60)
-zip_dir(
-    os.path.join(VIBRA_DIR, "CWRU_Dataset"),
-    os.path.join(KAGGLE_DIR, "cwru_dataset.zip")
-)
 
-# =======================================================
-# STEP 2: Ottawa .mat files (smallest format, 288 MB actual)
-#         scipy.io can read these directly - no MATLAB needed
-# =======================================================
-print()
-print("=" * 60)
-print("STEP 2: Ottawa .mat files (scipy.io readable, no MATLAB)")
-print("=" * 60)
-mat_dir = os.path.join(OTTAWA_ROOT, "3_MatLab_Raw_Data_Files (.mat)")
-if os.path.isdir(mat_dir):
-    # Count actual files inside
-    file_count = sum(len(files) for _, _, files in os.walk(mat_dir))
-    print(f"  Found {file_count} .mat files in Ottawa dataset")
-    zip_dir(mat_dir, os.path.join(KAGGLE_DIR, "ottawa_mat_dataset.zip"))
-else:
-    print("  WARNING: .mat folder not found. Falling back to CSV folder.")
-    csv_dir = os.path.join(OTTAWA_ROOT, "1_CSV_Raw_Data_Files (.csv)")
-    zip_dir(csv_dir, os.path.join(KAGGLE_DIR, "ottawa_mat_dataset.zip"))
+def write_kaggle_metadata(target_dir: str, title: str, slug: str, desc: str):
+    """Generates Kaggle dataset-metadata.json for `kaggle datasets create`."""
+    metadata = {
+        "title": title,
+        "id": f"yourusername/{slug}",
+        "licenses": [{"name": "CC0-1.0"}],
+        "description": desc
+    }
+    meta_path = os.path.join(target_dir, "dataset-metadata.json")
+    with open(meta_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=2)
+    return meta_path
 
-# =======================================================
-# STEP 3: Ottawa Pre-computed Accelerometer Spectrograms
-#         Already a zip, just copy it. Pre-computed = saves
-#         CWT computation time on Kaggle quota.
-# =======================================================
-print()
-print("=" * 60)
-print("STEP 3: Ottawa Accelerometer Spectrograms (pre-computed)")
-print("=" * 60)
-# Find the spectrogram zip dynamically
-spec_src = None
-for f in os.listdir(OTTAWA_ROOT):
-    if "Spectrogram" in f and "accelerometer" in f and f.endswith(".zip"):
-        spec_src = os.path.join(OTTAWA_ROOT, f)
-        break
 
-if spec_src:
-    spec_dst = os.path.join(KAGGLE_DIR, "ottawa_spectrograms_accel.zip")
-    print(f"  Copying {os.path.basename(spec_src)} ({os.path.getsize(spec_src)/1024/1024:.0f} MB)...")
-    shutil.copy2(spec_src, spec_dst)
-    print(f"  Done -> {os.path.getsize(spec_dst)/1024/1024:.0f} MB")
-else:
-    print("  WARNING: Spectrogram zip not found, skipping.")
+def main():
+    parser = argparse.ArgumentParser(description="Package dataset folders for Kaggle upload")
+    parser.add_argument('--dataset', default='cwru', 
+                        help="Key of dataset to zip (cwru, mfpt, seu, phm2009, rotating, xjtu_sy, pronostia, nasa_ims, paderborn, mafaulda, ottawa, all_core, all)")
+    parser.add_argument('--data_dir', default='data', help="Path to raw data directory")
+    parser.add_argument('--output_dir', default='kaggle/datasets', help="Output directory for zip archives")
+    args = parser.parse_args()
 
-# =======================================================
-# STEP 4: Python Codebase (all Phase*.py + notebook)
-# =======================================================
-print()
-print("=" * 60)
-print("STEP 4: Python Codebase (Phase*.py + Master Notebook)")
-print("=" * 60)
-code_zip = os.path.join(KAGGLE_DIR, "vibra_distill_code.zip")
-with zipfile.ZipFile(code_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
-    scripts_added = 0
-    for file in sorted(os.listdir(VIBRA_DIR)):
-        if file.startswith("Phase") and file.endswith(".py"):
-            file_path = os.path.join(VIBRA_DIR, file)
-            zipf.write(file_path, file)
-            scripts_added += 1
-    nb_path = os.path.join(KAGGLE_DIR, "notebook", "Master_Kaggle_Runner.ipynb")
-    if os.path.exists(nb_path):
-        zipf.write(nb_path, "Master_Kaggle_Runner.ipynb")
-        print(f"  + Notebook included")
-    print(f"  + {scripts_added} Python scripts included")
-print(f"  Done -> {os.path.getsize(code_zip)/1024/1024:.1f} MB")
+    print("=" * 75)
+    print("  VIBRADISTILL-EDGE: KAGGLE DATASET PACKAGING ENGINE")
+    print("=" * 75)
 
-# =======================================================
-# SUMMARY
-# =======================================================
-print()
-print("=" * 60)
-print("ALL KAGGLE UPLOAD FILES:")
-print("=" * 60)
-total_mb = 0
-for f in sorted(os.listdir(KAGGLE_DIR)):
-    fp = os.path.join(KAGGLE_DIR, f)
-    if os.path.isfile(fp) and f.endswith(".zip"):
-        size_mb = os.path.getsize(fp) / 1024 / 1024
-        total_mb += size_mb
-        print(f"  {f:<45} {size_mb:>8.1f} MB")
-print(f"  {'TOTAL':<45} {total_mb:>8.1f} MB")
-print()
-print("KAGGLE DATASET MAPPING:")
-print("  cwru_dataset.zip              -> Add as Dataset: 'cwru-dataset'")
-print("  ottawa_mat_dataset.zip        -> Add as Dataset: 'ottawa-mat'")
-print("  ottawa_spectrograms_accel.zip -> Add as Dataset: 'ottawa-spectrograms'")
-print("  vibra_distill_code.zip        -> Add as Dataset: 'vibra-distill-code'")
+    datasets_to_process = []
+    if args.dataset == 'all_core':
+        datasets_to_process = ['cwru', 'mfpt', 'rotating', 'seu', 'phm2009']
+    elif args.dataset == 'all':
+        datasets_to_process = list(DATA_REGISTRY.keys())
+    elif args.dataset in DATA_REGISTRY:
+        datasets_to_process = [args.dataset]
+    else:
+        # Check if direct directory name passed
+        matched = False
+        for k, v in DATA_REGISTRY.items():
+            if v['folder'].lower() == args.dataset.lower():
+                datasets_to_process = [k]
+                matched = True
+                break
+        if not matched:
+            print(f"Error: Unknown dataset '{args.dataset}'. Available keys: {list(DATA_REGISTRY.keys()) + ['all_core', 'all']}")
+            sys.exit(1)
+
+    summary = []
+    for key in datasets_to_process:
+        info = DATA_REGISTRY[key]
+        src_path = os.path.join(args.data_dir, info['folder'])
+        if not os.path.exists(src_path):
+            print(f"Warning: Folder '{src_path}' not found on disk. Skipping.")
+            continue
+        
+        target_dir = os.path.join(args.output_dir, info['slug'])
+        os.makedirs(target_dir, exist_ok=True)
+        zip_path = os.path.join(target_dir, f"{info['slug']}.zip")
+        
+        print(f"\n[{key.upper()}] Packaging {info['title']}...")
+        size_mb = zip_directory(src_path, zip_path)
+        meta_file = write_kaggle_metadata(target_dir, info['title'], info['slug'], info['desc'])
+        
+        summary.append({
+            'key': key,
+            'title': info['title'],
+            'slug': info['slug'],
+            'zip_path': zip_path,
+            'size_mb': round(size_mb, 2),
+            'target_dir': target_dir
+        })
+
+    print("=" * 75)
+    print("KAGGLE PACKAGING SUMMARY:")
+    for s in summary:
+        print(f"  * {s['title']}: {s['size_mb']} MB -> {s['zip_path']}")
+    print("\nHOW TO UPLOAD TO KAGGLE:")
+    print("  Option 1 (Web UI): Go to https://www.kaggle.com/datasets/new and drag & drop the .zip file.")
+    print("  Option 2 (Kaggle CLI):")
+    print("     1. Edit `yourusername` in `dataset-metadata.json`")
+    print("     2. Run: kaggle datasets create -p <target_dir>")
+    print("=" * 75)
+
+
+if __name__ == '__main__':
+    main()

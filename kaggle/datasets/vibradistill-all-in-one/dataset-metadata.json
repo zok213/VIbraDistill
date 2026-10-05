@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill-Edge Master All-in-One Bundle",
+  "id": "yourusername/vibradistill-all-in-one",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "Complete self-contained bundle for VibraDistill-Edge containing full codebase and 6 benchmark datasets (CWRU, MFPT, PRONOSTIA, SEU, PHM2009, Rotating Machine)."
+}

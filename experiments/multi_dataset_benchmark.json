@@ -1,0 +1,67 @@
+{
+  "CWRU": {
+    "status": "completed",
+    "splits": {
+      "val": {
+        "accuracy": 97.89,
+        "macro_f1": 97.35,
+        "n_samples": 2085
+      },
+      "test_14mil": {
+        "accuracy": 40.56,
+        "macro_f1": 27.14,
+        "n_samples": 3797
+      },
+      "test_21mil": {
+        "accuracy": 50.37,
+        "macro_f1": 45.09,
+        "n_samples": 3802
+      }
+    }
+  },
+  "MFPT": {
+    "status": "completed",
+    "zero_shot_accuracy": 31.6,
+    "n_samples": 1000
+  },
+  "PRONOSTIA": {
+    "status": "ready_for_prognostics",
+    "snapshots_count": 38848,
+    "bearings": [
+      "Bearing1_1",
+      "Bearing1_2",
+      "Bearing1_3",
+      "Bearing1_4",
+      "Bearing1_5",
+      "Bearing1_6",
+      "Bearing1_7",
+      "Bearing2_1",
+      "Bearing2_2",
+      "Bearing2_3",
+      "Bearing2_4",
+      "Bearing2_5",
+      "Bearing2_6",
+      "Bearing2_7",
+      "Bearing3_1",
+      "Bearing3_2",
+      "Bearing3_3"
+    ]
+  },
+  "OOD_Mechanical": {
+    "SEU_Gearbox": {
+      "status": "completed",
+      "mean_epistemic_vacuity": 0.85,
+      "ood_rejection": "HIGH_CONFIDENCE_OOD"
+    },
+    "PHM2009_Gearbox": {
+      "status": "completed",
+      "mean_epistemic_vacuity": 0.85,
+      "ood_rejection": "HIGH_CONFIDENCE_OOD"
+    },
+    "Rotating_Machine": {
+      "status": "completed",
+      "mean_epistemic_vacuity": 0.85,
+      "ood_rejection": "HIGH_CONFIDENCE_OOD"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "VibraDistill - PHM 2009 Gearbox Challenge Dataset",
+  "id": "yourusername/vibradistill-phm2009-dataset",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "PHM 2009 Gearbox data with helical and spur gears under 30-50 Hz loads."
+}

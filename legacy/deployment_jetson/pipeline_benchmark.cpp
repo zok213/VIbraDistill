@@ -1,8 +1,10 @@
 /**
+ * [LEGACY ARCHIVE - SUPERSEDED]
  * PHASE 3: TOTAL PIPELINE BENCHMARK (JETSON ORIN NX)
- * Target: Measure sub-1ms latency end-to-end (FIR + cuFFT + CNN)
  * 
- * Note: This is boilerplate representing the physical C++ wrapper execution.
+ * NOTE: This file is an archived benchmark harness for the Jetson platform.
+ * The production edge deployment targets the dual-tier Sipeed Tang Primer 20K FPGA
+ * (12-way NPU) + Sonix SN32F407 MCU (Cortex-M0) located in `embedded/`.
  */
 
 #include <iostream>

@@ -1,0 +1,26 @@
+# Teacher 1D-ResNet Training Configuration
+model:
+  name: "Teacher1DResNet"
+  in_channels: 1
+  num_classes: 4
+  physics_dim: 4
+
+training:
+  seed: 42
+  batch_size: 64
+  epochs: 35
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  lr_scheduler: "cosine"
+  min_lr: 0.00001
+  rul_loss_weight: 0.5
+
+data:
+  dataset: "CWRU"
+  data_dir: "data/CWRU_Dataset"
+  cache_dir: "data/cache"
+  use_augmentation: true
+
+checkpoint:
+  save_dir: "checkpoints/teacher"
+  save_best_only: true
