@@ -50,9 +50,9 @@ class MFPTBearingDataset(Dataset):
         
         categories = [
             ("1 - Three Baseline Conditions", 0),
-            ("2 - Three Outer Race Fault Conditions", 3),
-            ("3 - Seven More Outer Race Fault Conditions", 3),
-            ("4 - Seven Inner Race Fault Conditions", 2)
+            ("2 - Three Outer Race Fault Conditions", 2),
+            ("3 - Seven More Outer Race Fault Conditions", 2),
+            ("4 - Seven Inner Race Fault Conditions", 1)
         ]
         
         for folder_name, label in categories:
