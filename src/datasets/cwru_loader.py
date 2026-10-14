@@ -147,6 +147,41 @@ class CWRUBearingDataset(Dataset):
                 files_with_meta.append((f, 2, 1750.0))
             for f in sorted(glob.glob(os.path.join(test_21mil_dir, 'Ball', '*.mat'))):
                 files_with_meta.append((f, 3, 1750.0))
+
+        elif self.split in ['cross_load_train', 'cross_load_val']:
+            # Canonical Industrial Cross-Load Protocol (IEEE TII/TIE): Loads 0, 1, 2 HP (1797, 1772, 1750 RPM)
+            # across all fault types and severities (7, 14, 21-mil)
+            for fname in ['97.mat', '98.mat', '99.mat']:
+                f = os.path.join(normal_dir, fname)
+                if os.path.exists(f):
+                    files_with_meta.append((f, 0, NORMAL_RPM_MAP.get(fname, 1750.0)))
+            
+            all_fault_dirs = [
+                (train_7mil_dir, 1, 'InnerRace'), (train_7mil_dir, 2, 'OuterRace'), (train_7mil_dir, 3, 'Ball'),
+                (test_14mil_dir, 1, 'InnerRace'), (test_14mil_dir, 2, 'OuterRace'), (test_14mil_dir, 3, 'Ball'),
+                (test_21mil_dir, 1, 'InnerRace'), (test_21mil_dir, 2, 'OuterRace'), (test_21mil_dir, 3, 'Ball'),
+            ]
+            for root_d, lbl, sub in all_fault_dirs:
+                f_list = sorted(glob.glob(os.path.join(root_d, sub, '*.mat')))
+                for f in f_list[:3]:  # Loads 0, 1, 2 HP
+                    files_with_meta.append((f, lbl, 1750.0))
+
+        elif self.split == 'cross_load_test':
+            # Canonical Industrial Cross-Load Protocol: Unseen Load 3 HP (~1725 RPM)
+            # across all fault types and severities (7, 14, 21-mil)
+            f_norm = os.path.join(normal_dir, '100.mat')
+            if os.path.exists(f_norm):
+                files_with_meta.append((f_norm, 0, NORMAL_RPM_MAP.get('100.mat', 1725.0)))
+                
+            all_fault_dirs = [
+                (train_7mil_dir, 1, 'InnerRace'), (train_7mil_dir, 2, 'OuterRace'), (train_7mil_dir, 3, 'Ball'),
+                (test_14mil_dir, 1, 'InnerRace'), (test_14mil_dir, 2, 'OuterRace'), (test_14mil_dir, 3, 'Ball'),
+                (test_21mil_dir, 1, 'InnerRace'), (test_21mil_dir, 2, 'OuterRace'), (test_21mil_dir, 3, 'Ball'),
+            ]
+            for root_d, lbl, sub in all_fault_dirs:
+                f_list = sorted(glob.glob(os.path.join(root_d, sub, '*.mat')))
+                if f_list:
+                    files_with_meta.append((f_list[-1], lbl, 1725.0))  # Load 3 HP
         else:
             raise ValueError(f"Unknown split: {self.split}")
             
@@ -160,7 +195,7 @@ class CWRUBearingDataset(Dataset):
         all_labels = []
         all_rpms = []
         
-        is_train_like = self.split in ['train', 'val']
+        is_train_like = self.split in ['train', 'val', 'cross_load_train', 'cross_load_val']
         stride = self.train_stride if is_train_like else self.test_stride
         
         for file_path, label, default_rpm in file_list:
@@ -200,7 +235,7 @@ class CWRUBearingDataset(Dataset):
         all_rpms = np.array(all_rpms, dtype=np.float32)
         
         # Partition train vs validation deterministically by class
-        if self.split in ['train', 'val']:
+        if self.split in ['train', 'val', 'cross_load_train', 'cross_load_val']:
             rng = np.random.RandomState(self.seed)
             indices = np.arange(len(all_labels))
             rng.shuffle(indices)
@@ -209,7 +244,7 @@ class CWRUBearingDataset(Dataset):
             val_idx = indices[:val_count]
             train_idx = indices[val_count:]
             
-            sel_idx = train_idx if self.split == 'train' else val_idx
+            sel_idx = train_idx if self.split in ['train', 'cross_load_train'] else val_idx
             all_windows = all_windows[sel_idx]
             all_labels = all_labels[sel_idx]
             all_rpms = all_rpms[sel_idx]
@@ -220,7 +255,7 @@ class CWRUBearingDataset(Dataset):
         
         for i in range(len(all_windows)):
             win = all_windows[i]
-            if self.transform is not None and self.split == 'train':
+            if self.transform is not None and self.split in ['train', 'cross_load_train']:
                 win = self.transform(win)
                 
             out = self.dsp.process_window(win, rpm=all_rpms[i])
@@ -244,18 +279,14 @@ class CWRUBearingDataset(Dataset):
         }
 
 def get_cwru_dataloaders(data_dir: str, batch_size: int = 64, num_workers: int = 0,
-                         cache_dir: str = None, use_augmentation: bool = True):
+                         cache_dir: str = None, use_augmentation: bool = True,
+                         protocol: str = 'cross_severity'):
     """
     Factory function returning production-grade Zero-Leakage DataLoaders.
     
-    Returns:
-        dict: {
-            'train': DataLoader,
-            'val': DataLoader,
-            'test_14mil': DataLoader,
-            'test_21mil': DataLoader,
-            'test_unseen': DataLoader
-        }
+    Protocols:
+      - 'cross_severity' (default): Incipient damage holdout (Train 7-mil -> Test 14-mil, 21-mil).
+      - 'cross_load': Canonical Industrial Benchmark (Train Loads 0, 1, 2 HP -> Test Load 3 HP).
     """
     train_transform = None
     if use_augmentation:
@@ -265,6 +296,22 @@ def get_cwru_dataloaders(data_dir: str, batch_size: int = 64, num_workers: int =
             RandomScale(scale_min=0.9, scale_max=1.1, p=0.3)
         ])
         
+    if protocol == 'cross_load':
+        train_set = CWRUBearingDataset(data_dir, split='cross_load_train', transform=train_transform, cache_dir=cache_dir)
+        val_set = CWRUBearingDataset(data_dir, split='cross_load_val', transform=None, cache_dir=cache_dir)
+        test_set = CWRUBearingDataset(data_dir, split='cross_load_test', transform=None, cache_dir=cache_dir)
+        return {
+            'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers),
+            'val': DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=num_workers),
+            'test': DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers),
+            'test_cross_load': DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers),
+            'datasets': {
+                'train': train_set,
+                'val': val_set,
+                'test': test_set
+            }
+        }
+
     train_set = CWRUBearingDataset(data_dir, split='train', transform=train_transform, cache_dir=cache_dir)
     val_set = CWRUBearingDataset(data_dir, split='val', transform=None, cache_dir=cache_dir)
     test_14_set = CWRUBearingDataset(data_dir, split='test_14mil', transform=None, cache_dir=cache_dir)
