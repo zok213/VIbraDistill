@@ -62,3 +62,5 @@ legacy/notebooks/*.ipynb
 
 # Kaggle Dataset Archives
 kaggle/datasets/*/*.zip
+experiments/kaggle_output/
+scratch/

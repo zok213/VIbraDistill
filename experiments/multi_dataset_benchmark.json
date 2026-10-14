@@ -3,25 +3,25 @@
     "status": "completed",
     "splits": {
       "val": {
-        "accuracy": 97.89,
-        "macro_f1": 97.35,
+        "accuracy": 98.85,
+        "macro_f1": 98.49,
         "n_samples": 2085
       },
       "test_14mil": {
-        "accuracy": 40.56,
-        "macro_f1": 27.14,
+        "accuracy": 43.82,
+        "macro_f1": 29.71,
         "n_samples": 3797
       },
       "test_21mil": {
-        "accuracy": 50.37,
-        "macro_f1": 45.09,
+        "accuracy": 50.26,
+        "macro_f1": 43.16,
         "n_samples": 3802
       }
     }
   },
   "MFPT": {
     "status": "completed",
-    "zero_shot_accuracy": 31.6,
+    "zero_shot_accuracy": 19.8,
     "n_samples": 1000
   },
   "PRONOSTIA": {

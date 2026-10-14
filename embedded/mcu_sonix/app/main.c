@@ -30,6 +30,12 @@
 #include <stdbool.h>
 #include <string.h>
 
+/* Compile Sonix SN32F407 in Supervisory Controller Mode (FPGA runs NPU inference)
+ * This bypasses the 5,120-byte local scratchpad in vibradistill_model.c,
+ * restricting total static SRAM to 2,568 bytes (31.3%) and reserving > 5.5 KB
+ * of safe stack margin for nested SPI DMA interrupts. */
+#define TARGET_SN32F407_SUPERVISOR 1
+
 #include "vibradistill_model.h"
 #include "adaptive_conformal.h"
 

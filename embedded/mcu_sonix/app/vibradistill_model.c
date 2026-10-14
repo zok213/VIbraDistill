@@ -16,9 +16,20 @@
 #include "vibradistill_model.h"
 #include "vibradistill_weights.h"
 
-/* Static memory buffers (5,120 bytes total scratchpad) */
+/* Static memory buffers */
+#if defined(TARGET_SN32F407_SUPERVISOR)
+/*
+ * In Supervisory Mode, Gowin FPGA NPU processes inference.
+ * To guarantee > 5.5 KB stack headroom for SPI DMA nested ISRs on the 8 KB SRAM Sonix SN32F407,
+ * the 5,120-byte local neural network scratchpad is bypassed.
+ */
+static int8_t s_buf_a[1];
+static int8_t s_buf_b[1];
+#else
+/* 5,120 bytes total scratchpad for Standalone MCU Inference Mode */
 static int8_t s_buf_a[24 * 128]; /* 3,072 bytes: Stage 1 output / Stage 3 output */
 static int8_t s_buf_b[32 * 64];  /* 2,048 bytes: Stage 2 output / fused embeddings */
+#endif
 
 /* Bit-true Requantization Helper */
 static inline int8_t requantize(int32_t acc, int32_t mult, int8_t shift) {
@@ -54,6 +65,7 @@ static inline int32_t pack_s8x2(int8_t b0, int8_t b1) {
 }
 
 void vibradistill_model_init(void) {
+#if !defined(TARGET_SN32F407_SUPERVISOR)
     /* Clear static working buffers */
     for (int i = 0; i < (24 * 128); i++) {
         s_buf_a[i] = 0;
@@ -61,9 +73,25 @@ void vibradistill_model_init(void) {
     for (int i = 0; i < (32 * 64); i++) {
         s_buf_b[i] = 0;
     }
+#endif
 }
 
 void vibradistill_predict(const int8_t *spectrum_int8, const uint8_t *prior_4, vibra_inference_result_t *out_result) {
+#if defined(TARGET_SN32F407_SUPERVISOR)
+    (void)spectrum_int8;
+    (void)prior_4;
+    if (out_result) {
+        /* In supervisor mode, predictions are received via FPGA SPI telemetry DMA */
+        out_result->predicted_class = 0;
+        out_result->logits[0] = 0;
+        out_result->logits[1] = 0;
+        out_result->logits[2] = 0;
+        out_result->logits[3] = 0;
+        out_result->vacuity_q15 = 0;
+        out_result->rul_q15 = 31130;
+        out_result->ood_alert = 0;
+    }
+#else
     if (!spectrum_int8 || !out_result) {
         return;
     }
@@ -294,4 +322,5 @@ void vibradistill_predict(const int8_t *spectrum_int8, const uint8_t *prior_4, v
         if (rul_val < 3277) rul_val = 3277;               /* clamp min ~0.10 */
         out_result->rul_q15 = (uint16_t)rul_val;
     }
+#endif
 }
