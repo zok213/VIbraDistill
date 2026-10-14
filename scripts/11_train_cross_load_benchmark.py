@@ -36,14 +36,12 @@ def eval_model(model, loader, device):
             spec = b['spectrum'].to(device)
             prior = b['prior'].to(device)
             labels = b['label']
-            lg, alpha = model(spec, prior)
+            lg, _ = model(spec, prior)
             pred = lg.argmax(1).cpu().tolist()
             P += pred
             Y += labels.tolist()
-            if alpha is not None:
-                S = alpha.sum(dim=-1).cpu().numpy()
-                u = 4.0 / np.maximum(S, 1e-4)
-                vacuities.extend(u.tolist())
+            _, u = compute_dirichlet_vacuity(lg)
+            vacuities.extend(u.cpu().tolist())
     metrics = compute_classification_metrics(Y, P)
     mean_vacuity = float(np.mean(vacuities)) if vacuities else 0.0
     return {
@@ -123,11 +121,11 @@ def main():
 
     # 3. Train Student VibraDistillMicro via DKD + EDL
     print("\n[Step 2/2] Distilling into Student VibraDistillMicro (8,677 params) via DKD + EDL...")
-    student = VibraDistillMicro(in_channels=1, num_classes=4, physics_dim=4).to(device)
+    student = VibraDistillMicro(in_bins=257, num_classes=4, physics_dim=4).to(device)
     optimizer_s = optim.AdamW(student.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler_s = CosineAnnealingLR(optimizer_s, T_max=args.epochs)
     dkd_loss_fn = DecoupledKnowledgeDistillationLoss(alpha=1.0, beta=2.0, temperature=4.0)
-    edl_loss_fn = EvidentialLoss(num_classes=4, loss_type='log')
+    edl_loss_fn = EvidentialLoss(num_classes=4, annealing_epochs=10)
 
     best_val_f1_s = 0.0
     for epoch in range(1, args.epochs + 1):
@@ -142,10 +140,12 @@ def main():
             with torch.no_grad():
                 t_logits, _ = teacher(spec, prior)
 
-            s_logits, s_alpha = student(spec, prior)
-            loss_dkd = dkd_loss_fn(s_logits, t_logits, labels)
-            loss_edl = edl_loss_fn(s_alpha, labels, epoch=epoch, max_epochs=args.epochs)
-            loss = loss_dkd + 0.5 * loss_edl
+            s_logits, s_rul = student(spec, prior)
+            loss_dkd, _, _ = dkd_loss_fn(s_logits, t_logits, labels)
+            loss_edl = edl_loss_fn(s_logits, labels, epoch=epoch)
+            rul_target = torch.where(labels == 0, 1.0, 0.5).unsqueeze(1).float()
+            loss_rul = nn.functional.mse_loss(s_rul, rul_target)
+            loss = loss_dkd + 0.2 * loss_edl + 0.5 * loss_rul
             loss.backward()
             optimizer_s.step()
             tot_loss += loss.item() * len(labels)
@@ -158,6 +158,7 @@ def main():
                 'model_state_dict': student.state_dict(),
                 'val_f1': best_val_f1_s
             }, "checkpoints/student_dkd/best_student_cross_load.pt")
+        print(f"  Student Epoch [{epoch:02d}/{args.epochs:02d}] | Val F1 = {val_s['macro_f1']}% | Loss = {tot_loss/len(train_loader.dataset):.4f}")
 
     student.load_state_dict(torch.load("checkpoints/student_dkd/best_student_cross_load.pt", map_location=device)['model_state_dict'])
     student.eval()
