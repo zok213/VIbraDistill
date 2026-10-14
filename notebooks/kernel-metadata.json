@@ -1,0 +1,16 @@
+{
+  "id": "zok213/vibradistill-kaggle-dual-t4",
+  "title": "vibradistill-kaggle-dual-t4",
+  "code_file": "VibraDistill_Kaggle_Dual_T4.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "zok213/vibradistill-ai1"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}
