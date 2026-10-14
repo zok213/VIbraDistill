@@ -26,8 +26,8 @@ def resample_vibration_signal(x: np.ndarray, orig_fs: float, target_fs: float = 
 
 
 def warp_order_spectrum(spectrum: np.ndarray, source_rpm: float = 1750.0, target_rpm: float = 1500.0,
-                        source_geom_multiplier: float = 3.05, target_geom_multiplier: float = 5.41,
-                        num_bins: int = 257) -> np.ndarray:
+                        source_geom_multiplier: float = 3.585, target_geom_multiplier: float = 6.19,
+                        gamma: float = None, num_bins: int = 257) -> np.ndarray:
     """
     Kinematic Order Tracking & Frequency Warping for Zero-Shot Cross-Machine Transfer.
     Maps a 257-bin spectrum from target machine coordinates (e.g. MFPT @ 16-ball, 1500 RPM)
@@ -39,11 +39,13 @@ def warp_order_spectrum(spectrum: np.ndarray, source_rpm: float = 1750.0, target
     """
     spectrum = np.asarray(spectrum, dtype=np.float32).flatten()
     n = len(spectrum)
-    gamma = float((target_rpm / max(1.0, source_rpm)) * (target_geom_multiplier / max(1e-5, source_geom_multiplier)))
+    if gamma is None:
+        gamma = float((target_rpm / max(1.0, source_rpm)) * (target_geom_multiplier / max(1e-5, source_geom_multiplier)))
+    
     if abs(gamma - 1.0) < 0.01:
         return spectrum
     
     orig_indices = np.arange(n, dtype=np.float32)
-    warped_indices = orig_indices * gamma
-    warped_spec = np.interp(orig_indices, warped_indices, spectrum, left=float(spectrum[0]), right=float(spectrum[-1]))
+    warped_spec = np.interp(orig_indices * gamma, orig_indices, spectrum, left=float(spectrum[0]), right=float(spectrum[-1]))
     return warped_spec.astype(np.float32)
+

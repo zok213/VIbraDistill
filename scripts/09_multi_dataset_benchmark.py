@@ -74,11 +74,10 @@ def eval_mfpt(model, data_dir, device):
                 lg_raw, _ = model(spec, prior)
                 preds_raw = lg_raw.argmax(1).cpu().tolist()
             
-            # SOTA Kinematic Order Warping (Aligning 16-ball Rexnord to 9-ball SKF)
+            # SOTA Kinematic Order Warping (Aligning 16-ball Nice 1012 @ 1500 RPM to 9-ball SKF 6205 @ 1750 RPM)
             warped_spec = torch.stack([
                 torch.from_numpy(warp_order_spectrum(
-                    s.squeeze().numpy(), source_rpm=1750.0, target_rpm=1500.0,
-                    source_geom_multiplier=3.05, target_geom_multiplier=5.41
+                    s.squeeze().numpy(), gamma=1.85
                 )).unsqueeze(0) for s in b['spectrum'].cpu()
             ]).to(device)
             
