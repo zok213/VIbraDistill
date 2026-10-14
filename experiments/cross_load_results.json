@@ -1,0 +1,27 @@
+{
+  "protocol": "Canonical Industrial Cross-Load Generalization (IEEE TII/TIE)",
+  "train_conditions": "Loads 0, 1, 2 HP (1797, 1772, 1750 RPM) across 7, 14, 21-mil faults",
+  "test_condition": "Load 3 HP (~1725 RPM) across 7, 14, 21-mil faults (Completely Unseen)",
+  "teacher_resnet_18": {
+    "val_f1": 95.38,
+    "test_load3": {
+      "accuracy": 90.55,
+      "macro_f1": 89.99,
+      "precision": 92.0,
+      "recall": 89.79,
+      "mean_vacuity": 0.3075,
+      "n_samples": 3091
+    }
+  },
+  "student_vibradistill_micro": {
+    "val_f1": 83.67,
+    "test_load3": {
+      "accuracy": 83.14,
+      "macro_f1": 82.32,
+      "precision": 85.02,
+      "recall": 81.87,
+      "mean_vacuity": 0.4306,
+      "n_samples": 3091
+    }
+  }
+}
