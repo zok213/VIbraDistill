@@ -1,0 +1,14 @@
+{
+  "profile_id": "PRF-03",
+  "name": "Run-to-Failure Lifecycles & Conformal RUL Tracking (PRONOSTIA / FEMTO-ST)",
+  "binary_file": "profile_pronostia_femto_rul.bin",
+  "binary_size_bytes": 8677,
+  "spi_switch_latency_ms": 5.55,
+  "target_machinery": "High-Speed Spindles, Wind Turbine Generative Units",
+  "operating_mode": "Continuous Remaining Useful Life Degradation with Conformal Prediction",
+  "conformal_guarantee": {
+    "target_miscoverage_alpha": 0.1,
+    "certified_empirical_coverage": 90.22,
+    "algorithm": "Higher-Order Predictor Adaptive Conformal Prediction (HopACP)"
+  }
+}

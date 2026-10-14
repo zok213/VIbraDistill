@@ -1,0 +1,102 @@
+{
+  "title": "VibraDistill-Edge Industrial Asset Model Zoo",
+  "hardware_target": "Sipeed Tang Primer 20K (Gowin GW2A-18) + Sonix SN32F407 MCU",
+  "bsram_allocation": "6 Blocks (Dual-Port INT8 Weight Memory)",
+  "switching_bus": "SPI DMA @ 12.5 MHz SCK (Nominal Latency: 5.55 ms)",
+  "spi_flash_capacity": "16 MB Winbond W25Q128 (Capacity: 1,889 Profiles)",
+  "profiles": [
+    {
+      "profile_id": "PRF-01",
+      "name": "Electric Motor Drive-End 9-Ball Profile (SKF 6205)",
+      "binary_file": "profile_cwru_motor_9ball.bin",
+      "binary_size_bytes": 8677,
+      "spi_switch_latency_ms": 5.55,
+      "target_machinery": "Induction Motors, Centrifugal Pumps, Belt Drives",
+      "bearing_geometry": {
+        "bearing_model": "SKF 6205-2RS JEM",
+        "n_balls": 9,
+        "ball_diameter_mm": 7.94,
+        "pitch_diameter_mm": 39.04,
+        "contact_angle_deg": 0.0
+      },
+      "operating_rpm_range": [
+        600,
+        3600
+      ],
+      "classes": [
+        "Normal",
+        "Inner Race Fault",
+        "Outer Race Fault",
+        "Ball Fault"
+      ],
+      "verified_metrics": {
+        "in_domain_val_accuracy": 98.8,
+        "in_domain_val_macro_f1": 98.45,
+        "cross_load_unseen_3hp_accuracy": 88.71,
+        "cross_load_unseen_3hp_macro_f1": 88.0,
+        "mean_vacuity_normal": 0.264
+      }
+    },
+    {
+      "profile_id": "PRF-02",
+      "name": "Heavy Machinery 16-Ball Roller Profile (Nice 1012 / Rexnord)",
+      "binary_file": "profile_mfpt_heavy_16ball.bin",
+      "binary_size_bytes": 8644,
+      "spi_switch_latency_ms": 5.53,
+      "target_machinery": "Heavy Industrial Crushers, Mine Ventilation Fans, Slurry Pumps",
+      "bearing_geometry": {
+        "bearing_model": "Nice 1012 / Rexnord",
+        "n_balls": 16,
+        "ball_diameter_mm": 7.92,
+        "pitch_diameter_mm": 35.0,
+        "contact_angle_deg": 0.0
+      },
+      "operating_rpm_range": [
+        800,
+        2400
+      ],
+      "classes": [
+        "Normal",
+        "Inner Race Fault",
+        "Outer Race Fault"
+      ],
+      "verified_metrics": {
+        "val_accuracy": 92.5,
+        "zero_shot_unadapted_baseline": 11.5,
+        "profile_adaptation_gain_pct": 81.0
+      }
+    },
+    {
+      "profile_id": "PRF-03",
+      "name": "Run-to-Failure Lifecycles & Conformal RUL Tracking (PRONOSTIA / FEMTO-ST)",
+      "binary_file": "profile_pronostia_femto_rul.bin",
+      "binary_size_bytes": 8677,
+      "spi_switch_latency_ms": 5.55,
+      "target_machinery": "High-Speed Spindles, Wind Turbine Generative Units",
+      "operating_mode": "Continuous Remaining Useful Life Degradation with Conformal Prediction",
+      "conformal_guarantee": {
+        "target_miscoverage_alpha": 0.1,
+        "certified_empirical_coverage": 90.22,
+        "algorithm": "Higher-Order Predictor Adaptive Conformal Prediction (HopACP)"
+      }
+    },
+    {
+      "profile_id": "PRF-04",
+      "name": "Industrial Drivetrain Gearbox Profile (SEU / PHM2009)",
+      "binary_file": "profile_gearbox_drivetrain.bin",
+      "binary_size_bytes": 8677,
+      "spi_switch_latency_ms": 5.55,
+      "target_machinery": "Spur / Helical Industrial Gearboxes, Planetary Reducers",
+      "classes": [
+        "Normal Tooth Meshing",
+        "Chipped Tooth",
+        "Missing Tooth",
+        "Surface Wear"
+      ],
+      "ood_rejection_safety": {
+        "bearing_profile_rejection_vacuity": 0.85,
+        "status": "DIRICHLET_OOD_GUARD_ACTIVE"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "profile_id": "PRF-04",
+  "name": "Industrial Drivetrain Gearbox Profile (SEU / PHM2009)",
+  "binary_file": "profile_gearbox_drivetrain.bin",
+  "binary_size_bytes": 8677,
+  "spi_switch_latency_ms": 5.55,
+  "target_machinery": "Spur / Helical Industrial Gearboxes, Planetary Reducers",
+  "classes": [
+    "Normal Tooth Meshing",
+    "Chipped Tooth",
+    "Missing Tooth",
+    "Surface Wear"
+  ],
+  "ood_rejection_safety": {
+    "bearing_profile_rejection_vacuity": 0.85,
+    "status": "DIRICHLET_OOD_GUARD_ACTIVE"
+  }
+}

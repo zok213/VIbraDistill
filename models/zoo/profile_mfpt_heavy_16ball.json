@@ -1,0 +1,29 @@
+{
+  "profile_id": "PRF-02",
+  "name": "Heavy Machinery 16-Ball Roller Profile (Nice 1012 / Rexnord)",
+  "binary_file": "profile_mfpt_heavy_16ball.bin",
+  "binary_size_bytes": 8644,
+  "spi_switch_latency_ms": 5.53,
+  "target_machinery": "Heavy Industrial Crushers, Mine Ventilation Fans, Slurry Pumps",
+  "bearing_geometry": {
+    "bearing_model": "Nice 1012 / Rexnord",
+    "n_balls": 16,
+    "ball_diameter_mm": 7.92,
+    "pitch_diameter_mm": 35.0,
+    "contact_angle_deg": 0.0
+  },
+  "operating_rpm_range": [
+    800,
+    2400
+  ],
+  "classes": [
+    "Normal",
+    "Inner Race Fault",
+    "Outer Race Fault"
+  ],
+  "verified_metrics": {
+    "val_accuracy": 92.5,
+    "zero_shot_unadapted_baseline": 11.5,
+    "profile_adaptation_gain_pct": 81.0
+  }
+}

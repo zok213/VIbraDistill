@@ -1,0 +1,32 @@
+{
+  "profile_id": "PRF-01",
+  "name": "Electric Motor Drive-End 9-Ball Profile (SKF 6205)",
+  "binary_file": "profile_cwru_motor_9ball.bin",
+  "binary_size_bytes": 8677,
+  "spi_switch_latency_ms": 5.55,
+  "target_machinery": "Induction Motors, Centrifugal Pumps, Belt Drives",
+  "bearing_geometry": {
+    "bearing_model": "SKF 6205-2RS JEM",
+    "n_balls": 9,
+    "ball_diameter_mm": 7.94,
+    "pitch_diameter_mm": 39.04,
+    "contact_angle_deg": 0.0
+  },
+  "operating_rpm_range": [
+    600,
+    3600
+  ],
+  "classes": [
+    "Normal",
+    "Inner Race Fault",
+    "Outer Race Fault",
+    "Ball Fault"
+  ],
+  "verified_metrics": {
+    "in_domain_val_accuracy": 98.8,
+    "in_domain_val_macro_f1": 98.45,
+    "cross_load_unseen_3hp_accuracy": 88.71,
+    "cross_load_unseen_3hp_macro_f1": 88.0,
+    "mean_vacuity_normal": 0.264
+  }
+}
