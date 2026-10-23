@@ -1,0 +1,65 @@
+// ============================================================================
+// File Name: primer20k_adxl345.cst
+// Target Board: Sipeed Tang Primer 20K Dock Lite (Gowin GW2A-LV18PG256C8/I7)
+// Description: Physical Pin Constraints for ADXL345 SPI, MCU SPI DMA, LEDs, Clock
+// ============================================================================
+
+// --- 1. Clock & System Reset ---
+// Onboard 27 MHz Crystal Oscillator
+IO_LOC  "clk_27m"       H11;
+IO_PORT "clk_27m"       IO_TYPE=LVCMOS33 PULL_MODE=NONE;
+
+// Active-Low Reset Key (S1 Button on Dock Lite)
+IO_LOC  "rst_n_pin"     T10;
+IO_PORT "rst_n_pin"     IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+// --- 2. ADXL345 / GY-291 SPI Interface (PMOD0 Header J3) ---
+// Pin 1: CS_N (Active-Low Chip Select)
+IO_LOC  "adxl_cs_n"     A15;
+IO_PORT "adxl_cs_n"     IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+// Pin 2: MOSI (SDA / SDI on GY-291)
+IO_LOC  "adxl_mosi"     B15;
+IO_PORT "adxl_mosi"     IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// Pin 3: MISO (SDO / ALT ADDRESS on GY-291)
+IO_LOC  "adxl_miso"     C15;
+IO_PORT "adxl_miso"     IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+
+// Pin 4: SCLK (SCL on GY-291 @ 5.0 MHz)
+IO_LOC  "adxl_sclk"     J14;
+IO_PORT "adxl_sclk"     IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// Pin 7: INT1 (Data Ready Hardware Interrupt Strobe)
+IO_LOC  "adxl_int1"     J16;
+IO_PORT "adxl_int1"     IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+
+// --- 3. High-Speed Telemetry SPI Bus to Sonix SN32F407 MCU (Header J4) ---
+// SPI SCK (12.5 MHz to MCU P2.0)
+IO_LOC  "mcu_spi_sck"   E15;
+IO_PORT "mcu_spi_sck"   IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// SPI MOSI (Data to MCU P2.1)
+IO_LOC  "mcu_spi_mosi"  D14;
+IO_PORT "mcu_spi_mosi"  IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// SPI CS_N (Slave Select to MCU P2.3)
+IO_LOC  "mcu_spi_cs_n"  A14;
+IO_PORT "mcu_spi_cs_n"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+// Hardware IRQ Pulse (Handshake Strobe to MCU P2.4)
+IO_LOC  "mcu_irq_pulse" N16;
+IO_PORT "mcu_irq_pulse" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// --- 4. Diagnostic LEDs ---
+// LED 0: Heartbeat (Blinks ~6 Hz)
+IO_LOC  "led_alive"     L14;
+IO_PORT "led_alive"     IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// LED 1: NPU Inference Busy
+IO_LOC  "led_infer_busy"L16;
+IO_PORT "led_infer_busy"IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;
+
+// LED 2: Dirichlet Vacuity / OOD Alert (u > 0.45)
+IO_LOC  "led_ood_alert" P14;
+IO_PORT "led_ood_alert" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8;

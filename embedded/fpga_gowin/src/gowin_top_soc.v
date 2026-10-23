@@ -12,12 +12,27 @@
 
 `timescale 1ns / 1ps
 
-module gowin_top_soc (
+module gowin_top_soc #(
+    parameter USE_ADXL345 = 1,  // 1: Live ADXL345 SPI Mode (3.2 kHz), 0: HIL / 12kHz Mode
+    parameter WEIGHT_FILE_BANK0 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank0.hex" : "roms/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank1.hex" : "roms/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank2.hex" : "roms/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank3.hex" : "roms/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank4.hex" : "roms/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank5.hex" : "roms/npu_weights_bank5.hex"
+)(
     input  wire                 clk_100m,         // 100 MHz On-Board Oscillator
     input  wire                 rst_n_pin,        // Active-Low Reset Pushbutton
     
-    // Physical Sensor Interface (ST IIS3DWB Acceleration Ingest)
-    input  wire                 sensor_sample_en, // 13.333 kHz Sample Strobe
+    // Physical ADXL345 / GY-291 SPI Interface (PMOD0 Header J3)
+    output wire                 adxl_cs_n,        // Chip Select (Pin 1)
+    output wire                 adxl_sclk,        // 5.0 MHz SPI Clock (Pin 4)
+    output wire                 adxl_mosi,        // MOSI (SDA/SDI Pin 2)
+    input  wire                 adxl_miso,        // MISO (SDO Pin 3)
+    input  wire                 adxl_int1,        // DATA_READY Strobe (Pin 7)
+    
+    // Optional Fallback / External Ingest Interface (HIL Streamer / CWRU 12kHz)
+    input  wire                 sensor_sample_en, // 12.0/13.333 kHz Sample Strobe
     input  wire signed [15:0]   sensor_data_in,   // 16-bit Raw Acceleration Sample
     
     // External Tachometer & Telemetry Inputs
@@ -51,23 +66,67 @@ module gowin_top_soc (
     end
 
     // =========================================================================
-    // 2. Stage 1 DSP: 32-Tap Causal Min-Phase FIR Bandpass Filter (2 - 5 kHz)
+    // 2. Stage 1 DSP: ADXL345 Master Ingest & 32-Tap Causal Min-Phase FIR
     // =========================================================================
+    wire signed [15:0] adxl_x, adxl_y, adxl_z;
+    wire               adxl_sample_valid;
+    wire               adxl_ready;
+
+    adxl345_spi_master #(
+        .CLK_FREQ_HZ (100_000_000),
+        .SPI_SCLK_HZ (5_000_000),
+        .DATA_WIDTH  (16)
+    ) u_adxl_master (
+        .clk          (clk_100m),
+        .rst_n        (rst_n_pin),
+        .spi_cs_n     (adxl_cs_n),
+        .spi_sclk     (adxl_sclk),
+        .spi_mosi     (adxl_mosi),
+        .spi_miso     (adxl_miso),
+        .adxl_int1    (adxl_int1),
+        .accel_x      (adxl_x),
+        .accel_y      (adxl_y),
+        .accel_z      (adxl_z),
+        .sample_valid (adxl_sample_valid),
+        .ready        (adxl_ready)
+    );
+
+    // Mux input source based on mode
+    wire signed [15:0] sample_in = USE_ADXL345 ? adxl_z : sensor_data_in;
+    wire               sample_strobe = USE_ADXL345 ? adxl_sample_valid : sensor_sample_en;
+
     wire signed [15:0] fir_out;
     wire               fir_valid;
 
-    fir_minphase_32 #(
-        .DATA_WIDTH  (16),
-        .COEFF_WIDTH (16),
-        .TAPS        (32)
-    ) u_fir (
-        .clk        (clk_100m),
-        .rst_n      (rst_n_pin),
-        .sample_en  (sensor_sample_en),
-        .x_in       (sensor_data_in),
-        .y_out      (fir_out),
-        .valid_out  (fir_valid)
-    );
+    generate
+        if (USE_ADXL345) begin: gen_adxl_fir
+            fir_adxl345_32 #(
+                .DATA_WIDTH  (16),
+                .COEFF_WIDTH (16),
+                .TAPS        (32)
+            ) u_fir_adxl (
+                .clk        (clk_100m),
+                .rst_n      (rst_n_pin),
+                .sample_en  (sample_strobe),
+                .x_in       (sample_in),
+                .y_out      (fir_out),
+                .valid_out  (fir_valid)
+            );
+        end else begin: gen_legacy_fir
+            fir_minphase_32 #(
+                .DATA_WIDTH  (16),
+                .COEFF_WIDTH (16),
+                .TAPS        (32)
+            ) u_fir_legacy (
+                .clk        (clk_100m),
+                .rst_n      (rst_n_pin),
+                .sample_en  (sample_strobe),
+                .x_in       (sample_in),
+                .y_out      (fir_out),
+                .valid_out  (fir_valid)
+            );
+        end
+    endgenerate
 
     // =========================================================================
     // 3. Stage 2 DSP: Causal Envelope Demodulator (Rectifier + IIR LPF)
@@ -103,12 +162,12 @@ module gowin_top_soc (
     wire                npu_ood_alert;
 
     npu_12way_core #(
-        .WEIGHT_FILE_BANK0 ("roms/npu_weights_bank0.hex"),
-        .WEIGHT_FILE_BANK1 ("roms/npu_weights_bank1.hex"),
-        .WEIGHT_FILE_BANK2 ("roms/npu_weights_bank2.hex"),
-        .WEIGHT_FILE_BANK3 ("roms/npu_weights_bank3.hex"),
-        .WEIGHT_FILE_BANK4 ("roms/npu_weights_bank4.hex"),
-        .WEIGHT_FILE_BANK5 ("roms/npu_weights_bank5.hex")
+        .WEIGHT_FILE_BANK0 (WEIGHT_FILE_BANK0),
+        .WEIGHT_FILE_BANK1 (WEIGHT_FILE_BANK1),
+        .WEIGHT_FILE_BANK2 (WEIGHT_FILE_BANK2),
+        .WEIGHT_FILE_BANK3 (WEIGHT_FILE_BANK3),
+        .WEIGHT_FILE_BANK4 (WEIGHT_FILE_BANK4),
+        .WEIGHT_FILE_BANK5 (WEIGHT_FILE_BANK5)
     ) u_npu (
         .clk             (clk_100m),
         .rst_n           (rst_n_pin),
