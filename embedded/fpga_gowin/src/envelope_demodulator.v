@@ -10,11 +10,12 @@
 `timescale 1ns / 1ps
 
 module envelope_demodulator #(
-    parameter WIDTH = 16
+    parameter WIDTH        = 16,
+    parameter USE_ADXL345  = 1   // 1: ADXL345 (Fc=400Hz @ Fs=3.2kHz), 0: HIL (Fc=1000Hz @ Fs=13.333kHz)
 )(
     input  wire                          clk,        // 50 MHz / 100 MHz System Clock
     input  wire                          rst_n,      // Synchronous Active-Low Reset
-    input  wire                          sample_en,  // 13.333 kHz Sample Strobe
+    input  wire                          sample_en,  // Sample Strobe (3.2 kHz or 13.333 kHz)
     input  wire signed [WIDTH-1:0]       y_filtered, // Bandpass Filtered Sample
     output reg  signed [WIDTH-1:0]       env_out,    // Demodulated Baseband Envelope
     output reg                           valid_out   // Output Valid Strobe
@@ -23,13 +24,15 @@ module envelope_demodulator #(
     // Step 1: Full-Wave Absolute Value Rectification
     wire signed [WIDTH-1:0] v_rect = (y_filtered < 0) ? -y_filtered : y_filtered;
 
-    // Fixed-Point Butterworth 2nd-Order LPF Coefficients (Fc = 1000 Hz @ Fs = 13.333 kHz)
-    // Scaled in Q1.15 Format
-    localparam signed [15:0] B0 = 16'sh08A4; // ~0.067455
-    localparam signed [15:0] B1 = 16'sh1148; // ~0.134911
-    localparam signed [15:0] B2 = 16'sh08A4; // ~0.067455
-    localparam signed [15:0] A1 = 16'sh96E8; // -1.142981
-    localparam signed [15:0] A2 = 16'sh34B2; //  0.412802
+    // Fixed-Point Butterworth 2nd-Order LPF Coefficients Scaled in Q1.15 Format
+    // Dual-Mode Selection:
+    //   Mode 1 (USE_ADXL345 = 1): Fc = 400 Hz  @ Fs = 3,200 Hz (Motor 130 Bearing Profile)
+    //   Mode 2 (USE_ADXL345 = 0): Fc = 1000 Hz @ Fs = 13,333 Hz (Industrial CWRU / HIL Profile)
+    localparam signed [15:0] B0 = USE_ADXL345 ? 16'sh0C7F : 16'sh08A4; // ~0.097631 vs ~0.067455
+    localparam signed [15:0] B1 = USE_ADXL345 ? 16'sh18FE : 16'sh1148; // ~0.195262 vs ~0.134911
+    localparam signed [15:0] B2 = USE_ADXL345 ? 16'sh0C7F : 16'sh08A4; // ~0.097631 vs ~0.067455
+    localparam signed [15:0] A1 = USE_ADXL345 ? 16'sh8752 : 16'sh96E8; // -0.942809 vs -1.142981
+    localparam signed [15:0] A2 = USE_ADXL345 ? 16'sh2AAB : 16'sh34B2; //  0.333333 vs  0.412802
 
     reg signed [WIDTH-1:0] v_z1, v_z2;
     reg signed [WIDTH-1:0] e_z1, e_z2;

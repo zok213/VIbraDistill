@@ -162,14 +162,26 @@ def forward_c_engine(pkg, spectrum_int8, prior_4):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Verify MCU C-Engine bit-true parity vs NPU emulator")
+    parser.add_argument('--checkpoint', type=str, default='checkpoints/student_qat_adxl345/best_qat.pt', help="Path to QAT checkpoint")
+    parser.add_argument('--sensor_type', type=str, default='auto', choices=['auto', 'adxl345', 'iis3dwb'], help="Sensor profile")
     parser.add_argument('--max_samples', type=int, default=256, help="Max samples to verify (0 for full set)")
     args = parser.parse_args()
 
+    ckpt_path = args.checkpoint
+    if not os.path.exists(ckpt_path):
+        fallback = 'checkpoints/student_qat/best_qat.pt'
+        if os.path.exists(fallback):
+            ckpt_path = fallback
+
+    is_adxl = (args.sensor_type == 'adxl345') or ('adxl345' in ckpt_path.lower())
+    sensor_name = 'adxl345' if is_adxl else 'iis3dwb'
+    fs_val = 3200.0 if is_adxl else 12000.0
+
     print("=" * 70)
-    print("VERIFYING MCU C-ENGINE VS FPGA NPU EMULATOR BIT-TRUE PARITY")
+    print(f"VERIFYING MCU C-ENGINE VS FPGA NPU EMULATOR BIT-TRUE PARITY")
+    print(f"Checkpoint: {ckpt_path} | Profile: {sensor_name.upper()} (Fs={fs_val} Hz)")
     print("=" * 70)
     
-    ckpt_path = 'checkpoints/student_qat/best_qat.pt'
     ck = torch.load(ckpt_path, map_location='cpu')
     base = VibraDistillMicro()
     folded_base = fold_batchnorm_micro(base)
@@ -178,7 +190,13 @@ def main():
     folded = qat.export_folded()
     pkg = quantize_model_symmetric_int8(folded, act_ranges=ck['act_ranges'])
     
-    L = get_cwru_dataloaders('data/CWRU_Dataset', batch_size=128, use_augmentation=False)
+    L = get_cwru_dataloaders(
+        'data/CWRU_Dataset',
+        batch_size=128,
+        sensor_type=sensor_name,
+        fs=fs_val,
+        use_augmentation=False
+    )
     emulator = GowinNPU12WayEmulator()
     
     total_samples = 0

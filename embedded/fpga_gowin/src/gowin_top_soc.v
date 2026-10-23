@@ -135,7 +135,8 @@ module gowin_top_soc #(
     wire               env_valid;
 
     envelope_demodulator #(
-        .WIDTH (16)
+        .WIDTH        (16),
+        .USE_ADXL345  (USE_ADXL345)
     ) u_envelope (
         .clk        (clk_100m),
         .rst_n      (rst_n_pin),
