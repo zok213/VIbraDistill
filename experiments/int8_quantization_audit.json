@@ -1,0 +1,45 @@
+{
+  "task_id": "T03-04",
+  "model": "VibraDistillMicro (DKD INT8 QAT)",
+  "parameter_count": 8677,
+  "total_int8_weight_bytes": 7880,
+  "bsram_banks": 6,
+  "bsram_words_16bit": 3940,
+  "bsram_capacity_kb": 7.6953125,
+  "validation_accuracy_pct": 98.85,
+  "validation_macro_f1_pct": 98.49,
+  "f1_degradation_vs_fp32_pct": 0.31,
+  "dod_satisfied": true,
+  "banks": {
+    "bank_0": {
+      "file": "npu_weights_bank0.hex",
+      "words_16bit": 657,
+      "bytes": 1314
+    },
+    "bank_1": {
+      "file": "npu_weights_bank1.hex",
+      "words_16bit": 657,
+      "bytes": 1314
+    },
+    "bank_2": {
+      "file": "npu_weights_bank2.hex",
+      "words_16bit": 657,
+      "bytes": 1314
+    },
+    "bank_3": {
+      "file": "npu_weights_bank3.hex",
+      "words_16bit": 657,
+      "bytes": 1314
+    },
+    "bank_4": {
+      "file": "npu_weights_bank4.hex",
+      "words_16bit": 657,
+      "bytes": 1314
+    },
+    "bank_5": {
+      "file": "npu_weights_bank5.hex",
+      "words_16bit": 655,
+      "bytes": 1310
+    }
+  }
+}
