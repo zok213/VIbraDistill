@@ -8,12 +8,20 @@ import numpy as np
 import scipy.signal as signal
 from scipy.fft import fft, ifft
 
-# Exact 32 Q1.15 coefficients from Gowin RTL `fir_minphase_32.v`
+# Exact 32 Q1.15 coefficients from Gowin RTL `fir_minphase_32.v` (IIS3DWB / CWRU 12.0 kHz / 13.333 kHz)
 RTL_HEX_COEFFS = [
     0x0824, 0x0AB1, 0x0F3A, 0x14C2, 0x198D, 0x1C76, 0x1C2A, 0x17B3,
     0x0EE4, 0x02EE, 0xF4BE, 0xE689, 0xDA62, 0xD21E, 0xCEEE, 0xD2DE,
     0xDDDE, 0xEE1C, 0x015E, 0x1476, 0x2431, 0x2DCA, 0x2EEA, 0x27B8,
     0x18CE, 0x04DE, 0xEF2A, 0xDBA2, 0xCCC2, 0xC514, 0xC6AE, 0xD0B8
+]
+
+# Exact 32 Q1.15 coefficients for ADXL345 (Fs = 3,200 Hz, Passband 280 - 1400 Hz, Group Delay 2.76 samples)
+RTL_ADXL345_HEX_COEFFS = [
+    0x1FEB, 0xF4F3, 0xB3D6, 0x16F9, 0x216F, 0x03AB, 0x1BEF, 0xF030,
+    0xFF65, 0xF182, 0xF302, 0x0067, 0xF787, 0x0C3B, 0xFFD1, 0x0BD8,
+    0x030B, 0x027D, 0x0179, 0xF98E, 0xFF9D, 0xF791, 0x0011, 0xFBFB,
+    0x01B5, 0x01AF, 0x021B, 0x0435, 0x0081, 0x02E9, 0xFE5C, 0x002F
 ]
 
 def _hex_to_signed16(val):
@@ -23,6 +31,9 @@ def _hex_to_signed16(val):
 
 RTL_FIR_COEFFS_INT16 = np.array([_hex_to_signed16(h) for h in RTL_HEX_COEFFS], dtype=np.int16)
 RTL_FIR_COEFFS_Q15 = RTL_FIR_COEFFS_INT16.astype(np.float32) / 32768.0
+
+RTL_ADXL345_FIR_COEFFS_INT16 = np.array([_hex_to_signed16(h) for h in RTL_ADXL345_HEX_COEFFS], dtype=np.int16)
+RTL_ADXL345_FIR_COEFFS_Q15 = RTL_ADXL345_FIR_COEFFS_INT16.astype(np.float32) / 32768.0
 
 def design_minimum_phase_fir(num_taps=32, passband=(2000, 5000), fs=12000):
     """
@@ -74,14 +85,21 @@ class CausalFIRFilter:
     """
     Streaming Causal FIR Filter with persistent internal delay line state.
     Matches Gowin FPGA 4-MAC folded architecture delay line bit-for-bit.
+    Supports both IIS3DWB (Fs=12k/13.33k) and ADXL345 (Fs=3.2k) hardware profiles.
     """
-    def __init__(self, coeffs=None, use_rtl_coeffs=True, num_taps=32, fs=12000):
+    def __init__(self, coeffs=None, use_rtl_coeffs=True, num_taps=32, fs=12000, sensor_type='auto'):
         if coeffs is not None:
             self.coeffs = np.array(coeffs, dtype=np.float32)
         elif use_rtl_coeffs:
-            self.coeffs = RTL_FIR_COEFFS_Q15.copy()
+            if sensor_type == 'adxl345' or (sensor_type == 'auto' and abs(fs - 3200.0) < 100.0):
+                self.coeffs = RTL_ADXL345_FIR_COEFFS_Q15.copy()
+            else:
+                self.coeffs = RTL_FIR_COEFFS_Q15.copy()
         else:
-            self.coeffs = design_minimum_phase_fir(num_taps=num_taps, fs=fs)
+            if sensor_type == 'adxl345' or abs(fs - 3200.0) < 100.0:
+                self.coeffs = design_minimum_phase_fir(num_taps=num_taps, passband=(300, 1350), fs=fs)
+            else:
+                self.coeffs = design_minimum_phase_fir(num_taps=num_taps, passband=(2000, 5000), fs=fs)
             
         self.num_taps = len(self.coeffs)
         self.reset()

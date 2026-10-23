@@ -39,7 +39,8 @@ class CWRUBearingDataset(Dataset):
     def __init__(self, data_dir: str, split: str = 'train', 
                  window_size: int = 512, train_stride: int = 256, test_stride: int = 512,
                  val_ratio: float = 0.2, seed: int = 42,
-                 transform=None, cache_dir: str = None, force_recompute: bool = False):
+                 transform=None, cache_dir: str = None, force_recompute: bool = False,
+                 sensor_type: str = 'auto', fs: float = None):
         super(CWRUBearingDataset, self).__init__()
         self.data_dir = os.path.abspath(data_dir)
         self.split = split.lower()
@@ -49,13 +50,20 @@ class CWRUBearingDataset(Dataset):
         self.val_ratio = val_ratio
         self.seed = seed
         self.transform = transform
+        self.sensor_type = sensor_type
         
-        self.dsp = StreamingDSPPipeline(fs=12000.0, window_size=window_size)
+        if fs is not None:
+            self.fs = float(fs)
+        else:
+            self.fs = 3200.0 if sensor_type == 'adxl345' else 12000.0
+        
+        self.dsp = StreamingDSPPipeline(fs=self.fs, window_size=window_size, sensor_type=self.sensor_type)
         
         # Check cache
         if cache_dir is not None:
             os.makedirs(cache_dir, exist_ok=True)
-            cache_file = os.path.join(cache_dir, f"cwru_{self.split}_w{window_size}.pt")
+            sensor_tag = f"_{sensor_type}" if sensor_type in ['adxl345', 'iis3dwb'] else ("_adxl345" if abs(self.fs - 3200.0) < 100.0 else "")
+            cache_file = os.path.join(cache_dir, f"cwru_{self.split}{sensor_tag}_w{window_size}.pt")
         else:
             cache_file = None
             
@@ -207,6 +215,11 @@ class CWRUBearingDataset(Dataset):
                 continue
             raw_sig = mat[de_keys[0]].flatten().astype(np.float32)
             
+            # If target sensor is ADXL345 (Fs = 3,200 Hz), downsample from 12.0 kHz using polyphase anti-aliasing filter
+            if self.sensor_type == 'adxl345' or abs(self.fs - 3200.0) < 100.0:
+                import scipy.signal as signal
+                raw_sig = signal.resample_poly(raw_sig, up=4, down=15).astype(np.float32)
+            
             # Extract actual RPM if recorded in mat
             rpm_keys = [k for k in mat.keys() if 'RPM' in k.upper()]
             if rpm_keys:
@@ -280,13 +293,18 @@ class CWRUBearingDataset(Dataset):
 
 def get_cwru_dataloaders(data_dir: str, batch_size: int = 64, num_workers: int = 0,
                          cache_dir: str = None, use_augmentation: bool = True,
-                         protocol: str = 'cross_severity'):
+                         protocol: str = 'cross_severity',
+                         sensor_type: str = 'auto', fs: float = None):
     """
     Factory function returning production-grade Zero-Leakage DataLoaders.
     
     Protocols:
       - 'cross_severity' (default): Incipient damage holdout (Train 7-mil -> Test 14-mil, 21-mil).
       - 'cross_load': Canonical Industrial Benchmark (Train Loads 0, 1, 2 HP -> Test Load 3 HP).
+    
+    Hardware Profiles:
+      - sensor_type='auto' / 'iis3dwb': Fs = 12.0 kHz / 13.333 kHz
+      - sensor_type='adxl345': Fs = 3,200 Hz with polyphase decimation & 32-tap ADXL345 FIR
     """
     train_transform = None
     if use_augmentation:
@@ -297,9 +315,9 @@ def get_cwru_dataloaders(data_dir: str, batch_size: int = 64, num_workers: int =
         ])
         
     if protocol == 'cross_load':
-        train_set = CWRUBearingDataset(data_dir, split='cross_load_train', transform=train_transform, cache_dir=cache_dir)
-        val_set = CWRUBearingDataset(data_dir, split='cross_load_val', transform=None, cache_dir=cache_dir)
-        test_set = CWRUBearingDataset(data_dir, split='cross_load_test', transform=None, cache_dir=cache_dir)
+        train_set = CWRUBearingDataset(data_dir, split='cross_load_train', transform=train_transform, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
+        val_set = CWRUBearingDataset(data_dir, split='cross_load_val', transform=None, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
+        test_set = CWRUBearingDataset(data_dir, split='cross_load_test', transform=None, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
         return {
             'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers),
             'val': DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=num_workers),
@@ -312,11 +330,11 @@ def get_cwru_dataloaders(data_dir: str, batch_size: int = 64, num_workers: int =
             }
         }
 
-    train_set = CWRUBearingDataset(data_dir, split='train', transform=train_transform, cache_dir=cache_dir)
-    val_set = CWRUBearingDataset(data_dir, split='val', transform=None, cache_dir=cache_dir)
-    test_14_set = CWRUBearingDataset(data_dir, split='test_14mil', transform=None, cache_dir=cache_dir)
-    test_21_set = CWRUBearingDataset(data_dir, split='test_21mil', transform=None, cache_dir=cache_dir)
-    test_all_set = CWRUBearingDataset(data_dir, split='test_all', transform=None, cache_dir=cache_dir)
+    train_set = CWRUBearingDataset(data_dir, split='train', transform=train_transform, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
+    val_set = CWRUBearingDataset(data_dir, split='val', transform=None, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
+    test_14_set = CWRUBearingDataset(data_dir, split='test_14mil', transform=None, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
+    test_21_set = CWRUBearingDataset(data_dir, split='test_21mil', transform=None, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
+    test_all_set = CWRUBearingDataset(data_dir, split='test_all', transform=None, cache_dir=cache_dir, sensor_type=sensor_type, fs=fs)
     
     return {
         'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers),

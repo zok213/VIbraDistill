@@ -16,25 +16,58 @@
 
 > [!IMPORTANT]
 > **XÁC NHẬN ĐỒNG NHẤT 100% PHẦN MỀM AI & PHẦN CỨNG FPGA (ZERO MISMATCH):**  
-> **CÓ! Mô hình AI (cả Teacher ResNet-18 và Student VibraDistillMicro) HOÀN TOÀN ĐÃ ĐƯỢC HUẤN LUYỆN TRÊN DỮ LIỆU ĐÃ QUA BỘ LỌC FIR NÀY.**  
-> Trong toàn bộ pipeline tiền xử lý tại [`src/dsp/pipeline.py`](file:///d:/Gitrepo/VIbraDistill/src/dsp/pipeline.py), cờ mặc định luôn là `use_rtl_coeffs=True`. Mọi mẫu rung trước khi tính FFT 512-point và nạp vào NPU đều đã chạy qua đúng 32 hệ số Q1.15 này. Do đó, **không hề có bất kỳ độ lệch phân phối (Domain Mismatch) nào giữa mô hình AI trên Python và RTL trên vi mạch Gowin FPGA!**
+> **CÓ! Toàn bộ mô hình AI (cả Teacher ResNet-18 và Student VibraDistillMicro) HOÀN TOÀN ĐÃ ĐƯỢC HUẤN LUYỆN TRÊN DỮ LIỆU ĐÃ QUA BỘ LỌC FIR TƯƠNG ỨNG.**  
+> Để đáp ứng hoàn hảo cả việc **Demo phần cứng trực tiếp tại bàn thi (cảm biến thật ADXL345)** và **Kiểm thử công nghiệp chuẩn quốc tế (HIL Streamer / CWRU / PRONOSTIA)**, hệ thống hỗ trợ 2 cấu hình vi mạch bit-true song song:
 
-* **Kiểu bộ lọc (Filter Topology):** Causal Minimum-Phase Bandpass FIR Filter (32-tap).
-* **Tên khối RTL trên FPGA:** [`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v)
-* **Mã nguồn mô phỏng Python:** [`src/dsp/causal_fir.py`](file:///d:/Gitrepo/VIbraDistill/src/dsp/causal_fir.py) (class `CausalFIRFilter`)
-* **Dải thông (Passband):** **$2,000\,\text{Hz} - 5,000\,\text{Hz}$** (Dải tần số sóng mang cộng hưởng hỏng hóc vòng bi công nghiệp).
-* **Tần số lấy mẫu thiết kế ($F_s$):** **$12.0\,\text{kHz}$** (trên CWRU) / **$13.333\,\text{kHz}$** (trên ST IIS3DWB decimate /2) / **$3.2\,\text{kHz}$** (trên ADXL345).
-* **Độ suy hao dải chắn (Stopband Attenuation):** **$> 35\,\text{dB}$** tại $f < 1,700\,\text{Hz}$ và $f > 5,500\,\text{Hz}$.
-* **Độ trễ nhóm hiệu dụng (Group Delay):** Giảm từ **$15.5$ mẫu** (của Linear-Phase) xuống chỉ còn **$3.2$ mẫu** nhờ thuật toán phản chiếu nghiệm Cepstral (Homomorphic Cepstral Reflection), triệt tiêu hoàn toàn sóng gợn Gibbs trước xung kích (pre-cursor ringing).
-* **Kiến trúc RTL trên FPGA Gowin Tang Primer 20K:** 4 bộ nhân nhân chập thời gian (4-Multiplier Time-Multiplexed Folded MAC Engine), hoàn thành toàn bộ 32 taps trong đúng **8 chu kỳ xung nhịp 100 MHz ($80\,\text{ns}$)**.
+### 1. Cấu Hình 1: Cảm Biến Thực Tế ADXL345 ($F_s = 3,200\,\text{Hz}$ - Khuyên Dùng Tại Bàn Demo)
+* **Đối tượng đo đạc:** Động cơ DC mini 130 ($900 - 2,000\,\text{RPM}$, $f_r = 15 - 33.3\,\text{Hz}$) + Vòng bi 608ZZ/623ZZ.
+* **Tên khối RTL trên FPGA:** [`fir_adxl345_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_adxl345_32.v)
+* **Kiểu bộ lọc:** Causal Minimum-Phase Bandpass FIR Filter (32-tap).
+* **Tần số lấy mẫu:** $F_s = 3,200\,\text{Hz}$ (ADXL345 SPI full resolution, $f_\text{Nyquist} = 1,600\,\text{Hz}$).
+* **Dải thông (Passband):** **$280\,\text{Hz} - 1,400\,\text{Hz}$** (Bắt trọn từ hài bậc 3 đến bậc 10 của BPFI $142.2\,\text{Hz}$ và cộng hưởng cơ khí gá motor).
+* **Độ trễ nhóm hiệu dụng (Group Delay):** Chỉ **$2.76$ mẫu** ($0.86\,\text{ms}$), triệt tiêu hoàn toàn sóng gợn Gibbs trước va đập.
+* **Độ suy hao dải chắn:** $> 30\,\text{dB}$ tại $60\,\text{Hz}$ (khử rung lệch tâm trục & nhiễu điện lưới 50/60Hz); $> 40\,\text{dB}$ tại $1,550\,\text{Hz}$ (chống méo chồng phổ Nyquist).
+* **Trọng số NPU FPGA:** [`embedded/fpga_gowin/roms/npu_weights_adxl345_int8.mem`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/npu_weights_adxl345_int8.mem) (7,880 Bytes, 6 BSRAMs).
+* **Header MCU Cortex-M0:** [`embedded/mcu_sonix/app/vibradistill_adxl345_weights.h`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_adxl345_weights.h).
+* **Notebook Huấn Luyện Kaggle Dual-T4:** [`notebooks/VibraDistill_ADXL345_Kaggle_Dual_T4.ipynb`](file:///d:/Gitrepo/VIbraDistill/notebooks/VibraDistill_ADXL345_Kaggle_Dual_T4.ipynb).
+* **Script Chạy Trực Tiếp Local:** `python scripts/train_adxl345_native.py`.
+
+### 2. Cấu Hình 2: Dữ Liệu Công Nghiệp HIL Streamer ($F_s = 12.0\,\text{kHz} / 13.333\,\text{kHz}$)
+* **Đối tượng đo đạc:** Vòng bi công nghiệp hạng nặng CWRU 6205-2RS (1797 RPM, 2 HP) & PRONOSTIA (FEMTO-ST).
+* **Tên khối RTL trên FPGA:** [`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v).
+* **Dải thông (Passband):** **$2,000\,\text{Hz} - 5,000\,\text{Hz}$** (Dải sóng mang cộng hưởng khung máy công nghiệp).
+* **Độ trễ nhóm:** **$3.2$ mẫu** ($0.27\,\text{ms}$).
+* **Trọng số NPU FPGA:** [`embedded/fpga_gowin/roms/npu_weights_int8.mem`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/npu_weights_int8.mem).
+* **Header MCU Cortex-M0:** [`embedded/mcu_sonix/app/vibradistill_weights.h`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_weights.h).
 
 ---
 
-## II. BẢNG TOÀN BỘ 32 HỆ SỐ BIT-TRUE ĐỂ TÁI TẠO TRÊN FPGA (Q1.15)
+## II. BẢNG 32 HỆ SỐ BIT-TRUE CHO TỪNG CẤU HÌNH PHẦN CỨNG (Q1.15)
 
-Dưới đây là trọn vẹn 32 hệ số dạng nhị phân bù hai 16-bit (Q1.15) khớp tuyệt đối giữa Python và Verilog:
+### 1. Bảng Hệ Số Cấu Hình ADXL345 ($F_s = 3,200\,\text{Hz}$, Passband $280 - 1400\,\text{Hz}$)
 
-| Tap Index | Mã Hex Verilog | Giá Trị Signed INT16 | Giá Trị Thực Q1.15 ($h_i / 32768$) | Tap Index | Mã Hex Verilog | Giá Trị Signed INT16 | Giá Trị Thực Q1.15 ($h_i / 32768$) |
+| Tap | Mã Hex | Signed INT16 | Giá Trị Q1.15 | Tap | Mã Hex | Signed INT16 | Giá Trị Q1.15 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `h[0]` | `16'sh1FEB` | `+8171` | `+0.249359` | `h[16]` | `16'sh030B` | `+779` | `+0.023773` |
+| `h[1]` | `16'shF4F3` | `-2829` | `-0.086334` | `h[17]` | `16'sh027D` | `+637` | `+0.019440` |
+| `h[2]` | `16'shB3D6` | `-19500`| `-0.595093` | `h[18]` | `16'sh0179` | `+377` | `+0.011505` |
+| `h[3]` | `16'sh16F9` | `+5881` | `+0.179474` | `h[19]` | `16'shF98E` | `-1650` | `-0.050354` |
+| `h[4]` | `16'sh216F` | `+8559` | `+0.261200` | `h[20]` | `16'shFF9D` | `-99`   | `-0.003021` |
+| `h[5]` | `16'sh03AB` | `+939`  | `+0.028656` | `h[21]` | `16'shF791` | `-2159` | `-0.065887` |
+| `h[6]` | `16'sh1BEF` | `+7151` | `+0.218231` | `h[22]` | `16'sh0011` | `+17`   | `+0.000519` |
+| `h[7]` | `16'shF030` | `-4048` | `-0.123535` | `h[23]` | `16'shFBFB` | `-1029` | `-0.031403` |
+| `h[8]` | `16'shFF65` | `-155`  | `-0.004730` | `h[24]` | `16'sh01B5` | `+437`  | `+0.013336` |
+| `h[9]` | `16'shF182` | `-3710` | `-0.113220` | `h[25]` | `16'sh01AF` | `+431`  | `+0.013153` |
+| `h[10]`| `16'shF302` | `-3326` | `-0.101501` | `h[26]` | `16'sh021B` | `+539`  | `+0.016449` |
+| `h[11]`| `16'sh0067` | `+103`  | `+0.003143` | `h[27]` | `16'sh0435` | `+1077` | `+0.032867` |
+| `h[12]`| `16'shF787` | `-2169` | `-0.066193` | `h[28]` | `16'sh0081` | `+129`  | `+0.003937` |
+| `h[13]`| `16'sh0C3B` | `+3131` | `+0.095551` | `h[29]` | `16'sh02E9` | `+745`  | `+0.022736` |
+| `h[14]`| `16'shFFD1` | `-47`   | `-0.001434` | `h[30]` | `16'shFE5C` | `-420`  | `-0.012817` |
+| `h[15]`| `16'sh0BD8` | `+3032` | `+0.092529` | `h[31]` | `16'sh002F` | `+47`   | `+0.001434` |
+
+### 2. Bảng Hệ Số Cấu Hình HIL / Công Nghiệp ($F_s = 12.0\,\text{kHz}$, Passband $2000 - 5000\,\text{Hz}$)
+
+| Tap | Mã Hex | Signed INT16 | Giá Trị Q1.15 | Tap | Mã Hex | Signed INT16 | Giá Trị Q1.15 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | `h[0]` | `16'sh0824` | `+2084` | `+0.063599` | `h[16]` | `16'shDDDE` | `-8738` | `-0.266663` |
 | `h[1]` | `16'sh0AB1` | `+2737` | `+0.083527` | `h[17]` | `16'shEE1C` | `-4580` | `-0.139771` |
@@ -46,21 +79,42 @@ Dưới đây là trọn vẹn 32 hệ số dạng nhị phân bù hai 16-bit (Q
 | `h[7]` | `16'sh17B3` | `+6067` | `+0.185150` | `h[23]` | `16'sh27B8` | `+10168` | `+0.310303` |
 | `h[8]` | `16'sh0EE4` | `+3812` | `+0.116333` | `h[24]` | `16'sh18CE` | `+6350` | `+0.193787` |
 | `h[9]` | `16'sh02EE` | `+750` | `+0.022888` | `h[25]` | `16'sh04DE` | `+1246` | `+0.038025` |
-| `h[10]` | `16'shF4BE` | `-2882` | `-0.087952` | `h[26]` | `16'shEF2A` | `-4310` | `-0.131531` |
-| `h[11]` | `16'shE689` | `-6519` | `-0.198944` | `h[27]` | `16'shDBA2` | `-9310` | `-0.284119` |
-| `h[12]` | `16'shDA62` | `-9630` | `-0.293884` | `h[28]` | `16'shCCC2` | `-13118` | `-0.400330` |
-| `h[13]` | `16'shD21E` | `-11746` | `-0.358459` | `h[29]` | `16'shC514` | `-15084` | `-0.460327` |
-| `h[14]` | `16'shCEEE` | `-12562` | `-0.383362` | `h[30]` | `16'shC6AE` | `-14674` | `-0.447815` |
-| `h[15]` | `16'shD2DE` | `-11554` | `-0.352599` | `h[31]` | `16'shD0B8` | `-12104` | `-0.369385` |
+| `h[10]`| `16'shF4BE` | `-2882` | `-0.087952` | `h[26]` | `16'shEF2A` | `-4310` | `-0.131531` |
+| `h[11]`| `16'shE689` | `-6519` | `-0.198944` | `h[27]` | `16'shDBA2` | `-9310` | `-0.284119` |
+| `h[12]`| `16'shDA62` | `-9630` | `-0.293884` | `h[28]` | `16'shCCC2` | `-13118` | `-0.400330` |
+| `h[13]`| `16'shD21E` | `-11746` | `-0.358459` | `h[29]` | `16'shC514` | `-15084` | `-0.460327` |
+| `h[14]`| `16'shCEEE` | `-12562` | `-0.383362` | `h[30]` | `16'shC6AE` | `-14674` | `-0.447815` |
+| `h[15]`| `16'shD2DE` | `-11554` | `-0.352599` | `h[31]` | `16'shD0B8` | `-12104` | `-0.369385` |
 
 ---
 
 ## III. ĐOẠN CODE VERILOG GÁN TRỰC TIẾP TRÊN PHẦN CỨNG FPGA
 
-Khối RTL [`embedded/fpga_gowin/src/fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v#L33-L49) sử dụng trực tiếp các phép gán sau:
-
+### 1. Cho Khối ADXL345 ([`fir_adxl345_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_adxl345_32.v#L27-L44))
 ```verilog
-    // Minimum-Phase Filter Coefficients in Q1.15 Format (Reflected roots inside unit circle)
+    // ADXL345 Minimum-Phase Filter Coefficients in Q1.15 Format (Fs = 3,200 Hz)
+    wire signed [COEFF_WIDTH-1:0] h [0:TAPS-1];
+    assign h[ 0] = 16'sh1FEB; assign h[ 1] = 16'shF4F3;
+    assign h[ 2] = 16'shB3D6; assign h[ 3] = 16'sh16F9;
+    assign h[ 4] = 16'sh216F; assign h[ 5] = 16'sh03AB;
+    assign h[ 6] = 16'sh1BEF; assign h[ 7] = 16'shF030;
+    assign h[ 8] = 16'shFF65; assign h[ 9] = 16'shF182;
+    assign h[10] = 16'shF302; assign h[11] = 16'sh0067;
+    assign h[12] = 16'shF787; assign h[13] = 16'sh0C3B;
+    assign h[14] = 16'shFFD1; assign h[15] = 16'sh0BD8;
+    assign h[16] = 16'sh030B; assign h[17] = 16'sh027D;
+    assign h[18] = 16'sh0179; assign h[19] = 16'shF98E;
+    assign h[20] = 16'shFF9D; assign h[21] = 16'shF791;
+    assign h[22] = 16'sh0011; assign h[23] = 16'shFBFB;
+    assign h[24] = 16'sh01B5; assign h[25] = 16'sh01AF;
+    assign h[26] = 16'sh021B; assign h[27] = 16'sh0435;
+    assign h[28] = 16'sh0081; assign h[29] = 16'sh02E9;
+    assign h[30] = 16'shFE5C; assign h[31] = 16'sh002F;
+```
+
+### 2. Cho Khối HIL Công Nghiệp ([`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v#L33-L49))
+```verilog
+    // Industrial Minimum-Phase Filter Coefficients in Q1.15 Format (Fs = 12,000 Hz)
     wire signed [COEFF_WIDTH-1:0] h [0:TAPS-1];
     assign h[ 0] = 16'sh0824; assign h[ 1] = 16'sh0AB1;
     assign h[ 2] = 16'sh0F3A; assign h[ 3] = 16'sh14C2;

@@ -16,19 +16,24 @@ from .kinematics import extract_kinematic_energy_prior, SKF6205Geometry
 class StreamingDSPPipeline:
     """
     End-to-End DSP Preprocessing Pipeline bit-faithful to Gowin FPGA RTL.
+    Supports both IIS3DWB (Fs=12k/13.33k) and ADXL345 (Fs=3.2k) hardware profiles.
     """
     def __init__(self, fs=12000.0, window_size=512, fir_taps=32, 
-                 envelope_cutoff=1000.0, use_rtl_coeffs=True,
-                 bearing_geom=SKF6205Geometry):
+                 envelope_cutoff=None, use_rtl_coeffs=True,
+                 bearing_geom=SKF6205Geometry, sensor_type='auto'):
         self.fs = float(fs)
         self.window_size = int(window_size)
         self.bearing_geom = bearing_geom
+        self.sensor_type = sensor_type
+        
+        if envelope_cutoff is None:
+            envelope_cutoff = 400.0 if (sensor_type == 'adxl345' or abs(self.fs - 3200.0) < 100.0) else 1000.0
         
         # Hardware Stage 1: Causal FIR Filter
-        self.fir = CausalFIRFilter(use_rtl_coeffs=use_rtl_coeffs, num_taps=fir_taps, fs=fs)
+        self.fir = CausalFIRFilter(use_rtl_coeffs=use_rtl_coeffs, num_taps=fir_taps, fs=self.fs, sensor_type=sensor_type)
         
         # Hardware Stage 2: Causal Envelope Demodulator
-        self.envelope = CausalEnvelopeDemodulator(fc=envelope_cutoff, fs=fs, use_rtl_coeffs=False)
+        self.envelope = CausalEnvelopeDemodulator(fc=envelope_cutoff, fs=self.fs, use_rtl_coeffs=False)
         
         # Hardware Stage 3: Hann Window (512-point fixed ROM in FPGA)
         self.hann_window = 0.5 * (1.0 - np.cos(2.0 * np.pi * np.arange(self.window_size) / (self.window_size - 1)))
