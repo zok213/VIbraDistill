@@ -12,6 +12,30 @@
 
 ---
 
+## 📌 BẢNG TỔNG HỢP MÔ HÌNH & TRỌNG SỐ CHÍNH THỨC (PRODUCTION MODEL ARTIFACTS INDEX)
+
+> [!IMPORTANT]
+> **TẠI SAO MÔ HÌNH ADXL345 KHÔNG CHỨA DẢI TẦN CAO (> 1.6 kHz) VÀ VÌ SAO NẾU CÓ CŨNG KHÔNG CHẠY ĐƯỢC TRÊN PHẦN CỨNG THẬT?**
+> * **Giới hạn vật lý của cảm biến:** Cảm biến ADXL345 tại tốc độ tối đa có tần số lấy mẫu $F_s = 3,200\,\text{Hz}$, do đó giới hạn Shannon-Nyquist vật lý là $F_\text{Nyquist} = 1,600\,\text{Hz}$. Bất kỳ tần số nào $> 1.6\,\text{kHz}$ đều **KHÔNG THỂ LẤY MẪU ĐƯỢC** (sẽ bị biến dạng do răng cưa/aliasing nếu cố thu nhận).
+> * **Sự tương thích đầu vào của NPU (Domain Alignment):** Nếu nạp một mô hình huấn luyện ở tần số cao ($12\,\text{kHz}$ hoặc $25.6\,\text{kHz}$) vào phần cứng ADXL345 thật, các đỉnh va đập cơ học ($BPFI, BPFO$) sẽ bị lệch hoàn toàn bin tần số FFT ($\Delta f$ bị lệch từ $23.44\,\text{Hz}$ sang $6.25\,\text{Hz}$), dẫn đến việc mô hình dự đoán sai lệch 100%.
+> * **Bản chất động lực học Động cơ 130:** Với tốc độ $900 - 2,000\,\text{RPM}$, tần số hỏng hóc lớn nhất ($BPFI$) chỉ là $142.3\,\text{Hz}$. Đến **tận hài bậc 10** ($10 \times BPFI$) cũng chỉ là $1,423\,\text{Hz} < 1,600\,\text{Hz}$. Do đó, dải tần $[0 - 1,600\,\text{Hz}]$ của ADXL345 **thu nạp trọn vẹn 100% động học hỏng hóc của vòng bi mà không cần và không được có tần số cao rác**.
+> * **Chế độ kiểm thử tần số cao (HIL Mode):** Khi cần chứng minh NPU và FPGA xử lý được dải tần cao công nghiệp ($2 - 5\,\text{kHz}$), nhóm kích hoạt **Chế độ 2 (HIL Streamer)** bơm trực tiếp dữ liệu chuẩn CWRU 12 kHz / PRONOSTIA vào khối RTL `fir_minphase_32.v`.
+
+### Bảng Liên Kết Trực Tiếp File Trọng Số & Checkpoint Sản Phẩm:
+
+| Cấu Hình / Phân Hệ | File Trọng Số / Checkpoint Nạp Trực Tiếp | Định Dạng & Dung Lượng | Điểm F1 / Accuracy | Nền Tảng Chạy | Hướng Dẫn Sử Dụng Nhanh |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **FPGA Bit-True ROM (ADXL345)** | [`embedded/fpga_gowin/roms/npu_weights_adxl345_int8.mem`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/npu_weights_adxl345_int8.mem) | Verilog `.mem` (7,880 B) | **91.54%** / 93.85% | Gowin GW2A-18 BRAM | Nạp vào `gowin_top_soc.v` (`USE_ADXL345 = 1`) |
+| **FPGA BSRAM Banks (Bank 0-5)** | [`embedded/fpga_gowin/roms/adxl345/`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345) | 6 Bank `.hex` & `.mi` | Bit-True INT8 | Gowin EDA Block RAM | Load trực tiếp vào 6 khối BSRAM độc lập |
+| **MCU Sonix C Header (ADXL345)**| [`embedded/mcu_sonix/app/vibradistill_adxl345_weights.h`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_adxl345_weights.h) | ANSI C Header | Khớp 100% bit RTL | Cortex-M0 @ 60 MHz | `#include` trực tiếp trong Keil MDK-ARM |
+| **Student INT8 QAT PyTorch** | [`checkpoints/student_qat_adxl345/best_qat.pt`](file:///d:/Gitrepo/VIbraDistill/checkpoints/student_qat_adxl345/best_qat.pt) | PyTorch Checkpoint (39.9 KB) | **91.81%** (FakeQuant) | Python / Edge NPU | Dùng cho inference & audit bit-true |
+| **Student DKD PyTorch** | [`checkpoints/student_dkd_adxl345/best_student_dkd.pt`](file:///d:/Gitrepo/VIbraDistill/checkpoints/student_dkd_adxl345/best_student_dkd.pt) | PyTorch Checkpoint (45.0 KB) | **92.23%** (Float32) | Python / Kaggle | Mô hình học sinh sau chưng cất sâu 50 ep |
+| **Teacher ResNet Oracle** | [`checkpoints/teacher_adxl345/best_teacher.pt`](file:///d:/Gitrepo/VIbraDistill/checkpoints/teacher_adxl345/best_teacher.pt) | PyTorch Checkpoint (4.08 MB) | **96.48%** (Teacher) | GPU Cloud / Local | Mô hình giáo viên chuẩn chỉ dẫn chưng cất |
+| **FPGA Bit-True ROM (HIL 12kHz)**| [`embedded/fpga_gowin/roms/npu_weights_int8.mem`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/npu_weights_int8.mem) | Verilog `.mem` (8.47 KB) | **98.45%** (CWRU 12k) | Gowin GW2A-18 BRAM | Nạp vào `gowin_top_soc.v` (`USE_ADXL345 = 0`) |
+| **MCU Sonix C Header (HIL 12kHz)**| [`embedded/mcu_sonix/app/vibradistill_weights.h`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_weights.h) | ANSI C Header | Chuẩn CWRU / XJTU | Cortex-M0 @ 60 MHz | Firmware cho chế độ nhận dữ liệu HIL qua UART |
+
+---
+
 ## I. ĐẶC TẢ KỸ THUẬT BỘ LỌC (FILTER SPECIFICATIONS)
 
 > [!IMPORTANT]

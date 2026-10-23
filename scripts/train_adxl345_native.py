@@ -84,9 +84,9 @@ def main():
     parser = argparse.ArgumentParser(description="ADXL345 Native Training & Silicon Export Pipeline")
     parser.add_argument('--data_dir', type=str, default='data/CWRU_Dataset')
     parser.add_argument('--cache_dir', type=str, default='data/cache')
-    parser.add_argument('--teacher_epochs', type=int, default=25)
-    parser.add_argument('--student_epochs', type=int, default=30)
-    parser.add_argument('--qat_epochs', type=int, default=15)
+    parser.add_argument('--teacher_epochs', type=int, default=40)
+    parser.add_argument('--student_epochs', type=int, default=50)
+    parser.add_argument('--qat_epochs', type=int, default=25)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--lr_teacher', type=float, default=1e-3)
     parser.add_argument('--lr_student', type=float, default=2e-3)
@@ -150,6 +150,7 @@ def main():
             lg, rul = teacher(x, pr)
             loss = crit_cls(lg, y) + 0.5 * crit_rul(rul, rul_t)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(teacher.parameters(), max_norm=5.0)
             opt_t.step()
             running_loss += loss.item() * len(y)
         sched_t.step()
@@ -173,10 +174,10 @@ def main():
         p.requires_grad = False
 
     student = VibraDistillMicro(in_bins=257, num_classes=4, physics_dim=4).to(device)
-    dkd_loss = DecoupledKnowledgeDistillationLoss(alpha=1.0, beta=4.0, temperature=4.0, ce_weight=1.0)
-    edl_loss = EvidentialLoss(num_classes=4, annealing_epochs=10)
+    dkd_loss = DecoupledKnowledgeDistillationLoss(alpha=1.0, beta=6.0, temperature=3.0, ce_weight=1.0)
+    edl_loss = EvidentialLoss(num_classes=4, annealing_epochs=min(20, args.student_epochs // 2))
     opt_s = torch.optim.AdamW(student.parameters(), lr=args.lr_student, weight_decay=1e-4)
-    sched_s = CosineAnnealingLR(opt_s, T_max=args.student_epochs, eta_min=args.lr_student * 0.05)
+    sched_s = CosineAnnealingLR(opt_s, T_max=args.student_epochs, eta_min=args.lr_student * 0.02)
 
     best_s_f1 = 0.0
     best_s_state = None
@@ -194,6 +195,7 @@ def main():
             loss_edl = edl_loss(s_logits, y, epoch=ep)
             loss = loss_dkd_tot + 0.3 * loss_edl
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(student.parameters(), max_norm=5.0)
             opt_s.step()
             running_loss += loss.item() * len(y)
         sched_s.step()
@@ -233,6 +235,7 @@ def main():
             lg, _ = qat(x, pr)
             loss = F.cross_entropy(lg, y) + 0.5 * F.mse_loss(lg, tl)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(qat.parameters(), max_norm=5.0)
             opt_q.step()
             running_loss += float(loss.detach()) * len(y)
         sched_q.step()
