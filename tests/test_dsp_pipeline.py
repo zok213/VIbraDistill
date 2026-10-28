@@ -76,5 +76,26 @@ class TestDSPPipeline(unittest.TestCase):
         self.assertEqual(len(warped), 257)
         self.assertTrue(np.all(np.isfinite(warped)))
 
+    def test_adxl345_fir_verilog_parity(self):
+        """Verifies bit-true match of FIR coefficients between Python and Verilog RTL."""
+        import re
+        from src.dsp.causal_fir import RTL_ADXL345_HEX_COEFFS
+        v_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'src', 'fir_adxl345_32.v')
+        self.assertTrue(os.path.exists(v_path))
+        with open(v_path, 'r') as f:
+            v_content = f.read()
+
+        hex_matches = re.findall(r"assign\s+h\[\s*\d+\]\s*=\s*16'sh([0-9A-Fa-f]+);", v_content)
+        self.assertEqual(len(hex_matches), 32)
+        rtl_hex = [int(m, 16) for m in hex_matches]
+        self.assertEqual(rtl_hex, RTL_ADXL345_HEX_COEFFS)
+
+        # Test filter execution
+        fir_adxl = CausalFIRFilter(sensor_type='adxl345', fs=3200.0)
+        sig = np.random.randn(512).astype(np.float32)
+        out = fir_adxl.process_block(sig)
+        self.assertEqual(len(out), 512)
+        self.assertTrue(np.all(np.isfinite(out)))
+
 if __name__ == '__main__':
     unittest.main()

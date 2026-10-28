@@ -55,5 +55,78 @@ module fir_adxl345_32 #(
     assign h[30] = 16'shFE5C;
     assign h[31] = 16'sh002F;
 
-    // 32-sample delay line and 4-multiplier folded engine identical to fir_minphase_32.v
+    // 32-Sample Circular / Delay Line Shift Register
+    reg signed [DATA_WIDTH-1:0] delay_line [0:TAPS-1];
+    integer k;
+
+    // FSM States for 4-Multiplier Folded Engine (8 cycles @ 100 MHz = 80 ns)
+    localparam S_IDLE = 2'd0;
+    localparam S_CALC = 2'd1;
+    localparam S_DONE = 2'd2;
+
+    reg [1:0] state;
+    reg [2:0] cycle_cnt; // 0 to 7 (8 cycles x 4 MACs = 32 taps)
+    reg signed [35:0] acc;
+
+    // 4 Parallel Multipliers
+    wire [4:0] idx0 = {cycle_cnt, 2'b00};
+    wire [4:0] idx1 = {cycle_cnt, 2'b01};
+    wire [4:0] idx2 = {cycle_cnt, 2'b10};
+    wire [4:0] idx3 = {cycle_cnt, 2'b11};
+
+    wire signed [31:0] p0 = delay_line[idx0] * h[idx0];
+    wire signed [31:0] p1 = delay_line[idx1] * h[idx1];
+    wire signed [31:0] p2 = delay_line[idx2] * h[idx2];
+    wire signed [31:0] p3 = delay_line[idx3] * h[idx3];
+
+    // Synchronous Reset Mandate for Gowin DSP18E inference
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            for (k = 0; k < TAPS; k = k + 1) begin
+                delay_line[k] <= 16'sd0;
+            end
+            state     <= S_IDLE;
+            cycle_cnt <= 3'd0;
+            acc       <= 36'sd0;
+            y_out     <= 16'sd0;
+            valid_out <= 1'b0;
+        end else begin
+            case (state)
+                S_IDLE: begin
+                    valid_out <= 1'b0;
+                    if (sample_en) begin
+                        // Shift delay line and insert new sample
+                        delay_line[0] <= x_in;
+                        for (k = 1; k < TAPS; k = k + 1) begin
+                            delay_line[k] <= delay_line[k-1];
+                        end
+                        // Start folded accumulation
+                        cycle_cnt <= 3'd0;
+                        acc       <= 36'sd0;
+                        state     <= S_CALC;
+                    end
+                end
+
+                S_CALC: begin
+                    // Accumulate 4 MAC products per cycle
+                    acc <= acc + p0 + p1 + p2 + p3;
+                    if (cycle_cnt == 3'd7) begin
+                        state <= S_DONE;
+                    end else begin
+                        cycle_cnt <= cycle_cnt + 1'b1;
+                    end
+                end
+
+                S_DONE: begin
+                    // Output scaled Q1.15 sample (bits [30:15])
+                    y_out     <= acc[30:15];
+                    valid_out <= 1'b1;
+                    state     <= S_IDLE;
+                end
+
+                default: state <= S_IDLE;
+            endcase
+        end
+    end
+
 endmodule
