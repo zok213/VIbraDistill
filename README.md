@@ -29,14 +29,16 @@
 
 * **Bàn giao cho Bạn Toàn (FPGA Lead):**
   * Nạp trực tiếp khối RTL NPU mới nhất: [`embedded/fpga_gowin/src/npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) và [`npu_mac12_unit.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_mac12_unit.v).
+  * Khối Top SoC tích hợp hoàn chỉnh: [`embedded/fpga_gowin/src/gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v) khớp $100\%$ ràng buộc chân vật lý [`primer20k_adxl345.cst`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/primer20k_adxl345.cst) (Thạch anh 27 MHz chân H11 $\to$ Gowin rPLL 100 MHz, Bus SPI MCU chân E15/D14/A14/N16, triệt tiêu toàn bộ chân unconstrained).
   * 6 file hex trọng số 12 kênh cho 6 BSRAM bank: [`embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/) và `.mi`.
   * Bản đồ bộ nhớ & phân bổ dải tần: [`embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt).
   * Chạy script kiểm chứng số học bit-true: `python scripts/verify_fpga_npu_bram_co_sim.py` (kết quả 533/553 mẫu đạt 96.38% Acc).
   * Chạy testbench mô phỏng phần cứng: [`embedded/fpga_gowin/src/tb_npu_cosim.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/tb_npu_cosim.v) khớp $100\%$ với [`test_vectors/cosim_golden.hex`](file:///d:/Gitrepo/VIbraDistill/test_vectors/cosim_golden.hex).
 * **Bàn giao cho Bạn Thiện (MCU Firmware Lead):**
-  * Bỏ hẳn file `vibradistill_model.c` trong dự án Keil MDK-ARM, không chạy suy luận CNN trên MCU.
-  * Cấu hình SPI Slave DMA để hứng khung tin kết quả từ FPGA (chứa `predicted_class`, `confidence`, `vacuity_q15`, `rul_q15`).
-  * Thực thi logic điều khiển rơ-le SIL-2 ngắt nguồn động cơ khi `predicted_class != 0` và vẽ giao diện OLED mượt mà 60 FPS.
+  * Trong dự án Keil MDK-ARM, cờ `#define TARGET_SN32F407_SUPERVISOR 1` trong [`main.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/main.c) tự động ngắt bỏ toàn bộ mảng đệm 5,120 bytes của CNN cục bộ trong [`vibradistill_model.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_model.c).
+  * Dung lượng SRAM tiêu thụ trên Cortex-M0 giảm từ $6.8\,\text{KB}$ ($83\%$) xuống chỉ còn **$1.4\,\text{KB}$ ($17\%$)**, dành trọn $>6.7\,\text{KB}$ an toàn tuyệt đối cho ngăn xếp ngắt DMA và buffer OLED.
+  * Cấu hình SPI Slave DMA để hứng khung tin kết quả 524 bytes từ FPGA (chứa `npu_pred_class`, `dirichlet_max_evidence`, `hardware_status_flags`, `crc16_checksum`).
+  * Thực thi logic điều khiển rơ-le SIL-2 ngắt nguồn động cơ khi `npu_pred_class != 0` và vẽ giao diện OLED mượt mà 60 FPS.
 * **Bàn giao cho Bạn Quang (Integration Lead) & Kiệt (UX/Docs Lead):**
   * Đưa kiến trúc **"Heterogeneous Edge Co-Design: 100% FPGA Real-Time NPU Accelerator (2.6 µs) + MCU Supervisory Controller"** vào Báo cáo Phụ lục II và Slide bảo vệ.
   * Sử dụng bảng số liệu PPA và ma trận nhầm lẫn bên dưới để làm minh chứng thực nghiệm bất khả chiến bại trước Ban giám khảo.

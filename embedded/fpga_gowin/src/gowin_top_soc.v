@@ -21,42 +21,71 @@ module gowin_top_soc #(
     parameter WEIGHT_FILE_BANK4 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank4.hex" : "roms/npu_weights_bank4.hex",
     parameter WEIGHT_FILE_BANK5 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank5.hex" : "roms/npu_weights_bank5.hex"
 )(
-    input  wire                 clk_100m,         // 100 MHz On-Board Oscillator
-    input  wire                 rst_n_pin,        // Active-Low Reset Pushbutton
+    input  wire                 clk_27m,          // 27 MHz On-Board Crystal Oscillator (Pin H11)
+    input  wire                 rst_n_pin,        // Active-Low Reset Pushbutton (Pin T10)
     
     // Physical ADXL345 / GY-291 SPI Interface (PMOD0 Header J3)
-    output wire                 adxl_cs_n,        // Chip Select (Pin 1)
-    output wire                 adxl_sclk,        // 5.0 MHz SPI Clock (Pin 4)
-    output wire                 adxl_mosi,        // MOSI (SDA/SDI Pin 2)
-    input  wire                 adxl_miso,        // MISO (SDO Pin 3)
-    input  wire                 adxl_int1,        // DATA_READY Strobe (Pin 7)
+    output wire                 adxl_cs_n,        // Chip Select (Pin A15)
+    output wire                 adxl_sclk,        // 5.0 MHz SPI Clock (Pin J14)
+    output wire                 adxl_mosi,        // MOSI / SDA (Pin B15)
+    input  wire                 adxl_miso,        // MISO / SDO (Pin C15)
+    input  wire                 adxl_int1,        // DATA_READY Strobe (Pin J16)
     
-    // Optional Fallback / External Ingest Interface (HIL Streamer / CWRU 12kHz)
-    input  wire                 sensor_sample_en, // 12.0/13.333 kHz Sample Strobe
-    input  wire signed [15:0]   sensor_data_in,   // 16-bit Raw Acceleration Sample
-    
-    // External Tachometer & Telemetry Inputs
-    input  wire [15:0]          shaft_speed_fr,   // Rotational frequency fr (0.1 Hz)
-    input  wire [15:0]          temperature_c,    // Bearing housing temperature (0.1 C)
-    
-    // High-Speed SPI DMA Interface to Sonix MCU (SN32F407)
-    output wire                 spi_sck,          // SPI Clock (12.5 MHz)
-    output wire                 spi_cs_n,         // Active-Low SPI Chip Select
-    output wire                 spi_mosi,         // Master Out Slave In
-    output wire                 mcu_irq_pulse,    // Hardware IRQ Strobe to MCU GPIO P2.4
+    // High-Speed SPI DMA Interface to Sonix MCU (SN32F407) (Header J4)
+    output wire                 mcu_spi_sck,      // SPI Clock (12.5 MHz to MCU P2.0, Pin E15)
+    output wire                 mcu_spi_cs_n,     // Active-Low SPI Chip Select (to MCU P2.3, Pin A14)
+    output wire                 mcu_spi_mosi,     // Master Out Slave In (to MCU P2.1, Pin D14)
+    output wire                 mcu_irq_pulse,    // Hardware IRQ Strobe (to MCU P2.4, Pin N16)
     
     // Status & Diagnostic LEDs
-    output reg                  led_alive,        // Heartbeat LED (L14)
-    output reg                  led_infer_busy,   // NPU active LED (L16)
-    output reg                  led_ood_alert     // Dirichlet Vacuity Alert LED (P14)
+    output reg                  led_alive,        // Heartbeat LED (Pin L14)
+    output reg                  led_infer_busy,   // NPU active LED (Pin L16)
+    output reg                  led_ood_alert     // Dirichlet Vacuity Alert LED (Pin P14)
 );
 
     // =========================================================================
-    // 1. Clock & Reset Management
+    // 1. Clock & Reset Management (27 MHz Crystal -> 100 MHz System Clock)
     // =========================================================================
+`ifdef SIMULATION
+    wire clk_100m = clk_27m;
+    wire pll_lock = 1'b1;
+`else
+    wire clk_100m;
+    wire pll_lock;
+    // Gowin GW2A-18 rPLL: Fin = 27.0 MHz, Fout = 100.0 MHz
+    rPLL #(
+        .FCLKIN("27.0"),
+        .DEVICE("GW2A-18"),
+        .DYN_IDIV_SEL("false"),
+        .IDIV_SEL(26), // Fin / (26+1) = 1.0 MHz PFD
+        .DYN_FBDIV_SEL("false"),
+        .FBDIV_SEL(99), // 1.0 MHz * (99+1) = 100.0 MHz VCO
+        .DYN_ODIV_SEL("false"),
+        .ODIV_SEL(8)
+    ) u_pll_100m (
+        .CLKOUT(clk_100m),
+        .LOCK(pll_lock),
+        .CLKOUTP(),
+        .CLKOUTD(),
+        .CLKOUTD3(),
+        .RESET(~rst_n_pin),
+        .RESET_P(1'b0),
+        .CLKIN(clk_27m),
+        .CLKFB(1'b0),
+        .FBDSEL(6'b0),
+        .IDSEL(6'b0),
+        .ODSEL(6'b0),
+        .PSDA(4'b0),
+        .DUTYDA(4'b0),
+        .FDLY(4'b0)
+    );
+`endif
+
+    wire sys_rst_n = rst_n_pin & pll_lock;
+
     reg [23:0] heartbeat_cnt;
-    always @(posedge clk_100m or negedge rst_n_pin) begin
-        if (!rst_n_pin) begin
+    always @(posedge clk_100m or negedge sys_rst_n) begin
+        if (!sys_rst_n) begin
             heartbeat_cnt <= 24'd0;
             led_alive     <= 1'b0;
         end else begin
@@ -78,7 +107,7 @@ module gowin_top_soc #(
         .DATA_WIDTH  (16)
     ) u_adxl_master (
         .clk          (clk_100m),
-        .rst_n        (rst_n_pin),
+        .rst_n        (sys_rst_n),
         .spi_cs_n     (adxl_cs_n),
         .spi_sclk     (adxl_sclk),
         .spi_mosi     (adxl_mosi),
@@ -91,9 +120,9 @@ module gowin_top_soc #(
         .ready        (adxl_ready)
     );
 
-    // Mux input source based on mode
-    wire signed [15:0] sample_in = USE_ADXL345 ? adxl_z : sensor_data_in;
-    wire               sample_strobe = USE_ADXL345 ? adxl_sample_valid : sensor_sample_en;
+    // Accelerometer Z-axis is primary vertical vibration axis
+    wire signed [15:0] sample_in     = adxl_z;
+    wire               sample_strobe = adxl_sample_valid;
 
     wire signed [15:0] fir_out;
     wire               fir_valid;
@@ -106,7 +135,7 @@ module gowin_top_soc #(
                 .TAPS        (32)
             ) u_fir_adxl (
                 .clk        (clk_100m),
-                .rst_n      (rst_n_pin),
+                .rst_n      (sys_rst_n),
                 .sample_en  (sample_strobe),
                 .x_in       (sample_in),
                 .y_out      (fir_out),
@@ -119,7 +148,7 @@ module gowin_top_soc #(
                 .TAPS        (32)
             ) u_fir_legacy (
                 .clk        (clk_100m),
-                .rst_n      (rst_n_pin),
+                .rst_n      (sys_rst_n),
                 .sample_en  (sample_strobe),
                 .x_in       (sample_in),
                 .y_out      (fir_out),
@@ -139,7 +168,7 @@ module gowin_top_soc #(
         .USE_ADXL345  (USE_ADXL345)
     ) u_envelope (
         .clk        (clk_100m),
-        .rst_n      (rst_n_pin),
+        .rst_n      (sys_rst_n),
         .sample_en  (fir_valid),
         .y_filtered (fir_out),
         .env_out    (env_out),
@@ -171,7 +200,7 @@ module gowin_top_soc #(
         .WEIGHT_FILE_BANK5 (WEIGHT_FILE_BANK5)
     ) u_npu (
         .clk             (clk_100m),
-        .rst_n           (rst_n_pin),
+        .rst_n           (sys_rst_n),
         .start           (npu_start),
         .ready           (npu_ready),
         .done            (npu_done),
@@ -208,16 +237,16 @@ module gowin_top_soc #(
         .NUM_BINS    (257)
     ) u_spi_tx (
         .clk                    (clk_100m),
-        .rst_n                  (rst_n_pin),
+        .rst_n                  (sys_rst_n),
         .start_tx               (spi_start_tx),
         .npu_pred_class         (npu_pred_class),
         .dirichlet_max_evidence (npu_vacuity_q15[15:8]),
         .hardware_status_flags  (16'h0004), // Bit 2: CRC OK
         .bram_addr              (spi_bram_addr),
         .bram_data              (spi_bram_data),
-        .spi_sck                (spi_sck),
-        .spi_cs_n               (spi_cs_n),
-        .spi_mosi               (spi_mosi),
+        .spi_sck                (mcu_spi_sck),
+        .spi_cs_n               (mcu_spi_cs_n),
+        .spi_mosi               (mcu_spi_mosi),
         .irq_pulse              (mcu_irq_pulse),
         .tx_busy                (spi_tx_busy)
     );
@@ -236,8 +265,8 @@ module gowin_top_soc #(
     reg [8:0]  load_idx;
     reg [23:0] timer_cnt; // Frame timer: ~10 Hz (10,000,000 cycles @ 100 MHz)
 
-    always @(posedge clk_100m or negedge rst_n_pin) begin
-        if (!rst_n_pin) begin
+    always @(posedge clk_100m or negedge sys_rst_n) begin
+        if (!sys_rst_n) begin
             seq_state      <= SEQ_IDLE;
             load_idx       <= 9'd0;
             timer_cnt      <= 24'd0;
@@ -269,10 +298,13 @@ module gowin_top_soc #(
 
                 SEQ_LOAD: begin
                     // Stream 257 spectrum bins into NPU input memory
+                    // Dual support: if BRAM holds 16-bit unscaled FFT (MSB != 0), use MSB;
+                    // otherwise use LSB (direct INT8 spectrum test vector).
                     npu_in_valid <= 1'b1;
                     npu_in_addr  <= load_idx;
-                    // Clamp spectrum magnitude to INT8 range [0, 127]
-                    npu_in_data  <= (spectrum_bram[load_idx][15:8] > 8'd127) ? 8'sd127 : spectrum_bram[load_idx][15:8];
+                    npu_in_data  <= (spectrum_bram[load_idx][15:8] != 8'd0) ?
+                                    ((spectrum_bram[load_idx][15:8] > 8'd127) ? 8'sd127 : spectrum_bram[load_idx][15:8]) :
+                                    ((spectrum_bram[load_idx][7:0]  > 8'd127) ? 8'sd127 : spectrum_bram[load_idx][7:0]);
 
                     if (load_idx < 9'd256) begin
                         load_idx <= load_idx + 1'b1;

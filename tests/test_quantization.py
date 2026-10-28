@@ -115,6 +115,36 @@ class TestQuantizationAndNPU(unittest.TestCase):
         acc_pct = (correct / len(y_va)) * 100.0
         self.assertGreater(acc_pct, 95.0)
 
+    def test_gowin_top_soc_cst_pin_parity(self):
+        """Verifies 100% pinout parity between primer20k_adxl345.cst and gowin_top_soc.v."""
+        import re
+        cst_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'primer20k_adxl345.cst')
+        soc_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'src', 'gowin_top_soc.v')
+        self.assertTrue(os.path.exists(cst_path))
+        self.assertTrue(os.path.exists(soc_path))
+
+        with open(cst_path, 'r') as f:
+            cst_content = f.read()
+        with open(soc_path, 'r') as f:
+            soc_content = f.read()
+
+        cst_ports = re.findall(r'IO_LOC\s+"([^"]+)"', cst_content)
+        self.assertGreater(len(cst_ports), 0)
+
+        # Extract port names from top module port declaration
+        soc_port_block = soc_content.split('module gowin_top_soc')[1].split(');')[0]
+        soc_ports = re.findall(r'(?:input|output)\s+(?:wire|reg)?\s*(?:signed)?\s*(?:\[[^\]]+\])?\s*([a-zA-Z0-9_]+)', soc_port_block)
+
+        for port in cst_ports:
+            self.assertIn(port, soc_ports, f"CST constraint port '{port}' missing in gowin_top_soc.v port list!")
+
+        # Also verify SPI master packet size vs main.c
+        main_c_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'mcu_sonix', 'app', 'main.c')
+        with open(main_c_path, 'r') as f:
+            main_c_content = f.read()
+        self.assertIn('#define SPI_FRAME_SIZE          524', main_c_content)
+        self.assertIn('.TOTAL_BYTES (524)', soc_content)
+
 
 if __name__ == '__main__':
     unittest.main()
