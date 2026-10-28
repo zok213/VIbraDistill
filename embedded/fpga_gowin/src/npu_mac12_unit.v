@@ -25,7 +25,8 @@ module npu_mac12_unit (
     input  wire                 requant_en,   // Strobe to trigger requantization of acc[channel_sel]
     input  wire [3:0]           channel_sel,  // 0 to 11 to select accumulator for output
     output reg  signed [7:0]    act_out,      // Requantized 8-bit signed activation output
-    output reg                  act_valid     // Valid strobe for act_out
+    output reg                  act_valid,    // Valid strobe for act_out
+    output wire signed [383:0]  accum_all_out // Direct 12-channel accumulators output (12 x 32-bit)
 );
 
     // 12 parallel 32-bit accumulators
@@ -57,6 +58,13 @@ module npu_mac12_unit (
             end
         end
     end
+
+    // Direct Parallel Output of All 12 Accumulators
+    assign accum_all_out = {
+        accum[11], accum[10], accum[9], accum[8],
+        accum[7],  accum[6],  accum[5], accum[4],
+        accum[3],  accum[2],  accum[1], accum[0]
+    };
 
     // Selected Accumulator + Bias for Requantization
     wire signed [31:0] selected_acc = accum[channel_sel] + bias_in;
