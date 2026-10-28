@@ -182,7 +182,7 @@ def main():
     print(f"Checkpoint: {ckpt_path} | Profile: {sensor_name.upper()} (Fs={fs_val} Hz)")
     print("=" * 70)
     
-    ck = torch.load(ckpt_path, map_location='cpu')
+    ck = torch.load(ckpt_path, map_location='cpu', weights_only=False)
     base = VibraDistillMicro()
     folded_base = fold_batchnorm_micro(base)
     qat = QATMicro(folded_base, ck['act_ranges'])

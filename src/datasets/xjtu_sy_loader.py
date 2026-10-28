@@ -12,7 +12,6 @@ for joint diagnostic-prognostic training with Adaptive Conformal Prediction (ACP
 import os
 import glob
 import numpy as np
-import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 
@@ -87,6 +86,7 @@ class XJTUSYBearingDataset(Dataset):
                 rul_fraction = max(0.0, min(1.0, (total_lifespan - actual_step_idx) / float(total_lifespan)))
                 
                 try:
+                    import pandas as pd
                     df = pd.read_csv(f_path, nrows=self.window_size * 2)
                     col = df.columns[0] # Horizontal vibration channel
                     sig = df[col].values.astype(np.float32)
