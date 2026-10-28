@@ -13,12 +13,12 @@
 `timescale 1ns / 1ps
 
 module npu_12way_core #(
-    parameter WEIGHT_FILE_BANK0 = "roms/npu_weights_bank0.hex",
-    parameter WEIGHT_FILE_BANK1 = "roms/npu_weights_bank1.hex",
-    parameter WEIGHT_FILE_BANK2 = "roms/npu_weights_bank2.hex",
-    parameter WEIGHT_FILE_BANK3 = "roms/npu_weights_bank3.hex",
-    parameter WEIGHT_FILE_BANK4 = "roms/npu_weights_bank4.hex",
-    parameter WEIGHT_FILE_BANK5 = "roms/npu_weights_bank5.hex"
+    parameter WEIGHT_FILE_BANK0 = "roms/adxl345/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = "roms/adxl345/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = "roms/adxl345/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = "roms/adxl345/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = "roms/adxl345/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = "roms/adxl345/npu_weights_bank5.hex"
 )(
     input  wire                 clk,            // 100 MHz Core Clock
     input  wire                 rst_n,          // Synchronous Active-Low Reset

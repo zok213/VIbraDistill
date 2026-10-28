@@ -37,12 +37,12 @@ module tb_npu_cosim;
 
     // DUT Instantiation
     npu_12way_core #(
-        .WEIGHT_FILE_BANK0 ("roms/npu_weights_bank0.hex"),
-        .WEIGHT_FILE_BANK1 ("roms/npu_weights_bank1.hex"),
-        .WEIGHT_FILE_BANK2 ("roms/npu_weights_bank2.hex"),
-        .WEIGHT_FILE_BANK3 ("roms/npu_weights_bank3.hex"),
-        .WEIGHT_FILE_BANK4 ("roms/npu_weights_bank4.hex"),
-        .WEIGHT_FILE_BANK5 ("roms/npu_weights_bank5.hex")
+        .WEIGHT_FILE_BANK0 ("roms/adxl345/npu_weights_bank0.hex"),
+        .WEIGHT_FILE_BANK1 ("roms/adxl345/npu_weights_bank1.hex"),
+        .WEIGHT_FILE_BANK2 ("roms/adxl345/npu_weights_bank2.hex"),
+        .WEIGHT_FILE_BANK3 ("roms/adxl345/npu_weights_bank3.hex"),
+        .WEIGHT_FILE_BANK4 ("roms/adxl345/npu_weights_bank4.hex"),
+        .WEIGHT_FILE_BANK5 ("roms/adxl345/npu_weights_bank5.hex")
     ) dut (
         .clk             (clk),
         .rst_n           (rst_n),

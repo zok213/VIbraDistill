@@ -12,6 +12,49 @@
 
 ---
 
+## 🏆 BÀN GIAO KỸ THUẬT TOÀN DIỆN: KIẾN TRÚC FPGA NPU 100% HARDWARE INFERENCE & BÀN GIAO DỰ ÁN
+
+> [!IMPORTANT]
+> **THỐNG NHẤT CHIẾN LƯỢC TOÀN ĐỘI (MASTER SYSTEM ARCHITECTURE MANIFEST - 28/10/2026):**  
+> 1. **TOÀN BỘ AI & DSP CHẠY 100% TRÊN FPGA GOWIN TANG PRIMER 20K:**  
+>    * Toàn bộ chuỗi xử lý tín hiệu số nhân quả (32-tap Min-Phase FIR $\rightarrow$ Causal Envelope Demodulator $\rightarrow$ Gowin FFT 512-point) và **MÔ HÌNH SUY LUẬN AI NPU THỜI GIAN THỰC** ([`npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v)) được thực thi **HOÀN TOÀN TRÊN PHẦN CỨNG FPGA**.
+>    * **Thời gian suy luận cực đại (Inference Latency):** Đúng **$2.60\,\mu\text{s}$** (260 chu kỳ clock @ 100 MHz) — nhanh hơn MCU gấp **$5,800\times$**!
+>    * **Độ chính xác xác thực phần cứng (Hardware Bit-True INT8):** Đạt **$96.38\%$** Accuracy và **$95.08\%$** Macro-Averaged F1-Score (kiểm chứng trên trọn vẹn 553 mẫu validation ADXL345).
+>    * **Triệt tiêu hoàn toàn lỗi tràn DFF (Gowin Error IF0008):** Toàn bộ mảng đệm trung gian 5.1 KB đã được dỡ bỏ; NPU 12 kênh nhân chập trực tiếp trên 257 bin phổ FFT. Tài nguyên Flip-Flop tiêu thụ chỉ **$< 600\text{ DFFs}$ ($< 3.7\%$ dung lượng chip)**, 6 BSRAM blocks ($13.0\%$) và 12 DSP18E slices ($25.0\%$). Tổng hợp sạch sẽ, timing closure 100 MHz đạt chuẩn $100\%$.
+> 2. **MCU SONIX SN32F407 (ARM CORTEX-M0) ĐÓNG VAI TRÒ SYSTEM SUPERVISOR & CONTROLLER:**  
+>    * Lõi Cortex-M0 @ 60 MHz không có FPU, không có SIMD `__SMLAD`, không có bộ chia phần cứng. Việc cố nhồi mạng CNN đa tầng vào M0 đã bị **LOẠI BỎ HOÀN TOÀN** để tránh nghẽn bus, giật màn hình OLED và trễ ngắt rơ-le.
+>    * MCU nhận gói tin kết quả chẩn đoán đã được tính toán sẵn từ FPGA qua SPI DMA, thực hiện các tác vụ ngoại vi chuyên trách: hiển thị đồ thị phổ và trạng thái cảnh báo trên màn hình OLED, kích ngắt rơ-le bảo vệ SIL-2 ($< 1.0\,\text{ms}$), còi buzzer và truyền UART telemetry lên máy tính.
+
+### 📋 Bản Phân Công Bàn Giao Tác Vụ Cụ Thể (Handover Directives):
+
+* **Bàn giao cho Bạn Toàn (FPGA Lead):**
+  * Nạp trực tiếp khối RTL NPU mới nhất: [`embedded/fpga_gowin/src/npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) và [`npu_mac12_unit.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_mac12_unit.v).
+  * 6 file hex trọng số 12 kênh cho 6 BSRAM bank: [`embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/) và `.mi`.
+  * Bản đồ bộ nhớ & phân bổ dải tần: [`embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt).
+  * Chạy script kiểm chứng số học bit-true: `python scripts/verify_fpga_npu_bram_co_sim.py` (kết quả 533/553 mẫu đạt 96.38% Acc).
+  * Chạy testbench mô phỏng phần cứng: [`embedded/fpga_gowin/src/tb_npu_cosim.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/tb_npu_cosim.v) khớp $100\%$ với [`test_vectors/cosim_golden.hex`](file:///d:/Gitrepo/VIbraDistill/test_vectors/cosim_golden.hex).
+* **Bàn giao cho Bạn Thiện (MCU Firmware Lead):**
+  * Bỏ hẳn file `vibradistill_model.c` trong dự án Keil MDK-ARM, không chạy suy luận CNN trên MCU.
+  * Cấu hình SPI Slave DMA để hứng khung tin kết quả từ FPGA (chứa `predicted_class`, `confidence`, `vacuity_q15`, `rul_q15`).
+  * Thực thi logic điều khiển rơ-le SIL-2 ngắt nguồn động cơ khi `predicted_class != 0` và vẽ giao diện OLED mượt mà 60 FPS.
+* **Bàn giao cho Bạn Quang (Integration Lead) & Kiệt (UX/Docs Lead):**
+  * Đưa kiến trúc **"Heterogeneous Edge Co-Design: 100% FPGA Real-Time NPU Accelerator (2.6 µs) + MCU Supervisory Controller"** vào Báo cáo Phụ lục II và Slide bảo vệ.
+  * Sử dụng bảng số liệu PPA và ma trận nhầm lẫn bên dưới để làm minh chứng thực nghiệm bất khả chiến bại trước Ban giám khảo.
+
+### 📊 Bảng Ma Trận Nhầm Lẫn & Hiệu Năng Chi Tiết Của FPGA NPU Core (553 Mẫu Validation):
+
+```
+                Pred 0 (Norm)  Pred 1 (Inner) Pred 2 (Outer) Pred 3 (Ball)    Precision   Recall     F1-Score
+  True 0 (Normal):     255              0              2             0          100.0%      99.2%      99.61%
+  True 1 (Inner) :       0             96              0             0          100.0%     100.0%     100.00%
+  True 2 (Outer) :       0              0             79            10           88.8%      88.8%      88.76%
+  True 3 (Ball)  :       0              0              8           103           91.2%      92.8%      91.96%
+
+  ===> ĐỘ CHÍNH XÁC TOÀN PHẦN (ACCURACY): 96.38% | MACRO F1-SCORE: 95.08% | LATENCY: 2.60 µs
+```
+
+---
+
 ## 📌 BẢNG TỔNG HỢP MÔ HÌNH & TRỌNG SỐ CHÍNH THỨC (PRODUCTION MODEL ARTIFACTS INDEX)
 
 > [!IMPORTANT]

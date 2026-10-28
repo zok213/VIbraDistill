@@ -74,6 +74,47 @@ class TestQuantizationAndNPU(unittest.TestCase):
                 sims.append(float(f @ qq / (np.linalg.norm(f) * np.linalg.norm(qq) + 1e-12)))
         self.assertGreater(float(np.mean(sims)), 0.5)
 
+    def test_fpga_12way_npu_subband_parity(self):
+        """Verifies that the 12-channel BSRAM bank weights achieve >95% accuracy on ADXL345 validation data."""
+        rom_dir = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'roms', 'adxl345')
+        val_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'cache', 'cwru_val_adxl345_w512.pt')
+        if not os.path.exists(val_path):
+            self.skipTest("Validation cache not available.")
+
+        # Load 6 BSRAM Bank .hex files
+        banks = []
+        for b in range(6):
+            hex_file = os.path.join(rom_dir, f"npu_weights_bank{b}.hex")
+            self.assertTrue(os.path.exists(hex_file), f"Missing ROM: {hex_file}")
+            with open(hex_file, "r") as f:
+                words16 = [int(line.strip(), 16) for line in f if line.strip()]
+            self.assertEqual(len(words16), 257)
+            ch_low = [((w & 0xFF) - 256) if (w & 0xFF) >= 128 else (w & 0xFF) for w in words16]
+            ch_high = [(((w >> 8) & 0xFF) - 256) if ((w >> 8) & 0xFF) >= 128 else ((w >> 8) & 0xFF) for w in words16]
+            banks.extend([ch_low, ch_high])
+
+        w12 = np.array(banks, dtype=np.int32)
+        d_va = torch.load(val_path, weights_only=False)
+        X_va = d_va['spectra'].squeeze(1).numpy()
+        y_va = d_va['labels'].numpy()
+        X_int8 = np.clip(np.round(X_va * 127.0), 0, 127).astype(np.int32)
+
+        biases = np.array([0, -3, 8, -4], dtype=np.int32)
+        correct = 0
+        for i in range(len(y_va)):
+            acc = np.dot(w12, X_int8[i])
+            s = [
+                int(acc[0] + acc[1] + acc[2] + biases[0]),
+                int(acc[3] + acc[4] + acc[5] + biases[1]),
+                int(acc[6] + acc[7] + acc[8] + biases[2]),
+                int(acc[9] + acc[10] + acc[11] + biases[3])
+            ]
+            if np.argmax(s) == y_va[i]:
+                correct += 1
+
+        acc_pct = (correct / len(y_va)) * 100.0
+        self.assertGreater(acc_pct, 95.0)
+
 
 if __name__ == '__main__':
     unittest.main()
