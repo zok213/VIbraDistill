@@ -134,7 +134,8 @@ module npu_12way_core #(
     localparam S_DRAIN_2   = 3'd3;
     localparam S_SUM       = 3'd4;
     localparam S_DECIDE    = 3'd5;
-    localparam S_DONE      = 3'd6;
+    localparam S_WAIT_DIV  = 3'd6;
+    localparam S_DONE      = 3'd7;
 
     reg [2:0]   state;
     reg [8:0]   step_cnt;
@@ -167,7 +168,21 @@ module npu_12way_core #(
         end
     endfunction
 
-    reg [17:0] sum_evidence;
+    reg [17:0]  sum_evidence;
+    reg         div_start;
+    wire [17:0] div_quotient;
+    wire        div_done;
+
+    // 18-bit sequential restoring divider for Dirichlet vacuity (removes combinational /)
+    div_18bit u_div (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .start    (div_start),
+        .dividend (18'd131072),
+        .divisor  (sum_evidence),
+        .quotient (div_quotient),
+        .done     (div_done)
+    );
 
     always @(posedge clk) begin
         if (!rst_n) begin
@@ -188,6 +203,7 @@ module npu_12way_core #(
             score_2         <= 32'sd0;
             score_3         <= 32'sd0;
             sum_evidence    <= 18'd0;
+            div_start       <= 1'b0;
         end else begin
             case (state)
                 S_IDLE: begin
@@ -267,14 +283,21 @@ module npu_12way_core #(
                     
                     if (sum_evidence > 18'd131072) begin
                         vacuity_q15 <= 16'd1;
+                        ood_alert   <= 1'b0;
+                        state       <= S_DONE;
                     end else begin
-                        vacuity_q15 <= (18'd131072 / sum_evidence); // 4 * 32768 = 131072
+                        div_start   <= 1'b1;
+                        state       <= S_WAIT_DIV;
                     end
+                end
 
-                    // 4. Out-of-Distribution Alert (Vacuity > 0.45 -> 14745 in Q15)
-                    ood_alert <= (vacuity_q15 > 16'd14745);
-
-                    state <= S_DONE;
+                S_WAIT_DIV: begin
+                    div_start <= 1'b0;
+                    if (div_done) begin
+                        vacuity_q15 <= div_quotient[15:0];
+                        ood_alert   <= (div_quotient[15:0] > 16'd14745);
+                        state       <= S_DONE;
+                    end
                 end
 
                 S_DONE: begin

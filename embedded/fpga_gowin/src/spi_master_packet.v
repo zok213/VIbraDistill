@@ -57,6 +57,7 @@ module spi_master_packet #(
     reg [7:0]  current_byte;
     reg [15:0] frame_count;
     reg [15:0] crc16_reg;
+    reg        crc_pend; // 1: byte latched in current_byte needs CRC calculation in STATE_SHIFT_BIT
 
     // CRC-16-CCITT update function (Polynomial: 0x1021, Init: 0xFFFF)
     function [15:0] update_crc(input [15:0] crc, input [7:0] data);
@@ -103,6 +104,7 @@ module spi_master_packet #(
             irq_pulse    <= 1'b0;
             tx_busy      <= 1'b0;
             bram_addr    <= 9'd0;
+            crc_pend     <= 1'b0;
         end else begin
             clk_div <= clk_div + 1'b1;
 
@@ -128,10 +130,8 @@ module spi_master_packet #(
                 STATE_LOAD_BYTE: begin
                     current_byte <= next_byte;
 
-                    // Update CRC-16 for payload bytes 0 to 521
-                    if (byte_idx <= 10'd521) begin
-                        crc16_reg <= update_crc(crc16_reg, next_byte);
-                    end
+                    // Pipeline CRC calculation into STATE_SHIFT_BIT on registered current_byte
+                    crc_pend <= (byte_idx <= 10'd521);
 
                     // Advance BRAM address when high byte of current bin is consumed
                     if (byte_idx >= 10'd4 && byte_idx <= 10'd517 && byte_idx[0] == 1'b1) begin
@@ -143,6 +143,11 @@ module spi_master_packet #(
                 end
 
                 STATE_SHIFT_BIT: begin
+                    if (crc_pend) begin
+                        crc16_reg <= update_crc(crc16_reg, current_byte);
+                        crc_pend  <= 1'b0;
+                    end
+
                     if (sck_fall) begin
                         spi_mosi <= current_byte[bit_idx];
                         spi_sck  <= 1'b0;
