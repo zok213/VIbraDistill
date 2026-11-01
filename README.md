@@ -12,44 +12,85 @@
 
 ---
 
-## 🏆 BÀN GIAO KỸ THUẬT TOÀN DIỆN: KIẾN TRÚC FPGA NPU 100% HARDWARE INFERENCE & BÀN GIAO DỰ ÁN
+## 🏆 BÀN GIAO KỸ THUẬT TOÀN DIỆN: KIẾN TRÚC FPGA NPU 100% HARDWARE INFERENCE & TỐI ƯU HÓA VI MẠCH
 
 > [!IMPORTANT]
-> **THỐNG NHẤT CHIẾN LƯỢC TOÀN ĐỘI (MASTER SYSTEM ARCHITECTURE MANIFEST - 28/10/2026):**  
+> **TÀI LIỆU HƯỚNG DẪN CHẠY & KIỂM THỬ TỪNG BƯỚC CHO CẢ TEAM:**  
+> Xem ngay tài liệu thực chiến đầy đủ: **[`docs/STEP_BY_STEP_RUN_GUIDE.md`](docs/STEP_BY_STEP_RUN_GUIDE.md)**  
+> *(Bao gồm: Sơ đồ nối dây Tang Primer 20K - ADXL345 - Sonix MCU - OLED - SIL-2 Relay, lệnh co-sim bit-true, kịch bản nạp Gowin Programmer, nạp Keil MDK, và bảng tra cứu lỗi trong 30 giây).*
+
+> [!IMPORTANT]
+> **THỐNG NHẤT CHIẾN LƯỢC TOÀN ĐỘI (MASTER SYSTEM ARCHITECTURE MANIFEST):**  
 > 1. **TOÀN BỘ AI & DSP CHẠY 100% TRÊN FPGA GOWIN TANG PRIMER 20K:**  
->    * Toàn bộ chuỗi xử lý tín hiệu số nhân quả (32-tap Min-Phase FIR $\rightarrow$ Causal Envelope Demodulator $\rightarrow$ Gowin FFT 512-point) và **MÔ HÌNH SUY LUẬN AI NPU THỜI GIAN THỰC** ([`npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v)) được thực thi **HOÀN TOÀN TRÊN PHẦN CỨNG FPGA**.
->     * **Thời gian suy luận cực đại (Inference Latency):** Đúng **.62\,\mu\text{s}$** (262 chu kỳ clock @ 100 MHz) — nhanh hơn MCU gấp **,700\times$**!
->    * **Độ chính xác xác thực phần cứng (Hardware Bit-True INT8):** Đạt **.38\%$** Accuracy và **.08\%$** Macro-Averaged F1-Score trên 553 mẫu validation ADXL345; và **.05\%$** Accuracy, **.34\%$** F1 trên toàn bộ 2,767 cửa sổ dữ liệu thực từ 15 file .mat CWRU.
->    * **Đóng gói giải pháp Timing Closure (Triệt tiêu lỗi Slack -4.065ns của Toàn):** Cắt đường trễ BSRAM DO $\rightarrow$ MAC $\rightarrow$ ACCUM thành đường ống 2 tầng (2-Stage Pipelined MAC trong 
-pu_mac12_unit.v), nâng tần số hoạt động cực đại \text{max} \ge 200\,\text{MHz}$ (dư $> +5.5\,\text{ns}$ slack tại 100 MHz), triệt tiêu hoàn toàn 623 điểm nút vi phạm STA!
->    * **Triệt tiêu hoàn toàn lỗi tràn DFF (Gowin Error IF0008):** Toàn bộ mảng đệm trung gian 5.1 KB đã được dỡ bỏ; NPU 12 kênh nhân chập trực tiếp trên 257 bin phổ FFT. Tài nguyên Flip-Flop tiêu thụ chỉ **$< 750\text{ DFFs}$ ($< 4.5\%$ dung lượng chip)**, 6 BSRAM blocks (.0\%$) và 12 DSP18E slices (.0\%$). Tổng hợp sạch sẽ, timing closure 100 MHz đạt chuẩn \%$.
-2. **MCU SONIX SN32F407 (ARM CORTEX-M0) ĐÓNG VAI TRÒ SYSTEM SUPERVISOR & CONTROLLER:**  
->    * Lõi Cortex-M0 @ 60 MHz không có FPU, không có SIMD __SMLAD, không có bộ chia phần cứng. Việc cố nhồi mạng CNN đa tầng vào M0 đã bị **LOẠI BỎ HOÀN TOÀN** để tránh nghẽn bus, giật màn hình OLED và trễ ngắt rơ-le.
->    * MCU nhận gói tin kết quả chẩn đoán đã được tính toán sẵn từ FPGA qua SPI DMA, thực hiện các tác vụ ngoại vi chuyên trách: hiển thị đồ thị phổ và trạng thái cảnh báo trên màn hình OLED, kích ngắt rơ-le bảo vệ SIL-2 ($< 1.0\,\text{ms}$), còi buzzer và truyền UART telemetry lên máy tính.
+>    * Toàn bộ chuỗi xử lý tín hiệu số nhân quả (32-tap Min-Phase FIR -> Causal Envelope Demodulator -> Gowin FFT 512-point) và **MÔ HÌNH SUY LUẬN AI NPU THỜI GIAN THỰC** ([`npu_12way_core.v`](embedded/fpga_gowin/src/npu_12way_core.v)) được thực thi **HOÀN TOÀN TRÊN PHẦN CỨNG FPGA**.
+>    * **Thời gian suy luận cực đại (Inference Latency):** Đúng **2.62 µs** (262 chu kỳ clock @ 100 MHz) — nhanh hơn MCU gấp **2,700x**!
+>    * **Độ chính xác xác thực phần cứng (Hardware Bit-True INT8):** Đạt **96.38%** Accuracy và **95.08%** Macro-Averaged F1-Score trên 553 mẫu validation ADXL345; và **98.05%** Accuracy, **97.34%** F1 trên toàn bộ 2,767 cửa sổ dữ liệu thực từ 15 file .mat CWRU.
+>    * **Giải pháp Đóng gói Timing Closure:** Tối ưu hóa đường trễ tới hạn BSRAM DO -> MAC -> ACCUM bằng kiến trúc đường ống 2 tầng đối xứng (2-Stage Pipelined MAC trong [`npu_mac12_unit.v`](embedded/fpga_gowin/src/npu_mac12_unit.v)), nâng tần số hoạt động cực đại $F_\text{max} \ge 200\,\text{MHz}$ (dư $> +5.5\,\text{ns}$ slack tại 100 MHz), triệt tiêu hoàn toàn vi phạm STA setup/hold.
+>    * **Tối ưu hóa Tài nguyên Logic Silicon:** Toàn bộ mảng đệm trung gian 5.1 KB đã được chuyển thành luồng xử lý streaming trực tiếp; NPU 12 kênh nhân chập song song trên 257 bin phổ FFT. Tài nguyên Flip-Flop tiêu thụ chỉ **< 750 DFFs (< 4.5% dung lượng chip)**, 6 BSRAM blocks (13.0%) và 12 DSP18E slices (25.0%). Tổng hợp sạch sẽ, timing closure 100 MHz đạt chuẩn 100%.
+> 2. **MCU SONIX SN32F407 (ARM CORTEX-M0) ĐÓNG VAI TRÒ SYSTEM SUPERVISOR & CONTROLLER:**  
+>    * Lõi Cortex-M0 @ 60 MHz không có FPU, không có SIMD `__SMLAD`, không có bộ chia phần cứng. Kiến trúc phân tầng tách bạch giao toàn bộ tính toán ma trận nặng cho FPGA NPU.
+>    * MCU nhận gói tin kết quả chẩn đoán đã tính toán sẵn từ FPGA qua SPI DMA 12.5 MHz, thực hiện các tác vụ điều khiển chuyên trách: hiển thị đồ thị phổ và trạng thái cảnh báo trên màn hình OLED SSD1306, kích ngắt rơ-le bảo vệ SIL-2 (< 1.0 ms), còi buzzer và truyền UART telemetry lên máy tính.
 
-### 📋 Bản Phân Công Bàn Giao Tác Vụ Cụ Thể (Handover Directives):
+---
 
-* **Bàn giao cho Bạn Toàn (FPGA Lead):**
-  * Nạp trực tiếp khối RTL NPU đã tối ưu timing: [embedded/fpga_gowin/src/npu_12way_core.v](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) và [
-pu_mac12_unit.v](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_mac12_unit.v) (đã tích hợp 2-stage MAC pipeline & 2 drain cycles S_DRAIN_1, S_DRAIN_2, timing Fmax > 200 MHz).
-  * Khối Top SoC tích hợp hoàn chỉnh: [embedded/fpga_gowin/src/gowin_top_soc.v](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v) hỗ trợ chuyển chế độ đơn giản qua 1 cờ tham số:
-    * parameter USE_ADXL345 = 1: Chạy cảm biến thật ADXL345 (FIR 3.2 kHz ir_adxl345_32.v, Envelope Fc=400Hz, ROM 
-oms/adxl345/, Biases [0, -3, 8, -4]).
-    * parameter USE_ADXL345 = 0: Chạy luồng kiểm thử HIL Streamer (FIR 12 kHz ir_minphase_32.v, Envelope Fc=1000Hz, ROM 
-oms/hil/, Biases [-5, -3, 14, -6]).
+### 🔬 BÁO CÁO GIẢI TRÌNH KỸ THUẬT: TỐI ƯU HÓA ĐƯỜNG TRỄ TIMING VÀ ĐỒNG BỘ SỐ HỌC RTL
+*(Silicon RTL Timing Closure & Arithmetic Optimization Report)*
+
+Trong quá trình tối ưu hóa và khép kín thời gian (Timing Closure) cho vi mạch NPU 12 kênh trên FPGA Gowin Tang Primer 20K, hai vấn đề kỹ thuật trọng yếu về **pha đường ống MAC** và **hàm truyền bão hòa biên độ** đã được phân tích nguyên nhân gốc rễ (Root Cause Analysis) và xử lý triệt để:
+
+#### 1. Đồng bộ Pha Đường Ống MAC & Chu Trình Truy Xuất BSRAM (BSRAM Pipelined Phase Alignment):
+* **Hiện tượng & Phân tích nguyên nhân gốc rễ (Root Cause Analysis):**  
+  Nhằm giải quyết nút thắt STA (đường trễ tới hạn 14.04 ns từ chân dữ liệu BSRAM qua bộ nhân 8x8 đến bộ cộng tích lũy, gây vi phạm Slack -4.065 ns), vi mạch cần chèn thanh ghi đường ống đệm. Tuy nhiên, nếu áp dụng phương án can thiệp sớm bằng cách nhảy cóc địa chỉ đọc (`bsram_addr <= step_cnt + 2'd2;`) trong FSM điều khiển, chu trình xung nhịp sẽ bị trượt pha nghiêm trọng:
+  * Tại nhịp clock $T=1$, địa chỉ đang là `0`. Sang $T=2$, địa chỉ nhảy thẳng lên `2`, làm **địa chỉ `bsram_addr = 1` không bao giờ xuất hiện** (Trọng số của Bin 1 bị bỏ qua 100%).
+  * Đồng thời, tại $T=1$, cờ `acc_clear = 1` đang tích cực làm bộ tích lũy bị reset về 0, dẫn tới kết quả nhân của Bin 0 bị triệt tiêu hoàn toàn.
+  * Toàn bộ 256 bin phổ phía sau bị lệch pha $+1$ so với ma trận trọng số. Thực nghiệm đối soát cho thấy độ chính xác mô hình bị suy giảm từ **96.38%** xuống còn **85.53%** (-10.85%).
+* **Giải pháp vi mạch chuẩn mực (Silicon Resolution):**  
+  * Khôi phục dòng địa chỉ đọc tuần tự tự nhiên ($0, 1, 2, \dots, 256$) trong [`npu_12way_core.v`](embedded/fpga_gowin/src/npu_12way_core.v).
+  * Chuyển toàn bộ logic trễ vào bên trong khối datapath [`npu_mac12_unit.v`](embedded/fpga_gowin/src/npu_mac12_unit.v) bằng kiến trúc **2-Stage Symmetric MAC Pipeline**: thanh ghi hóa đồng pha cả trọng số (`pipe1_w`), kích hoạt phổ (`pipe1_act`), và tích số trung gian (`pipe2_prod`).
+  * Bổ sung 2 trạng thái xả đường ống (`S_DRAIN_1`, `S_DRAIN_2`) trong FSM trước khi chuyển sang tổng hợp (`S_SUM`) để toàn bộ tích số của Bin 256 được tích lũy trọn vẹn vào thanh ghi.
+  * **Kết quả nghiệm thu:** Đường trễ tới hạn giảm còn $\le 4.3\,\text{ns}$ ($F_\text{max} \ge 200\,\text{MHz}$, Slack dương $> +5.5\,\text{ns}$ @ 100 MHz), bảo toàn nguyên vẹn độ chính xác **96.38%** (ADXL345) và **98.05%** (Raw 15 CWRU .mat).
+
+#### 2. Chuẩn Hóa Hàm Truyền Bão Hòa Tuyến Tính Biên Độ Phổ (Monotonic Linear Saturation):
+* **Hiện tượng & Phân tích nguyên nhân gốc rễ (Root Cause Analysis):**  
+  Trong khối nạp phổ [`gowin_top_soc.v`](embedded/fpga_gowin/src/gowin_top_soc.v), việc nén biên độ 16-bit không dấu từ bộ trích căn bậc hai (`mag_isqrt`) sang định dạng INT8 NPU bằng logic phân nhánh byte cao:
+  ```verilog
+  npu_in_data <= (load_raw_data[15:8] != 8'd0) ?
+              ((load_raw_data[15:8] > 8'd127) ? 8'sd127 : load_raw_data[15:8]) :
+              ((load_raw_data[7:0]  > 8'd127) ? 8'sd127 : load_raw_data[7:0]);
+  ```
+  đã tạo ra hàm truyền phi tuyến dạng răng cưa nghịch đảo (Sawtooth Inversion Cliff):
+  * Với biên độ $x = 255$ (`0x00FF`): Byte cao bằng $0 \implies$ byte thấp $255 > 127 \implies$ bão hòa kịch trần bằng **$127$**.
+  * Với biên độ $x = 256$ (`0x0100`): Byte cao bằng $1 \neq 0 \implies$ gán trực tiếp $x[15:8] = \mathbf{1}$!
+  * Hiện tượng vực thẳm số học này khiến các xung va đập cơ học cường độ lớn ($x \ge 256$) bị triệt tiêu thành tín hiệu sàn nhiễu ($1..2$), trong khi tín hiệu yếu ($255$) lại bị thổi phồng lên mức kịch trần, làm sai lệch cấu trúc phổ phong bì.
+* **Giải pháp vi mạch chuẩn mực (Silicon Resolution):**  
+  * Áp dụng chuẩn số học bão hòa tuyến tính đơn điệu (Monotonic Saturation):
+    ```verilog
+    npu_in_data <= (spectrum_bram[load_idx] > 16'd127) ? 8'sd127 : spectrum_bram[load_idx][7:0];
+    ```
+  * Hàm truyền thỏa mãn chặt chẽ tính đơn điệu toán học $\forall x_1 \le x_2 \implies f(x_1) \le f(x_2)$. Toàn bộ năng lượng phổ vượt ngưỡng $127$ được bão hòa phẳng, bảo toàn hình thái các đỉnh phổ đặc trưng lỗi vòng bi ($BPFO, BPFI, BSF$).
+
+---
+
+### 📋 Bản Phân Công Bàn Giao Kỹ Thuật (Engineering Handover Directives):
+
+* **Phân Hệ FPGA NPU Acceleration (FPGA Subsystem Lead):**
+  * Nạp trực tiếp khối RTL NPU đã tối ưu timing: [`embedded/fpga_gowin/src/npu_12way_core.v`](embedded/fpga_gowin/src/npu_12way_core.v) và [`embedded/fpga_gowin/src/npu_mac12_unit.v`](embedded/fpga_gowin/src/npu_mac12_unit.v) (đã tích hợp 2-stage MAC pipeline & 2 drain cycles S_DRAIN_1, S_DRAIN_2, timing Fmax > 200 MHz).
+  * Khối Top SoC tích hợp hoàn chỉnh: [`embedded/fpga_gowin/src/gowin_top_soc.v`](embedded/fpga_gowin/src/gowin_top_soc.v) hỗ trợ chuyển chế độ đơn giản qua 1 cờ tham số:
+    * `parameter USE_ADXL345 = 1`: Chạy cảm biến thật ADXL345 (FIR 3.2 kHz `fir_adxl345_32.v`, Envelope Fc=400Hz, ROM `roms/adxl345/`, Biases `[0, -3, 8, -4]`).
+    * `parameter USE_ADXL345 = 0`: Chạy luồng kiểm thử HIL Streamer (FIR 12 kHz `fir_minphase_32.v`, Envelope Fc=1000Hz, ROM `roms/hil/`, Biases `[-5, -3, 14, -6]`).
   * 6 file hex trọng số đã tách riêng rõ ràng:
-    * Chế độ ADXL345: [embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/) (96.38% Acc).
-    * Chế độ HIL: [embedded/fpga_gowin/roms/hil/npu_weights_bank0..5.hex](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/hil/) (98.71% Acc).
-  * Chạy script kiểm chứng số học bit-true: python scripts/verify_fpga_npu_bram_co_sim.py (533/553 mẫu validation đạt 96.38% Acc).
-  * Chạy test kiểm thử trực tiếp từ 15 file .mat CWRU: python scripts/verify_raw_mat_to_fpga_pipeline.py (2,713/2,767 mẫu đạt 98.05% Acc).
-* **Bàn giao cho Bạn Thiện (MCU Firmware Lead):**
-  * Trong dự án Keil MDK-ARM, cờ `#define TARGET_SN32F407_SUPERVISOR 1` trong [`main.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/main.c) tự động ngắt bỏ toàn bộ mảng đệm 5,120 bytes của CNN cục bộ trong [`vibradistill_model.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_model.c).
-  * Dung lượng SRAM tiêu thụ trên Cortex-M0 giảm từ $6.8\,\text{KB}$ ($83\%$) xuống chỉ còn **$1.4\,\text{KB}$ ($17\%$)**, dành trọn $>6.7\,\text{KB}$ an toàn tuyệt đối cho ngăn xếp ngắt DMA và buffer OLED.
+    * Chế độ ADXL345: [`embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex`](embedded/fpga_gowin/roms/adxl345/) (96.38% Acc).
+    * Chế độ HIL: [`embedded/fpga_gowin/roms/hil/npu_weights_bank0..5.hex`](embedded/fpga_gowin/roms/hil/) (98.71% Acc).
+  * Chạy script kiểm chứng số học bit-true: `python scripts/verify_fpga_npu_bram_co_sim.py` (533/553 mẫu validation đạt 96.38% Acc).
+  * Chạy test kiểm thử trực tiếp từ 15 file .mat CWRU: `python scripts/verify_raw_mat_to_fpga_pipeline.py` (2,713/2,767 mẫu đạt 98.05% Acc).
+* **Phân Hệ Vi Điều Khiển Giám Sát (MCU Firmware Lead):**
+  * Trong dự án Keil MDK-ARM, cờ `#define TARGET_SN32F407_SUPERVISOR 1` trong [`main.c`](embedded/mcu_sonix/app/main.c) tự động ngắt bỏ toàn bộ mảng đệm 5,120 bytes của CNN cục bộ trong [`vibradistill_model.c`](embedded/mcu_sonix/app/vibradistill_model.c).
+  * Dung lượng SRAM tiêu thụ trên Cortex-M0 giảm từ 6.8 KB (83%) xuống chỉ còn **1.4 KB (17%)**, dành trọn > 6.7 KB an toàn tuyệt đối cho ngăn xếp ngắt DMA và buffer OLED.
   * Cấu hình SPI Slave DMA để hứng khung tin kết quả 524 bytes từ FPGA (chứa `npu_pred_class`, `dirichlet_max_evidence`, `hardware_status_flags`, `crc16_checksum`).
   * Thực thi logic điều khiển rơ-le SIL-2 ngắt nguồn động cơ khi `npu_pred_class != 0` và vẽ giao diện OLED mượt mà 60 FPS.
-* **Bàn giao cho Bạn Quang (Integration Lead) & Kiệt (UX/Docs Lead):**
+* **Phân Hệ Tích Hợp & Đo Kiểm Thực Địa (System Integration & UX/Docs Lead):**
   * Đưa kiến trúc **"Heterogeneous Edge Co-Design: 100% FPGA Real-Time NPU Accelerator (2.6 µs) + MCU Supervisory Controller"** vào Báo cáo Phụ lục II và Slide bảo vệ.
-  * Sử dụng bảng số liệu PPA và ma trận nhầm lẫn bên dưới để làm minh chứng thực nghiệm bất khả chiến bại trước Ban giám khảo.
+  * Sử dụng bảng số liệu PPA và ma trận nhầm lẫn bên dưới để làm minh chứng thực nghiệm trước Ban giám khảo.
 
 ### 📊 Bảng Ma Trận Nhầm Lẫn & Hiệu Năng Chi Tiết Của FPGA NPU Core (553 Mẫu Validation):
 

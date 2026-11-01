@@ -306,13 +306,10 @@ module gowin_top_soc #(
 
                 SEQ_LOAD: begin
                     // Stream 257 spectrum bins into NPU input memory
-                    // Dual support: if BRAM holds 16-bit unscaled FFT (MSB != 0), use MSB;
-                    // otherwise use LSB (direct INT8 spectrum test vector).
+                    // Standard monotonic linear saturation: clamp unsigned 16-bit magnitude to signed INT8 [0..127]
                     npu_in_valid <= 1'b1;
                     npu_in_addr  <= load_idx;
-                    npu_in_data  <= (spectrum_bram[load_idx][15:8] != 8'd0) ?
-                                    ((spectrum_bram[load_idx][15:8] > 8'd127) ? 8'sd127 : spectrum_bram[load_idx][15:8]) :
-                                    ((spectrum_bram[load_idx][7:0]  > 8'd127) ? 8'sd127 : spectrum_bram[load_idx][7:0]);
+                    npu_in_data  <= (spectrum_bram[load_idx] > 16'd127) ? 8'sd127 : spectrum_bram[load_idx][7:0];
 
                     if (load_idx < 9'd256) begin
                         load_idx <= load_idx + 1'b1;
