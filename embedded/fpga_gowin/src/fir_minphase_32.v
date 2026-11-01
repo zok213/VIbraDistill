@@ -47,12 +47,14 @@ module fir_minphase_32 #(
     assign h[28] = 16'shCCC2; assign h[29] = 16'shC514;
     assign h[30] = 16'shC6AE; assign h[31] = 16'shD0B8;
 
-    // FSM States for 4-Multiplier Folded Engine (8 cycles)
-    localparam S_IDLE = 2'd0;
-    localparam S_CALC = 2'd1;
-    localparam S_DONE = 2'd2;
+    // FSM States for 3-Stage Pipelined 4-Multiplier Folded Engine (Timing Closure > 100 MHz)
+    localparam S_IDLE    = 3'd0;
+    localparam S_CALC    = 3'd1;
+    localparam S_DRAIN_1 = 3'd2;
+    localparam S_DRAIN_2 = 3'd3;
+    localparam S_DONE    = 3'd4;
 
-    reg [1:0] state;
+    reg [2:0] state;
     reg [2:0] cycle_cnt; // 0 to 7 (8 cycles x 4 MACs = 32 taps)
     reg signed [35:0] acc;
 
@@ -67,6 +69,15 @@ module fir_minphase_32 #(
     wire signed [31:0] p2 = delay_line[idx2] * h[idx2];
     wire signed [31:0] p3 = delay_line[idx3] * h[idx3];
 
+    // Stage 1 Pipeline Registers: 4 Multiplier Products (32-bit each)
+    reg signed [31:0] pp0, pp1, pp2, pp3;
+
+    // Stage 2 Pipeline Registers: Pairwise Sums (34-bit each, prevents overflow)
+    reg signed [33:0] s01, s23;
+
+    // Pipeline Valid Strobe Shift Registers
+    reg pv1, pv2;
+
     // Synchronous Reset Mandate for Gowin DSP18E inference
     always @(posedge clk) begin
         if (!rst_n) begin
@@ -76,33 +87,80 @@ module fir_minphase_32 #(
             state     <= S_IDLE;
             cycle_cnt <= 3'd0;
             acc       <= 36'sd0;
+            pp0       <= 32'sd0;
+            pp1       <= 32'sd0;
+            pp2       <= 32'sd0;
+            pp3       <= 32'sd0;
+            s01       <= 34'sd0;
+            s23       <= 34'sd0;
+            pv1       <= 1'b0;
+            pv2       <= 1'b0;
             y_out     <= 16'sd0;
             valid_out <= 1'b0;
         end else begin
             case (state)
                 S_IDLE: begin
                     valid_out <= 1'b0;
+                    pv1       <= 1'b0;
+                    pv2       <= 1'b0;
                     if (sample_en) begin
                         // Shift delay line and insert new sample
                         delay_line[0] <= x_in;
                         for (k = 1; k < TAPS; k = k + 1) begin
                             delay_line[k] <= delay_line[k-1];
                         end
-                        // Start folded accumulation
+                        // Initialize folded pipelined accumulation
                         cycle_cnt <= 3'd0;
                         acc       <= 36'sd0;
+                        pp0       <= 32'sd0;
+                        pp1       <= 32'sd0;
+                        pp2       <= 32'sd0;
+                        pp3       <= 32'sd0;
+                        s01       <= 34'sd0;
+                        s23       <= 34'sd0;
                         state     <= S_CALC;
                     end
                 end
 
                 S_CALC: begin
-                    // Accumulate 4 MAC products per cycle
-                    acc <= acc + p0 + p1 + p2 + p3;
+                    // Stage 1: Latch 4 multiplier products
+                    pp0 <= p0;
+                    pp1 <= p1;
+                    pp2 <= p2;
+                    pp3 <= p3;
+                    pv1 <= 1'b1;
+
+                    // Stage 2: Pairwise addition (enabled once pv1 is valid)
+                    if (pv1) begin
+                        s01 <= pp0 + pp1;
+                        s23 <= pp2 + pp3;
+                        pv2 <= 1'b1;
+                    end
+
+                    // Stage 3: Accumulator update (enabled once pv2 is valid)
+                    if (pv2) begin
+                        acc <= acc + s01 + s23;
+                    end
+
                     if (cycle_cnt == 3'd7) begin
-                        state <= S_DONE;
+                        state <= S_DRAIN_1;
                     end else begin
                         cycle_cnt <= cycle_cnt + 1'b1;
                     end
+                end
+
+                S_DRAIN_1: begin
+                    // Process group 7 in Stage 2; accumulate group 6 in Stage 3
+                    s01   <= pp0 + pp1;
+                    s23   <= pp2 + pp3;
+                    acc   <= acc + s01 + s23;
+                    state <= S_DRAIN_2;
+                end
+
+                S_DRAIN_2: begin
+                    // Accumulate group 7 (final 4 taps) in Stage 3
+                    acc   <= acc + s01 + s23;
+                    state <= S_DONE;
                 end
 
                 S_DONE: begin

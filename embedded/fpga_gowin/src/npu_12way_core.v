@@ -128,16 +128,17 @@ module npu_12way_core #(
     // =========================================================================
     // 4. Main FSM Execution Controller
     // =========================================================================
-    localparam S_IDLE      = 3'd0;
-    localparam S_COMPUTE   = 3'd1;
-    localparam S_DRAIN_1   = 3'd2;
-    localparam S_DRAIN_2   = 3'd3;
-    localparam S_SUM       = 3'd4;
-    localparam S_DECIDE    = 3'd5;
-    localparam S_WAIT_DIV  = 3'd6;
-    localparam S_DONE      = 3'd7;
+    localparam S_IDLE      = 4'd0;
+    localparam S_COMPUTE   = 4'd1;
+    localparam S_DRAIN_1   = 4'd2;
+    localparam S_DRAIN_2   = 4'd3;
+    localparam S_SUM       = 4'd4;
+    localparam S_DECIDE    = 4'd5;
+    localparam S_CHECK     = 4'd6;
+    localparam S_WAIT_DIV  = 4'd7;
+    localparam S_DONE      = 4'd8;
 
-    reg [2:0]   state;
+    reg [3:0]   state;
     reg [8:0]   step_cnt;
 
     // Registers for 4-class scores and evidential Dirichlet uncertainty
@@ -278,9 +279,13 @@ module npu_12way_core #(
                     };
 
                     // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
-                    sum_evidence = get_evidence(score_0) + get_evidence(score_1) +
-                                   get_evidence(score_2) + get_evidence(score_3) + 18'd4;
-                    
+                    // Pipeline register: latch sum_evidence non-blocking to decouple comparator carry-chain
+                    sum_evidence <= get_evidence(score_0) + get_evidence(score_1) +
+                                    get_evidence(score_2) + get_evidence(score_3) + 18'd4;
+                    state <= S_CHECK;
+                end
+
+                S_CHECK: begin
                     if (sum_evidence > 18'd131072) begin
                         vacuity_q15 <= 16'd1;
                         ood_alert   <= 1'b0;
