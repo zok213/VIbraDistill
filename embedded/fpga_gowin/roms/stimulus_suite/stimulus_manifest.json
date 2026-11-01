@@ -1,0 +1,226 @@
+[
+  {
+    "file": "01_cwru_normal_0hp.hex",
+    "true_class_id": 0,
+    "true_class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "description": "Chuẩn vòng bi lành lặn 0 HP",
+    "size_words": 512
+  },
+  {
+    "file": "02_cwru_inner_7mil_0hp.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "0 HP / 1797 RPM",
+    "description": "Lỗi vòng trong 7-mil (BPFI ~162Hz)",
+    "size_words": 512
+  },
+  {
+    "file": "03_cwru_outer_7mil_0hp.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "0 HP / 1797 RPM",
+    "description": "Lỗi vòng ngoài 7-mil (BPFO ~107Hz)",
+    "size_words": 512
+  },
+  {
+    "file": "04_cwru_ball_7mil_0hp.hex",
+    "true_class_id": 3,
+    "true_class_name": "Ball",
+    "condition": "0 HP / 1797 RPM",
+    "description": "Lỗi viên bi 7-mil (BSF ~71Hz)",
+    "size_words": 512
+  },
+  {
+    "file": "05_cwru_normal_1hp.hex",
+    "true_class_id": 0,
+    "true_class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "description": "Chuẩn vòng bi lành lặn 1 HP",
+    "size_words": 512
+  },
+  {
+    "file": "06_cwru_inner_7mil_1hp.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "1 HP / 1772 RPM",
+    "description": "Lỗi vòng trong 7-mil tải 1 HP",
+    "size_words": 512
+  },
+  {
+    "file": "07_cwru_outer_7mil_1hp.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "1 HP / 1772 RPM",
+    "description": "Lỗi vòng ngoài 7-mil tải 1 HP",
+    "size_words": 512
+  },
+  {
+    "file": "08_cwru_ball_7mil_1hp.hex",
+    "true_class_id": 3,
+    "true_class_name": "Ball",
+    "condition": "1 HP / 1772 RPM",
+    "description": "Lỗi viên bi 7-mil tải 1 HP",
+    "size_words": 512
+  },
+  {
+    "file": "09_cwru_normal_2hp.hex",
+    "true_class_id": 0,
+    "true_class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "description": "Chuẩn vòng bi lành lặn 2 HP",
+    "size_words": 512
+  },
+  {
+    "file": "10_cwru_inner_7mil_2hp.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "2 HP / 1750 RPM",
+    "description": "Lỗi vòng trong 7-mil tải 2 HP",
+    "size_words": 512
+  },
+  {
+    "file": "11_cwru_outer_7mil_2hp.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "2 HP / 1750 RPM",
+    "description": "Lỗi vòng ngoài 7-mil tải 2 HP",
+    "size_words": 512
+  },
+  {
+    "file": "12_cwru_ball_7mil_2hp.hex",
+    "true_class_id": 3,
+    "true_class_name": "Ball",
+    "condition": "2 HP / 1750 RPM",
+    "description": "Lỗi viên bi 7-mil tải 2 HP",
+    "size_words": 512
+  },
+  {
+    "file": "13_cwru_normal_3hp.hex",
+    "true_class_id": 0,
+    "true_class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "description": "Chuẩn vòng bi lành lặn 3 HP",
+    "size_words": 512
+  },
+  {
+    "file": "14_cwru_inner_7mil_3hp.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "3 HP / 1730 RPM",
+    "description": "Lỗi vòng trong 7-mil tải 3 HP",
+    "size_words": 512
+  },
+  {
+    "file": "15_cwru_outer_7mil_3hp.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "3 HP / 1730 RPM",
+    "description": "Lỗi vòng ngoài 7-mil tải 3 HP",
+    "size_words": 512
+  },
+  {
+    "file": "16_cwru_ball_7mil_3hp.hex",
+    "true_class_id": 3,
+    "true_class_name": "Ball",
+    "condition": "3 HP / 1730 RPM",
+    "description": "Lỗi viên bi 7-mil tải 3 HP",
+    "size_words": 512
+  },
+  {
+    "file": "17_cwru_inner_14mil_1hp.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "1 HP / 14-mil",
+    "description": "Lỗi vòng trong vết nứt 14-mil",
+    "size_words": 512
+  },
+  {
+    "file": "18_cwru_outer_14mil_1hp.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "1 HP / 14-mil",
+    "description": "Lỗi vòng ngoài vết nứt 14-mil",
+    "size_words": 512
+  },
+  {
+    "file": "19_cwru_ball_14mil_1hp.hex",
+    "true_class_id": 3,
+    "true_class_name": "Ball",
+    "condition": "1 HP / 14-mil",
+    "description": "Lỗi viên bi vết nứt 14-mil",
+    "size_words": 512
+  },
+  {
+    "file": "20_cwru_inner_21mil_1hp.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "1 HP / 21-mil",
+    "description": "Lỗi vòng trong phá hủy nặng 21-mil",
+    "size_words": 512
+  },
+  {
+    "file": "21_cwru_outer_21mil_1hp.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "1 HP / 21-mil",
+    "description": "Lỗi vòng ngoài phá hủy nặng 21-mil",
+    "size_words": 512
+  },
+  {
+    "file": "22_cwru_ball_21mil_1hp.hex",
+    "true_class_id": 3,
+    "true_class_name": "Ball",
+    "condition": "1 HP / 21-mil",
+    "description": "Lỗi viên bi phá hủy nặng 21-mil",
+    "size_words": 512
+  },
+  {
+    "file": "23_cwru_inner_7mil_win2.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "0 HP / Window 2",
+    "description": "Cửa sổ thời gian số 2 (Offset 4096)",
+    "size_words": 512
+  },
+  {
+    "file": "24_cwru_inner_7mil_win3.hex",
+    "true_class_id": 1,
+    "true_class_name": "Inner",
+    "condition": "0 HP / Window 3",
+    "description": "Cửa sổ thời gian số 3 (Offset 8192)",
+    "size_words": 512
+  },
+  {
+    "file": "25_cwru_outer_7mil_win2.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "0 HP / Window 2",
+    "description": "Cửa sổ thời gian số 2 (Offset 4096)",
+    "size_words": 512
+  },
+  {
+    "file": "26_cwru_outer_7mil_win3.hex",
+    "true_class_id": 2,
+    "true_class_name": "Outer",
+    "condition": "0 HP / Window 3",
+    "description": "Cửa sổ thời gian số 3 (Offset 8192)",
+    "size_words": 512
+  },
+  {
+    "file": "27_ood_high_noise.hex",
+    "true_class_id": -1,
+    "true_class_name": "OOD Anomaly",
+    "condition": "Gaussian Noise",
+    "description": "Nhiễu trắng biên độ cao (Test đèn OOD Vacuity)",
+    "size_words": 512
+  },
+  {
+    "file": "28_ood_synthetic_multitone.hex",
+    "true_class_id": -1,
+    "true_class_name": "OOD Anomaly",
+    "condition": "Synthetic Multitone",
+    "description": "Tín hiệu cộng hưởng lạ 450Hz & 850Hz",
+    "size_words": 512
+  }
+]

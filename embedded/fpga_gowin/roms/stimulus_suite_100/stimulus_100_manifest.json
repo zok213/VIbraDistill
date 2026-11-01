@@ -1,0 +1,1002 @@
+[
+  {
+    "id": 1,
+    "file": "stimulus_001_normal_vec01.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 512,
+    "expected_trip": false
+  },
+  {
+    "id": 2,
+    "file": "stimulus_002_normal_vec02.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "source_mat": "98.mat",
+    "offset": 512,
+    "expected_trip": false
+  },
+  {
+    "id": 3,
+    "file": "stimulus_003_normal_vec03.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "source_mat": "99.mat",
+    "offset": 512,
+    "expected_trip": false
+  },
+  {
+    "id": 4,
+    "file": "stimulus_004_normal_vec04.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "source_mat": "100.mat",
+    "offset": 512,
+    "expected_trip": false
+  },
+  {
+    "id": 5,
+    "file": "stimulus_005_normal_vec05.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 1024,
+    "expected_trip": false
+  },
+  {
+    "id": 6,
+    "file": "stimulus_006_normal_vec06.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "source_mat": "98.mat",
+    "offset": 1024,
+    "expected_trip": false
+  },
+  {
+    "id": 7,
+    "file": "stimulus_007_normal_vec07.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "source_mat": "99.mat",
+    "offset": 1024,
+    "expected_trip": false
+  },
+  {
+    "id": 8,
+    "file": "stimulus_008_normal_vec08.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "source_mat": "100.mat",
+    "offset": 1024,
+    "expected_trip": false
+  },
+  {
+    "id": 9,
+    "file": "stimulus_009_normal_vec09.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 1536,
+    "expected_trip": false
+  },
+  {
+    "id": 10,
+    "file": "stimulus_010_normal_vec10.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "source_mat": "98.mat",
+    "offset": 1536,
+    "expected_trip": false
+  },
+  {
+    "id": 11,
+    "file": "stimulus_011_normal_vec11.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "source_mat": "99.mat",
+    "offset": 1536,
+    "expected_trip": false
+  },
+  {
+    "id": 12,
+    "file": "stimulus_012_normal_vec12.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "source_mat": "100.mat",
+    "offset": 1536,
+    "expected_trip": false
+  },
+  {
+    "id": 13,
+    "file": "stimulus_013_normal_vec13.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 2048,
+    "expected_trip": false
+  },
+  {
+    "id": 14,
+    "file": "stimulus_014_normal_vec14.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "source_mat": "98.mat",
+    "offset": 2048,
+    "expected_trip": false
+  },
+  {
+    "id": 15,
+    "file": "stimulus_015_normal_vec15.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "source_mat": "99.mat",
+    "offset": 2048,
+    "expected_trip": false
+  },
+  {
+    "id": 16,
+    "file": "stimulus_016_normal_vec16.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "source_mat": "100.mat",
+    "offset": 2048,
+    "expected_trip": false
+  },
+  {
+    "id": 17,
+    "file": "stimulus_017_normal_vec17.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 2560,
+    "expected_trip": false
+  },
+  {
+    "id": 18,
+    "file": "stimulus_018_normal_vec18.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "source_mat": "98.mat",
+    "offset": 2560,
+    "expected_trip": false
+  },
+  {
+    "id": 19,
+    "file": "stimulus_019_normal_vec19.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "source_mat": "99.mat",
+    "offset": 2560,
+    "expected_trip": false
+  },
+  {
+    "id": 20,
+    "file": "stimulus_020_normal_vec20.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "source_mat": "100.mat",
+    "offset": 2560,
+    "expected_trip": false
+  },
+  {
+    "id": 21,
+    "file": "stimulus_021_normal_vec21.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 3072,
+    "expected_trip": false
+  },
+  {
+    "id": 22,
+    "file": "stimulus_022_normal_vec22.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "1 HP / 1772 RPM",
+    "source_mat": "98.mat",
+    "offset": 3072,
+    "expected_trip": false
+  },
+  {
+    "id": 23,
+    "file": "stimulus_023_normal_vec23.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "2 HP / 1750 RPM",
+    "source_mat": "99.mat",
+    "offset": 3072,
+    "expected_trip": false
+  },
+  {
+    "id": 24,
+    "file": "stimulus_024_normal_vec24.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "3 HP / 1730 RPM",
+    "source_mat": "100.mat",
+    "offset": 3072,
+    "expected_trip": false
+  },
+  {
+    "id": 25,
+    "file": "stimulus_025_normal_vec25.hex",
+    "class_id": 0,
+    "class_name": "Normal",
+    "condition": "0 HP / 1797 RPM",
+    "source_mat": "97.mat",
+    "offset": 3584,
+    "expected_trip": false
+  },
+  {
+    "id": 26,
+    "file": "stimulus_026_inner_vec01.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "105.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 27,
+    "file": "stimulus_027_inner_vec02.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "106.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 28,
+    "file": "stimulus_028_inner_vec03.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "107.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 29,
+    "file": "stimulus_029_inner_vec04.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "108.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 30,
+    "file": "stimulus_030_inner_vec05.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "170.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 31,
+    "file": "stimulus_031_inner_vec06.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "210.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 32,
+    "file": "stimulus_032_inner_vec07.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "105.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 33,
+    "file": "stimulus_033_inner_vec08.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "106.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 34,
+    "file": "stimulus_034_inner_vec09.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "107.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 35,
+    "file": "stimulus_035_inner_vec10.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "108.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 36,
+    "file": "stimulus_036_inner_vec11.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "170.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 37,
+    "file": "stimulus_037_inner_vec12.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "210.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 38,
+    "file": "stimulus_038_inner_vec13.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "105.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 39,
+    "file": "stimulus_039_inner_vec14.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "106.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 40,
+    "file": "stimulus_040_inner_vec15.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "107.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 41,
+    "file": "stimulus_041_inner_vec16.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "108.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 42,
+    "file": "stimulus_042_inner_vec17.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "170.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 43,
+    "file": "stimulus_043_inner_vec18.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "210.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 44,
+    "file": "stimulus_044_inner_vec19.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "105.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 45,
+    "file": "stimulus_045_inner_vec20.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "106.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 46,
+    "file": "stimulus_046_inner_vec21.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "107.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 47,
+    "file": "stimulus_047_inner_vec22.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "108.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 48,
+    "file": "stimulus_048_inner_vec23.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "170.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 49,
+    "file": "stimulus_049_inner_vec24.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "210.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 50,
+    "file": "stimulus_050_inner_vec25.hex",
+    "class_id": 1,
+    "class_name": "Inner",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "105.mat",
+    "offset": 2560,
+    "expected_trip": true
+  },
+  {
+    "id": 51,
+    "file": "stimulus_051_outer_vec01.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "130.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 52,
+    "file": "stimulus_052_outer_vec02.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "131.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 53,
+    "file": "stimulus_053_outer_vec03.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "132.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 54,
+    "file": "stimulus_054_outer_vec04.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "133.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 55,
+    "file": "stimulus_055_outer_vec05.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "198.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 56,
+    "file": "stimulus_056_outer_vec06.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "235.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 57,
+    "file": "stimulus_057_outer_vec07.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "130.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 58,
+    "file": "stimulus_058_outer_vec08.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "131.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 59,
+    "file": "stimulus_059_outer_vec09.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "132.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 60,
+    "file": "stimulus_060_outer_vec10.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "133.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 61,
+    "file": "stimulus_061_outer_vec11.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "198.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 62,
+    "file": "stimulus_062_outer_vec12.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "235.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 63,
+    "file": "stimulus_063_outer_vec13.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "130.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 64,
+    "file": "stimulus_064_outer_vec14.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "131.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 65,
+    "file": "stimulus_065_outer_vec15.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "132.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 66,
+    "file": "stimulus_066_outer_vec16.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "133.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 67,
+    "file": "stimulus_067_outer_vec17.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "198.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 68,
+    "file": "stimulus_068_outer_vec18.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "235.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 69,
+    "file": "stimulus_069_outer_vec19.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "130.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 70,
+    "file": "stimulus_070_outer_vec20.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "131.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 71,
+    "file": "stimulus_071_outer_vec21.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "132.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 72,
+    "file": "stimulus_072_outer_vec22.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "133.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 73,
+    "file": "stimulus_073_outer_vec23.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "198.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 74,
+    "file": "stimulus_074_outer_vec24.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "235.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 75,
+    "file": "stimulus_075_outer_vec25.hex",
+    "class_id": 2,
+    "class_name": "Outer",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "130.mat",
+    "offset": 2560,
+    "expected_trip": true
+  },
+  {
+    "id": 76,
+    "file": "stimulus_076_ball_vec01.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "118.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 77,
+    "file": "stimulus_077_ball_vec02.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "119.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 78,
+    "file": "stimulus_078_ball_vec03.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "120.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 79,
+    "file": "stimulus_079_ball_vec04.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "121.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 80,
+    "file": "stimulus_080_ball_vec05.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "186.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 81,
+    "file": "stimulus_081_ball_vec06.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "223.mat",
+    "offset": 512,
+    "expected_trip": true
+  },
+  {
+    "id": 82,
+    "file": "stimulus_082_ball_vec07.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "118.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 83,
+    "file": "stimulus_083_ball_vec08.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "119.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 84,
+    "file": "stimulus_084_ball_vec09.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "120.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 85,
+    "file": "stimulus_085_ball_vec10.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "121.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 86,
+    "file": "stimulus_086_ball_vec11.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "186.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 87,
+    "file": "stimulus_087_ball_vec12.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "223.mat",
+    "offset": 1024,
+    "expected_trip": true
+  },
+  {
+    "id": 88,
+    "file": "stimulus_088_ball_vec13.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "118.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 89,
+    "file": "stimulus_089_ball_vec14.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "119.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 90,
+    "file": "stimulus_090_ball_vec15.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "120.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 91,
+    "file": "stimulus_091_ball_vec16.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "121.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 92,
+    "file": "stimulus_092_ball_vec17.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "186.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 93,
+    "file": "stimulus_093_ball_vec18.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "223.mat",
+    "offset": 1536,
+    "expected_trip": true
+  },
+  {
+    "id": 94,
+    "file": "stimulus_094_ball_vec19.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "118.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 95,
+    "file": "stimulus_095_ball_vec20.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 1 HP (1772 RPM)",
+    "source_mat": "119.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 96,
+    "file": "stimulus_096_ball_vec21.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 2 HP (1750 RPM)",
+    "source_mat": "120.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 97,
+    "file": "stimulus_097_ball_vec22.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 3 HP (1730 RPM)",
+    "source_mat": "121.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 98,
+    "file": "stimulus_098_ball_vec23.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "14mil / 1 HP (Unseen)",
+    "source_mat": "186.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 99,
+    "file": "stimulus_099_ball_vec24.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "21mil / 1 HP (Severe)",
+    "source_mat": "223.mat",
+    "offset": 2048,
+    "expected_trip": true
+  },
+  {
+    "id": 100,
+    "file": "stimulus_100_ball_vec25.hex",
+    "class_id": 3,
+    "class_name": "Ball",
+    "condition": "7mil / 0 HP (1797 RPM)",
+    "source_mat": "118.mat",
+    "offset": 2560,
+    "expected_trip": true
+  }
+]
