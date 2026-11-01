@@ -234,6 +234,12 @@ Sau khi cấp nguồn 5V cho cả 2 bo mạch và bật động cơ thử nghi�
 Chế độ HIL (Hardware-in-the-Loop) dùng để chứng minh với Ban giám khảo rằng hệ thống xử lý hoàn hảo các tiêu chuẩn dữ liệu rung chấn công nghiệp tần số cao ($F_s = 12\,\text{kHz}$, dải lọc $2 - 5\,\text{kHz}$).
 
 ### 3.1. Chế Độ Replay Tự Động Từ Bộ Nhớ Trong BRAM (Không Cần Máy Tính)
+
+> [!IMPORTANT]
+> **CẢNH BÁO QUAN TRỌNG: PHÂN BIỆT FILE SÓNG RUNG THỜI GIAN vs. VECTOR PHỔ FFT**
+> * **File nạp sóng rung cảm biến công nghiệp:** Bắt buộc dùng bộ file [`embedded/fpga_gowin/roms/stimulus_cwru_*.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/) (mỗi file gồm 512 mẫu sóng rung 16-bit signed trích từ file `.mat` CWRU 12 kHz).
+> * **TUYỆT ĐỐI KHÔNG GÁN FILE [`test_vectors/cosim_input.hex`](file:///d:/Gitrepo/VIbraDistill/test_vectors/cosim_input.hex) VÀO ĐÂY:** Vì file đó là **257 bin phổ FFT tĩnh**, chỉ dùng cho testbench độc lập của NPU (`tb_npu_cosim.v`). Nếu nạp nhầm vào bộ phát sóng rung, phổ tần số sẽ bị bộ lọc FIR và FFT xử lý lần thứ hai, làm sai lệch hoàn toàn tần số dao động!
+
 1. Trong file [`gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v), đổi tham số:
    ```verilog
    parameter USE_ADXL345 = 0; // 0: HIL / 12kHz Mode
@@ -243,7 +249,12 @@ Chế độ HIL (Hardware-in-the-Loop) dùng để chứng minh với Ban giám 
    - Bộ giải điều chế bao: Tần số cắt $F_c = 1000\,\text{Hz}$.
    - Trọng số NPU: [`roms/hil/npu_weights_bank0..5.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/hil/) (Độ chính xác **98.71%**).
    - Biases NPU: `[-5, -3, 14, -6]`.
-   - Dữ liệu kích thích: Nạp sẵn từ các file `stimulus_cwru_normal.hex`, `stimulus_cwru_inner.hex`, `stimulus_cwru_outer.hex`, `stimulus_cwru_ball.hex`.
+   - Dữ liệu kích thích sóng rung 12 kHz: Nạp sẵn từ các file:
+     * `stimulus_cwru_normal.hex` (Vòng bi bình thường - Class 0)
+     * `stimulus_cwru_inner.hex` (Lỗi vòng trong BPFI - Class 1)
+     * `stimulus_cwru_outer.hex` (Lỗi vòng ngoài BPFO - Class 2)
+     * `stimulus_cwru_ball.hex` (Lỗi viên bi BSF - Class 3)
+     * `stimulus_cwru_mixed.hex` (Đa lỗi / OOD)
 3. Biên dịch và nạp vào Tang Primer 20K. FPGA sẽ tự động phát lại các mẫu rung CWRU tuần tự và gửi telemetry sang MCU.
 
 ### 3.2. Chế Độ Bơm Dữ Liệu Thời Gian Thực Qua USB-UART (921,600 Baud)

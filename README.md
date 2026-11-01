@@ -106,6 +106,35 @@ Trong quá trình tối ưu hóa và khép kín thời gian (Timing Closure) cho
 
 ---
 
+## 🎯 CẨM NANG PHÂN BIỆT FILE DỮ LIỆU ĐẦU VÀO TRÊN FPGA (DATA INPUT & STIMULUS MATRIX)
+
+> [!IMPORTANT]
+> **CẢNH BÁO QUAN TRỌNG KHI NẠP DỮ LIỆU KIỂM THỬ PHẦN CỨNG (TRÁNH LỖI GÁN NHẦM FILE):**  
+> Trong thư mục dự án có 2 loại file `.hex` mang chữ "input", có bản chất vật lý hoàn toàn khác biệt nhau:
+> 1. **Dữ liệu Sóng Rung Thô theo Thời Gian (`stimulus_cwru_*.hex`):** Là tín hiệu thời gian thực giả lập cảm biến rung công nghiệp (12 kHz CWRU), phải nạp vào **đầu chuỗi xử lý tín hiệu DSP (đầu vào bộ lọc FIR/FFT)**.
+> 2. **Dữ liệu Phổ Tần Số Đã Qua FFT (`test_vectors/cosim_input.hex`):** Là 257 bin tần số sau FFT, chỉ dùng nạp trực tiếp vào **riêng khối suy luận NPU (`npu_12way_core.v`)** trong bài testbench tĩnh.
+> ⚠️ **TUYỆT ĐỐI KHÔNG NẠP NHẦM:** Nếu gán file `cosim_input.hex` vào khối giả lập cảm biến rung, phổ tần số sẽ bị bộ lọc FIR và FFT xử lý lần thứ hai, gây méo mó hoàn toàn và NPU sẽ dự đoán sai!
+
+### 📊 Bảng Ma Trận Phân Biệt Các Tệp Dữ Liệu & Vị Trí Gán Chuẩn:
+
+| Nhóm Dữ Liệu | Đường Dẫn File Cụ Thể | Định Dạng Dữ Liệu | Bản Chất Vật Lý | Khối Phần Cứng Đón Nhận | Mục Đích Sử Dụng |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| **1. Sóng Rung Công Nghiệp Giả Lập (CWRU 12 kHz)** | [`embedded/fpga_gowin/roms/stimulus_cwru_normal.hex`](embedded/fpga_gowin/roms/stimulus_cwru_normal.hex)<br>[`embedded/fpga_gowin/roms/stimulus_cwru_inner.hex`](embedded/fpga_gowin/roms/stimulus_cwru_inner.hex)<br>[`embedded/fpga_gowin/roms/stimulus_cwru_outer.hex`](embedded/fpga_gowin/roms/stimulus_cwru_outer.hex)<br>[`embedded/fpga_gowin/roms/stimulus_cwru_ball.hex`](embedded/fpga_gowin/roms/stimulus_cwru_ball.hex)<br>[`embedded/fpga_gowin/roms/stimulus_cwru_mixed.hex`](embedded/fpga_gowin/roms/stimulus_cwru_mixed.hex) | 512 dòng x 16-bit signed hex | **Tín hiệu sóng rung dao động thô theo thời gian** trích xuất từ 15 file `.mat` CWRU ($F_s = 12\,\text{kHz}$) | **Đầu vào chuỗi DSP FPGA** (Replay BRAM thay cho ADXL345 khi `USE_ADXL345 = 0`) | Kiểm thử toàn diện chuỗi: Sóng rung $\to$ Lọc FIR $\to$ Tách bao $\to$ FFT $\to$ NPU AI phân loại |
+| **2. Vector Phổ Tần Số Sau FFT (NPU Testbench)** | [`test_vectors/cosim_input.hex`](test_vectors/cosim_input.hex)<br>[`test_vectors/cosim_golden.hex`](test_vectors/cosim_golden.hex) | 261 dòng x 8-bit hex (257 bins phổ + 4 priors) | **Biên độ phổ tần số đã qua FFT** (Frequency-domain spectral bins INT8) | **Riêng khối NPU Core** ([`npu_12way_core.v`](embedded/fpga_gowin/src/npu_12way_core.v)) hoặc BRAM phổ tĩnh | Dùng cho testbench RTL [`tb_npu_cosim.v`](embedded/fpga_gowin/src/tb_npu_cosim.v) và script co-sim Python kiểm chứng bit-true lõi nhân chập |
+| **3. Trọng Số NPU BSRAM (Cảm Biến Thật ADXL345)** | [`embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex`](embedded/fpga_gowin/roms/adxl345/) | 6 file x 257 dòng x 16-bit hex | Trọng số mạng NPU 12 kênh huấn luyện trên dải tần cảm biến thật ($0 - 1,600\,\text{Hz}$) | 6 khối BSRAM trong NPU khi `USE_ADXL345 = 1` | Chạy thực tế tại bàn demo với cảm biến ADXL345 và động cơ 130 |
+| **4. Trọng Số NPU BSRAM (HIL Công Nghiệp CWRU)** | [`embedded/fpga_gowin/roms/hil/npu_weights_bank0..5.hex`](embedded/fpga_gowin/roms/hil/) | 6 file x 257 dòng x 16-bit hex | Trọng số mạng NPU 12 kênh huấn luyện trên dải tần cao công nghiệp ($2,000 - 5,000\,\text{Hz}$) | 6 khối BSRAM trong NPU khi `USE_ADXL345 = 0` | Chạy chế độ HIL Replay hoặc nhận luồng dữ liệu 12 kHz qua USB-UART |
+
+### 🛠️ Hướng Dẫn Cách Gán Nhanh Trong Gowin EDA:
+* **Khi muốn test AI với cảm biến rung công nghiệp (Mode HIL 12 kHz):**
+  1. Mở [`gowin_top_soc.v`](embedded/fpga_gowin/src/gowin_top_soc.v), đặt: `parameter USE_ADXL345 = 0;`.
+  2. Hệ thống sẽ tự động cấu hình bộ lọc FIR 12 kHz ([`fir_minphase_32.v`](embedded/fpga_gowin/src/fir_minphase_32.v)) và nạp trọng số NPU chuẩn công nghiệp từ thư mục `roms/hil/`.
+  3. Để đổi kịch bản rung kiểm thử, chỉ cần trỏ file kích thích sóng rung mong muốn (`stimulus_cwru_normal.hex`, `stimulus_cwru_inner.hex`, v.v.) vào khối BRAM phát sóng rung đầu vào.
+* **Khi muốn chạy demo thật trên động cơ (Mode Live Physical):**
+  1. Mở [`gowin_top_soc.v`](embedded/fpga_gowin/src/gowin_top_soc.v), đặt: `parameter USE_ADXL345 = 1;`.
+  2. Hệ thống sẽ tự động chuyển sang đọc cảm biến GY-291 thật qua SPI, áp dụng bộ lọc 3.2 kHz ([`fir_adxl345_32.v`](embedded/fpga_gowin/src/fir_adxl345_32.v)) và nạp trọng số tối ưu từ thư mục `roms/adxl345/`.
+
+---
+
 ## 📌 BẢNG TỔNG HỢP MÔ HÌNH & TRỌNG SỐ CHÍNH THỨC (PRODUCTION MODEL ARTIFACTS INDEX)
 
 > [!IMPORTANT]
