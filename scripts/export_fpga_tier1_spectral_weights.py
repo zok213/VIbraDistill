@@ -18,13 +18,25 @@ import os
 import torch
 import numpy as np
 
-def generate_and_export_tier1_weights(output_dir: str = "embedded/fpga_gowin/roms/adxl345"):
+def generate_and_export_tier1_weights(mode: str = "adxl345", output_dir: str = None):
+    if mode == "adxl345":
+        train_path = "data/cache/cwru_train_adxl345_w512.pt"
+        val_path = "data/cache/cwru_val_adxl345_w512.pt"
+        if output_dir is None:
+            output_dir = "embedded/fpga_gowin/roms/adxl345"
+        bands = [(0, 65), (65, 141), (141, 257)] # Fs=3200Hz: 0-400Hz, 400-875Hz, 875-1600Hz
+    elif mode == "hil":
+        train_path = "data/cache/cwru_train_w512.pt"
+        val_path = "data/cache/cwru_val_w512.pt"
+        if output_dir is None:
+            output_dir = "embedded/fpga_gowin/roms/hil"
+        bands = [(0, 85), (85, 171), (171, 257)] # Fs=12000Hz: 0-2000Hz, 2000-4000Hz, 4000-6000Hz
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
+
     os.makedirs(output_dir, exist_ok=True)
     
-    # 1. Load cached ADXL345 data
-    train_path = "data/cache/cwru_train_adxl345_w512.pt"
-    val_path = "data/cache/cwru_val_adxl345_w512.pt"
-    
+    # 1. Load cached data
     d_tr = torch.load(train_path, weights_only=False)
     d_va = torch.load(val_path, weights_only=False)
     
@@ -34,7 +46,7 @@ def generate_and_export_tier1_weights(output_dir: str = "embedded/fpga_gowin/rom
     X_va = torch.clamp(torch.round(d_va['spectra'].squeeze(1) * X_scale), 0, 127)
     y_va = d_va['labels']
     
-    print(f"[Tier-1 Train] Samples: {len(X_tr)} train, {len(X_va)} val. Bins: 257.")
+    print(f"[{mode.upper()} Tier-1 Train] Samples: {len(X_tr)} train, {len(X_va)} val. Bins: 257.")
     
     # 2. Train optimal linear spectral discriminator
     torch.manual_seed(42)
@@ -54,12 +66,8 @@ def generate_and_export_tier1_weights(output_dir: str = "embedded/fpga_gowin/rom
     b_int32 = torch.round(linear.bias.data * w_scale).to(torch.int32)          # [4]
     
     # 3. Decompose into 12 sub-band channels (3 per class)
-    # Band 0: [0..64]   (0 - 400 Hz: Fundamental fault harmonics & fr)
-    # Band 1: [65..140] (400 - 875 Hz: 2nd-5th harmonics & modulation sidebands)
-    # Band 2: [141..256](875 - 1600 Hz: High-frequency carrier tail)
     w12_int8 = torch.zeros(12, 257, dtype=torch.int32)
     b12_int32 = torch.zeros(12, dtype=torch.int32)
-    bands = [(0, 65), (65, 141), (141, 257)]
     
     for c in range(4):
         for s, (b_start, b_end) in enumerate(bands):
@@ -115,15 +123,29 @@ def generate_and_export_tier1_weights(output_dir: str = "embedded/fpga_gowin/rom
         f.write("===================================================\n")
         f.write("Architecture: 12-Way Systolic Spectral Matcher (< 3us Latency)\n")
         f.write(f"Validation Accuracy: {val_acc * 100:.2f}%\n")
+        f.write(f"Mode: {mode}\n")
         f.write("Channel Allocation:\n")
-        f.write("  - Class 0 (Normal):     Channels 0 (0-400Hz), 1 (400-875Hz), 2 (875-1600Hz)\n")
-        f.write("  - Class 1 (Inner BPFI): Channels 3 (0-400Hz), 4 (400-875Hz), 5 (875-1600Hz)\n")
-        f.write("  - Class 2 (Outer BPFO): Channels 6 (0-400Hz), 7 (400-875Hz), 8 (875-1600Hz)\n")
-        f.write("  - Class 3 (Ball BSF):   Channels 9 (0-400Hz), 10 (400-875Hz), 11 (875-1600Hz)\n")
+        if mode == "adxl345":
+            f.write("  - Class 0 (Normal):     Channels 0 (0-400Hz), 1 (400-875Hz), 2 (875-1600Hz)\n")
+            f.write("  - Class 1 (Inner BPFI): Channels 3 (0-400Hz), 4 (400-875Hz), 5 (875-1600Hz)\n")
+            f.write("  - Class 2 (Outer BPFO): Channels 6 (0-400Hz), 7 (400-875Hz), 8 (875-1600Hz)\n")
+            f.write("  - Class 3 (Ball BSF):   Channels 9 (0-400Hz), 10 (400-875Hz), 11 (875-1600Hz)\n")
+        else:
+            f.write("  - Class 0 (Normal):     Channels 0 (0-2000Hz), 1 (2000-4000Hz), 2 (4000-6000Hz)\n")
+            f.write("  - Class 1 (Inner BPFI): Channels 3 (0-2000Hz), 4 (2000-4000Hz), 5 (4000-6000Hz)\n")
+            f.write("  - Class 2 (Outer BPFO): Channels 6 (0-2000Hz), 7 (2000-4000Hz), 8 (4000-6000Hz)\n")
+            f.write("  - Class 3 (Ball BSF):   Channels 9 (0-2000Hz), 10 (2000-4000Hz), 11 (4000-6000Hz)\n")
         f.write("\nChannel Biases (INT32):\n")
         for c in range(4):
             f.write(f"  - Class {c} Bias: {b_int32[c].item()}\n")
     print(f"Exported Documentation: {map_file}")
+    return b_int32
 
 if __name__ == "__main__":
-    generate_and_export_tier1_weights()
+    print(">>> 1. EXPORTING NATIVE ADXL345 WEIGHTS (Fs = 3.2 kHz)...")
+    b_adxl = generate_and_export_tier1_weights(mode="adxl345")
+    print(f"ADXL Biases: {b_adxl.tolist()}")
+    
+    print("\n>>> 2. EXPORTING HIL STREAMER WEIGHTS (Fs = 12 kHz CWRU)...")
+    b_hil = generate_and_export_tier1_weights(mode="hil")
+    print(f"HIL Biases: {b_hil.tolist()}")

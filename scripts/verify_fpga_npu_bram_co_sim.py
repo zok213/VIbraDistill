@@ -63,9 +63,9 @@ def simulate_npu_12way_rtl_cycle_by_cycle():
     # 3. Simulate cycle-by-cycle RTL execution
     # Hardware parameters:
     # Clock: 100 MHz (10 ns)
-    # S_IDLE -> S_COMPUTE (257 cycles) -> S_SUM (1 cycle) -> S_DECIDE (1 cycle) -> S_DONE (1 cycle)
-    CYCLES_PER_INFERENCE = 260
-    LATENCY_US = (CYCLES_PER_INFERENCE * 10) / 1000.0 # 2.60 µs
+    # S_IDLE -> S_COMPUTE (257 cycles) -> S_DRAIN_1 (1 cycle) -> S_DRAIN_2 (1 cycle) -> S_SUM (1 cycle) -> S_DECIDE (1 cycle) -> S_DONE (1 cycle)
+    CYCLES_PER_INFERENCE = 262
+    LATENCY_US = (CYCLES_PER_INFERENCE * 10) / 1000.0 # 2.62 µs
 
     biases = np.array([0, -3, 8, -4], dtype=np.int32)
 

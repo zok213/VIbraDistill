@@ -145,6 +145,34 @@ class TestQuantizationAndNPU(unittest.TestCase):
         self.assertIn('#define SPI_FRAME_SIZE          524', main_c_content)
         self.assertIn('.TOTAL_BYTES (524)', soc_content)
 
+    def test_gowin_hil_roms_and_pipelined_timing(self):
+        """Verifies both ADXL345 and HIL ROMs exist, have 257 words each, and NPU core has 2-stage pipeline."""
+        base_rom = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'roms')
+        
+        # 1. Verify ADXL345 and HIL bank files
+        for mode in ['adxl345', 'hil']:
+            mode_dir = os.path.join(base_rom, mode)
+            self.assertTrue(os.path.exists(mode_dir), f"Missing ROM dir: {mode_dir}")
+            for b in range(6):
+                hex_f = os.path.join(mode_dir, f"npu_weights_bank{b}.hex")
+                self.assertTrue(os.path.exists(hex_f), f"Missing hex: {hex_f}")
+                with open(hex_f, 'r') as f:
+                    lines = [l.strip() for l in f if l.strip()]
+                self.assertEqual(len(lines), 257, f"{hex_f} has {len(lines)} lines, expected 257")
+
+        # 2. Verify MAC pipeline in npu_mac12_unit.v and drain states in npu_12way_core.v
+        mac_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'src', 'npu_mac12_unit.v')
+        with open(mac_path, 'r') as f:
+            mac_src = f.read()
+        self.assertIn('pipe1_act', mac_src)
+        self.assertIn('pipe2_prod', mac_src)
+
+        core_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'src', 'npu_12way_core.v')
+        with open(core_path, 'r') as f:
+            core_src = f.read()
+        self.assertIn('S_DRAIN_1', core_src)
+        self.assertIn('S_DRAIN_2', core_src)
+
 
 if __name__ == '__main__':
     unittest.main()

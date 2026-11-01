@@ -1,0 +1,16 @@
+GOWIN PRIMER 20K TIER-1 SPECTRAL WEIGHT MEMORY MAP
+===================================================
+Architecture: 12-Way Systolic Spectral Matcher (< 3us Latency)
+Validation Accuracy: 98.71%
+Mode: hil
+Channel Allocation:
+  - Class 0 (Normal):     Channels 0 (0-2000Hz), 1 (2000-4000Hz), 2 (4000-6000Hz)
+  - Class 1 (Inner BPFI): Channels 3 (0-2000Hz), 4 (2000-4000Hz), 5 (4000-6000Hz)
+  - Class 2 (Outer BPFO): Channels 6 (0-2000Hz), 7 (2000-4000Hz), 8 (4000-6000Hz)
+  - Class 3 (Ball BSF):   Channels 9 (0-2000Hz), 10 (2000-4000Hz), 11 (4000-6000Hz)
+
+Channel Biases (INT32):
+  - Class 0 Bias: -5
+  - Class 1 Bias: -3
+  - Class 2 Bias: 14
+  - Class 3 Bias: -6

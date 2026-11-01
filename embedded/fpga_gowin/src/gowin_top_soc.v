@@ -14,12 +14,16 @@
 
 module gowin_top_soc #(
     parameter USE_ADXL345 = 1,  // 1: Live ADXL345 SPI Mode (3.2 kHz), 0: HIL / 12kHz Mode
-    parameter WEIGHT_FILE_BANK0 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank0.hex" : "roms/npu_weights_bank0.hex",
-    parameter WEIGHT_FILE_BANK1 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank1.hex" : "roms/npu_weights_bank1.hex",
-    parameter WEIGHT_FILE_BANK2 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank2.hex" : "roms/npu_weights_bank2.hex",
-    parameter WEIGHT_FILE_BANK3 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank3.hex" : "roms/npu_weights_bank3.hex",
-    parameter WEIGHT_FILE_BANK4 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank4.hex" : "roms/npu_weights_bank4.hex",
-    parameter WEIGHT_FILE_BANK5 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank5.hex" : "roms/npu_weights_bank5.hex"
+    parameter WEIGHT_FILE_BANK0 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank0.hex" : "roms/hil/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank1.hex" : "roms/hil/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank2.hex" : "roms/hil/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank3.hex" : "roms/hil/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank4.hex" : "roms/hil/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = USE_ADXL345 ? "roms/adxl345/npu_weights_bank5.hex" : "roms/hil/npu_weights_bank5.hex",
+    parameter signed [31:0] BIAS_0 = USE_ADXL345 ? 32'sd0  : -32'sd5,
+    parameter signed [31:0] BIAS_1 = USE_ADXL345 ? -32'sd3 : -32'sd3,
+    parameter signed [31:0] BIAS_2 = USE_ADXL345 ? 32'sd8  : 32'sd14,
+    parameter signed [31:0] BIAS_3 = USE_ADXL345 ? -32'sd4 : -32'sd6
 )(
     input  wire                 clk_27m,          // 27 MHz On-Board Crystal Oscillator (Pin H11)
     input  wire                 rst_n_pin,        // Active-Low Reset Pushbutton (Pin T10)
@@ -197,7 +201,11 @@ module gowin_top_soc #(
         .WEIGHT_FILE_BANK2 (WEIGHT_FILE_BANK2),
         .WEIGHT_FILE_BANK3 (WEIGHT_FILE_BANK3),
         .WEIGHT_FILE_BANK4 (WEIGHT_FILE_BANK4),
-        .WEIGHT_FILE_BANK5 (WEIGHT_FILE_BANK5)
+        .WEIGHT_FILE_BANK5 (WEIGHT_FILE_BANK5),
+        .BIAS_0            (BIAS_0),
+        .BIAS_1            (BIAS_1),
+        .BIAS_2            (BIAS_2),
+        .BIAS_3            (BIAS_3)
     ) u_npu (
         .clk             (clk_100m),
         .rst_n           (sys_rst_n),

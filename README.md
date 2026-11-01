@@ -18,22 +18,30 @@
 > **THỐNG NHẤT CHIẾN LƯỢC TOÀN ĐỘI (MASTER SYSTEM ARCHITECTURE MANIFEST - 28/10/2026):**  
 > 1. **TOÀN BỘ AI & DSP CHẠY 100% TRÊN FPGA GOWIN TANG PRIMER 20K:**  
 >    * Toàn bộ chuỗi xử lý tín hiệu số nhân quả (32-tap Min-Phase FIR $\rightarrow$ Causal Envelope Demodulator $\rightarrow$ Gowin FFT 512-point) và **MÔ HÌNH SUY LUẬN AI NPU THỜI GIAN THỰC** ([`npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v)) được thực thi **HOÀN TOÀN TRÊN PHẦN CỨNG FPGA**.
->    * **Thời gian suy luận cực đại (Inference Latency):** Đúng **$2.60\,\mu\text{s}$** (260 chu kỳ clock @ 100 MHz) — nhanh hơn MCU gấp **$5,800\times$**!
->    * **Độ chính xác xác thực phần cứng (Hardware Bit-True INT8):** Đạt **$96.38\%$** Accuracy và **$95.08\%$** Macro-Averaged F1-Score (kiểm chứng trên trọn vẹn 553 mẫu validation ADXL345).
->    * **Triệt tiêu hoàn toàn lỗi tràn DFF (Gowin Error IF0008):** Toàn bộ mảng đệm trung gian 5.1 KB đã được dỡ bỏ; NPU 12 kênh nhân chập trực tiếp trên 257 bin phổ FFT. Tài nguyên Flip-Flop tiêu thụ chỉ **$< 600\text{ DFFs}$ ($< 3.7\%$ dung lượng chip)**, 6 BSRAM blocks ($13.0\%$) và 12 DSP18E slices ($25.0\%$). Tổng hợp sạch sẽ, timing closure 100 MHz đạt chuẩn $100\%$.
-> 2. **MCU SONIX SN32F407 (ARM CORTEX-M0) ĐÓNG VAI TRÒ SYSTEM SUPERVISOR & CONTROLLER:**  
->    * Lõi Cortex-M0 @ 60 MHz không có FPU, không có SIMD `__SMLAD`, không có bộ chia phần cứng. Việc cố nhồi mạng CNN đa tầng vào M0 đã bị **LOẠI BỎ HOÀN TOÀN** để tránh nghẽn bus, giật màn hình OLED và trễ ngắt rơ-le.
+>     * **Thời gian suy luận cực đại (Inference Latency):** Đúng **.62\,\mu\text{s}$** (262 chu kỳ clock @ 100 MHz) — nhanh hơn MCU gấp **,700\times$**!
+>    * **Độ chính xác xác thực phần cứng (Hardware Bit-True INT8):** Đạt **.38\%$** Accuracy và **.08\%$** Macro-Averaged F1-Score trên 553 mẫu validation ADXL345; và **.05\%$** Accuracy, **.34\%$** F1 trên toàn bộ 2,767 cửa sổ dữ liệu thực từ 15 file .mat CWRU.
+>    * **Đóng gói giải pháp Timing Closure (Triệt tiêu lỗi Slack -4.065ns của Toàn):** Cắt đường trễ BSRAM DO $\rightarrow$ MAC $\rightarrow$ ACCUM thành đường ống 2 tầng (2-Stage Pipelined MAC trong 
+pu_mac12_unit.v), nâng tần số hoạt động cực đại \text{max} \ge 200\,\text{MHz}$ (dư $> +5.5\,\text{ns}$ slack tại 100 MHz), triệt tiêu hoàn toàn 623 điểm nút vi phạm STA!
+>    * **Triệt tiêu hoàn toàn lỗi tràn DFF (Gowin Error IF0008):** Toàn bộ mảng đệm trung gian 5.1 KB đã được dỡ bỏ; NPU 12 kênh nhân chập trực tiếp trên 257 bin phổ FFT. Tài nguyên Flip-Flop tiêu thụ chỉ **$< 750\text{ DFFs}$ ($< 4.5\%$ dung lượng chip)**, 6 BSRAM blocks (.0\%$) và 12 DSP18E slices (.0\%$). Tổng hợp sạch sẽ, timing closure 100 MHz đạt chuẩn \%$.
+2. **MCU SONIX SN32F407 (ARM CORTEX-M0) ĐÓNG VAI TRÒ SYSTEM SUPERVISOR & CONTROLLER:**  
+>    * Lõi Cortex-M0 @ 60 MHz không có FPU, không có SIMD __SMLAD, không có bộ chia phần cứng. Việc cố nhồi mạng CNN đa tầng vào M0 đã bị **LOẠI BỎ HOÀN TOÀN** để tránh nghẽn bus, giật màn hình OLED và trễ ngắt rơ-le.
 >    * MCU nhận gói tin kết quả chẩn đoán đã được tính toán sẵn từ FPGA qua SPI DMA, thực hiện các tác vụ ngoại vi chuyên trách: hiển thị đồ thị phổ và trạng thái cảnh báo trên màn hình OLED, kích ngắt rơ-le bảo vệ SIL-2 ($< 1.0\,\text{ms}$), còi buzzer và truyền UART telemetry lên máy tính.
 
 ### 📋 Bản Phân Công Bàn Giao Tác Vụ Cụ Thể (Handover Directives):
 
 * **Bàn giao cho Bạn Toàn (FPGA Lead):**
-  * Nạp trực tiếp khối RTL NPU mới nhất: [`embedded/fpga_gowin/src/npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) và [`npu_mac12_unit.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_mac12_unit.v).
-  * Khối Top SoC tích hợp hoàn chỉnh: [`embedded/fpga_gowin/src/gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v) khớp $100\%$ ràng buộc chân vật lý [`primer20k_adxl345.cst`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/primer20k_adxl345.cst) (Thạch anh 27 MHz chân H11 $\to$ Gowin rPLL 100 MHz, Bus SPI MCU chân E15/D14/A14/N16, triệt tiêu toàn bộ chân unconstrained).
-  * 6 file hex trọng số 12 kênh cho 6 BSRAM bank: [`embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/) và `.mi`.
-  * Bản đồ bộ nhớ & phân bổ dải tần: [`embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt).
-  * Chạy script kiểm chứng số học bit-true: `python scripts/verify_fpga_npu_bram_co_sim.py` (kết quả 533/553 mẫu đạt 96.38% Acc).
-  * Chạy testbench mô phỏng phần cứng: [`embedded/fpga_gowin/src/tb_npu_cosim.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/tb_npu_cosim.v) khớp $100\%$ với [`test_vectors/cosim_golden.hex`](file:///d:/Gitrepo/VIbraDistill/test_vectors/cosim_golden.hex).
+  * Nạp trực tiếp khối RTL NPU đã tối ưu timing: [embedded/fpga_gowin/src/npu_12way_core.v](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) và [
+pu_mac12_unit.v](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_mac12_unit.v) (đã tích hợp 2-stage MAC pipeline & 2 drain cycles S_DRAIN_1, S_DRAIN_2, timing Fmax > 200 MHz).
+  * Khối Top SoC tích hợp hoàn chỉnh: [embedded/fpga_gowin/src/gowin_top_soc.v](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v) hỗ trợ chuyển chế độ đơn giản qua 1 cờ tham số:
+    * parameter USE_ADXL345 = 1: Chạy cảm biến thật ADXL345 (FIR 3.2 kHz ir_adxl345_32.v, Envelope Fc=400Hz, ROM 
+oms/adxl345/, Biases [0, -3, 8, -4]).
+    * parameter USE_ADXL345 = 0: Chạy luồng kiểm thử HIL Streamer (FIR 12 kHz ir_minphase_32.v, Envelope Fc=1000Hz, ROM 
+oms/hil/, Biases [-5, -3, 14, -6]).
+  * 6 file hex trọng số đã tách riêng rõ ràng:
+    * Chế độ ADXL345: [embedded/fpga_gowin/roms/adxl345/npu_weights_bank0..5.hex](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/) (96.38% Acc).
+    * Chế độ HIL: [embedded/fpga_gowin/roms/hil/npu_weights_bank0..5.hex](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/hil/) (98.71% Acc).
+  * Chạy script kiểm chứng số học bit-true: python scripts/verify_fpga_npu_bram_co_sim.py (533/553 mẫu validation đạt 96.38% Acc).
+  * Chạy test kiểm thử trực tiếp từ 15 file .mat CWRU: python scripts/verify_raw_mat_to_fpga_pipeline.py (2,713/2,767 mẫu đạt 98.05% Acc).
 * **Bàn giao cho Bạn Thiện (MCU Firmware Lead):**
   * Trong dự án Keil MDK-ARM, cờ `#define TARGET_SN32F407_SUPERVISOR 1` trong [`main.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/main.c) tự động ngắt bỏ toàn bộ mảng đệm 5,120 bytes của CNN cục bộ trong [`vibradistill_model.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_model.c).
   * Dung lượng SRAM tiêu thụ trên Cortex-M0 giảm từ $6.8\,\text{KB}$ ($83\%$) xuống chỉ còn **$1.4\,\text{KB}$ ($17\%$)**, dành trọn $>6.7\,\text{KB}$ an toàn tuyệt đối cho ngăn xếp ngắt DMA và buffer OLED.
@@ -70,7 +78,8 @@
 
 | Cấu Hình / Phân Hệ | File Trọng Số / Checkpoint Nạp Trực Tiếp | Định Dạng & Dung Lượng | Điểm F1 / Accuracy | Nền Tảng Chạy | Hướng Dẫn Sử Dụng Nhanh |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **FPGA 12-Way NPU Core (ADXL345)** | [`embedded/fpga_gowin/roms/adxl345/`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345) | 6 Bank `.hex` & `.mi` (257w x 16b) | **96.38%** (Hardware Bit-True) | Gowin GW2A-18 BSRAM | Nạp trực tiếp vào `npu_12way_core.v` (Inference 2.60 µs) |
+| **FPGA 12-Way NPU Core (ADXL345)** | [`embedded/fpga_gowin/roms/adxl345/`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345) | 6 Bank `.hex` & `.mi` (257w x 16b) | **96.38%** (Hardware Bit-True) | Gowin GW2A-18 BSRAM | Nạp trực tiếp vào `npu_12way_core.v` (Inference 2.62 µs) |
+| **FPGA 12-Way NPU Core (HIL 12kHz)** | [`embedded/fpga_gowin/roms/hil/`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/hil) | 6 Bank `.hex` & `.mi` (257w x 16b) | **98.71%** (Hardware Bit-True) | Gowin GW2A-18 BSRAM | Nạp trực tiếp vào `npu_12way_core.v` khi `USE_ADXL345 = 0` (Inference 2.62 µs) |
 | **Bản đồ Phân Bổ Kênh NPU** | [`embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/adxl345/tier1_spectral_weights_map.txt) | Text Memory Map | 12 Kênh Sub-band | Tài liệu phần cứng | Định nghĩa 4 lớp x 3 dải con (0-400Hz, 400-875Hz, 875-1600Hz) |
 | **FPGA Bit-True ROM (Unified)** | [`embedded/fpga_gowin/roms/npu_weights_adxl345_int8.mem`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/npu_weights_adxl345_int8.mem) | Verilog `.mem` (7,880 B) | **91.54%** / 93.85% | Gowin GW2A-18 BRAM | Nạp vào `gowin_top_soc.v` (`USE_ADXL345 = 1`) |
 | **MCU Sonix Supervisor Header**| [`embedded/mcu_sonix/app/vibradistill_adxl345_weights.h`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/vibradistill_adxl345_weights.h) | ANSI C Header | Khớp 100% bit RTL | Cortex-M0 @ 60 MHz | Telemetry parser, OLED UI & Relay driver |
@@ -234,7 +243,7 @@ Bảng đối soát chi tiết từng nhiệm vụ kỹ thuật và lệnh thự
 | **`T02-02`** | SPI0 Slave Circular DMA 524 Bytes trên MCU | Thiện, Toàn | [`main.c#L80`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/main.c#L80) (`s_dma_rx_ping_pong`) | Nhận đúng gói 524B, ngắt `DMA_TC`, CPU load $<1\%$ |
 | **`T02-03`** | Đấu nối Bus SPI & Đo toàn vẹn tín hiệu trên DSO | Quang, Thiện | SCK (P2.0), MOSI (P2.1), MISO (P2.2), CS (P2.3), DRDY (P2.4) | Dây $<8\,\text{cm}$, GND chung, xung SPI vuông vức không méo |
 | **`T02-04`** | Cài đặt Thuật toán HopACP Q16.16 C Thuần | Tài, Quang | `python scripts/test_hop_acp_parity.py` | 10,000 bước test, sai số $0.0000174\%$, độ bao phủ **$90.04\%$**, trễ $<15$ chu kỳ |
-| **`T03-01`** | Tích hợp Chuỗi DSP & NPU 24-way MAC trên FPGA | Toàn, Tài | [`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v), [`npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) | Chuỗi FIR $\to$ Demod $\to$ FFT $\to$ NPU đạt $f_\text{max} \ge 105\,\text{MHz}$ |
+| **`T03-01`** | Tích hợp Chuỗi DSP & NPU 12-way Pipelined MAC trên FPGA | Toàn, Tài | [`fir_adxl345_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_adxl345_32.v), [`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v), [`npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v) | Chuỗi FIR $\to$ Demod $\to$ FFT $\to$ NPU đạt $f_\text{max} \ge 200\,\text{MHz}$, latency $2.62\,\mu\text{s}$ |
 | **`T03-02`** | Mạch Rơ-le Cách Ly Quang Ngắt Động Cơ SIL-2 | Thiện, Quang | [`main.c#L178`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/main.c#L178) (`P1.0 Active-High`) | Tiếp điểm Thường Đóng (NC), thời gian xuất lệnh trip $<1.0\,\text{ms}$ |
 | **`T03-03`** | Driver OLED Page-Banded 128B RAM SSD1306 | Kiệt, Thiện | Bus I2C Fast-Mode 400kHz (P1.2 SCL, P1.3 SDA) | Cấp phát đúng 128 Bytes RAM cho 1 trang, quét 15–20 FPS, tiết kiệm 896B SRAM |
 | **`T03-04`** | Audit Lượng Tử Hóa INT8 & Xuất Bảng Nhớ ROM | Tài, Toàn | `python scripts/export_unified_int8_mem.py`<br>`python scripts/08_verify_c_engine_parity.py` | Macro F1 **$98.49\%$**, 7,880 Bytes ROM, khớp $100.00\%$ bit-true C-Engine vs RTL |
@@ -311,11 +320,11 @@ graph TD
     Motor["Động Cơ DC 130 + Encoder Quang <br> (900 - 2000 RPM, 30 PPR)"] -->|Xung Kênh A| MCU_CAP["Timer CT16B0_CAP0 (Chân P0.5)"]
 
     subgraph FPGA["TẦNG VI MẠCH GIA TỐC: Gowin Tang Primer 20K (GW2A-LV18) @ 100 MHz"]
-        DSP_FIR["① 32-Tap Causal Min-Phase FIR <br> (Băng thông 2-5 kHz, Trễ 3.2 mẫu)"]
-        DSP_ENV["② Causal Leaky Demodulator <br> (y[n] = max(|x[n]|, y[n-1] - y[n-1]>>6))"]
+        DSP_FIR["① Dual-Mode 32-Tap Causal Min-Phase FIR <br> (ADXL345: 280-1400 Hz | HIL: 2-5 kHz, Trễ < 3 mẫu)"]
+        DSP_ENV["② Dual-Mode Causal Envelope Demodulator <br> (Full-Wave Rectifier + 2nd-Order Butterworth IIR LPF)"]
         DSP_FFT["③ 512-pt Radix-2 FFT Engine <br> (Cửa sổ Hanning, 257 Bins dương)"]
         DSP_KIN["④ 8D Harmonic Kinematic Vector <br> (BPFO_1x..2x, BPFI_1x..2x, BSF, FTF)"]
-        NPU_ENG["⑤ 24-Way INT8 MAC Systolic NPU <br> (VibraDistillMicro: 8,677 params / 6 BSRAMs)"]
+        NPU_ENG["⑤ 12-Way Pipelined Systolic NPU Core <br> (2-Stage Pipelined MAC, 262 chu kỳ @ 100 MHz, Fmax > 200 MHz)"]
         SPI_M["⑥ SPI Master Telemetry Engine <br> (Gói 524 Bytes @ 12.5 MHz SCK + CRC-16)"]
 
         DSP_FIR --> DSP_ENV --> DSP_FFT --> DSP_KIN --> NPU_ENG --> SPI_M
