@@ -34,9 +34,12 @@ runs/
 
 # Data and Notebook checkpoints
 data/
+!data/rul_mat_benchmarks/
+!data/rul_mat_benchmarks/**
 .ipynb_checkpoints/
 */.ipynb_checkpoints/
 *.mat
+!data/rul_mat_benchmarks/*.mat
 *.npy
 
 # Model Checkpoints and Exported Binaries

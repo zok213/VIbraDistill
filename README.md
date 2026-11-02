@@ -479,9 +479,9 @@ git checkout tai
 # 2. Cài đặt môi trường Python
 pip install -r requirements.txt
 
-# 3. Chạy bộ 34 bài kiểm thử toàn diện hệ thống (PyTest Unit Tests)
+# 3. Chạy bộ 37 bài kiểm thử toàn diện hệ thống (PyTest Unit Tests)
 pytest tests/ -v
-# ===> KẾT QUẢ MONG ĐỢI: 34 passed in ~7.2s (100% Passed)
+# ===> KẾT QUẢ MONG ĐỢI: 37 passed in ~29s (100% Passed)
 
 # 4. Chạy kiểm chứng số học bit-true RTL NPU (553 mẫu validation ADXL345)
 python scripts/verify_fpga_npu_bram_co_sim.py
@@ -514,6 +514,10 @@ python scripts/verify_multi_dataset_fpga.py
 # 11. Chạy sinh biểu đồ chẩn đoán thời gian thực tích hợp Tiên lượng RUL & HopACP
 python scripts/realtime_diagnostic_monitor.py
 # ===> KẾT QUẢ MONG ĐỢI: Sinh 6 biểu đồ chuẩn công nghiệp tại docs/figures/diagnostic_cases/
+
+# 12. Chạy kiểm chứng tiên lượng RUL từ file MATLAB .mat chuẩn (HopACP 90% Conformal & SIL-2 Trip)
+python scripts/verify_mat_rul_prognostics.py
+# ===> KẾT QUẢ MONG ĐỢI: HopACP Coverage 91.41% (>= 90%), MAE 0.224h, Trip ngắt an toàn trước sự cố 101.7 phút
 ```
 
 ---
