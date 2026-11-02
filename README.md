@@ -358,6 +358,23 @@ Khi thỏa mãn điều kiện sự cố, chân P1.0 xuất mức cao (Active-Hi
 
 ---
 
+### 4. ĐẶC TẢ KIẾN TRÚC AI & HỌC MÁY NHÚNG (EMBEDDED AI ARCHITECTURE SPECIFICATION)
+*(Tài liệu đặc tả toán học chuyên sâu, số lượng tham số, phân rã đạo hàm chưng cất và cơ chế định lượng bất định xem tại: [`docs/AI_ARCHITECTURE_DEEP_DIVE.md`](docs/AI_ARCHITECTURE_DEEP_DIVE.md))*
+
+* **Mô Hình Thầy (Teacher 1D-ResNet Oracle ~1.13M Tham Số)**: Mạng Residual 4 tầng ($32 \to 64 \to 128 \to 256$ kênh) huấn luyện không ràng buộc trên GPU, khai thác toàn bộ tương quan phổ phi tuyến cấp cao để định hướng mô hình Trò.
+* **Mô Hình Trò (Student `VibraDistillMicro` Đúng 8,677 Tham Số, ~8.47 KB INT8)**:
+  * **Stage 1 (Multi-Scale FALBlock)**: 3 nhánh chập song song $k=3$ (đỉnh Dirac $1\times BPFO/BPFI$), $k=7$ (cặp hài $2\times, 3\times$), $k=15$ (chùm dải biên điều chế $f \pm n \cdot f_r$).
+  * **Physics-FiLM Modulator (P-FiLM)**: Điều chế affine bản đồ đặc trưng kênh bằng vector tiên nghiệm động lực học 4D ($\mathbf{f} \mapsto \gamma(\mathbf{p}) \odot \mathbf{f} + \beta(\mathbf{p})$).
+  * **Stage 2 & 3 (Feature Aggregator)**: Chập co dải $\to$ `AdaptiveAvgPool1d(4)` sinh 64 chiều embedding phổ sâu.
+  * **Ghép Nối Cân Bằng Dải Động (Dynamic Range Matching)**: Vectơ tiên nghiệm được co giãn $3.0\times$ trước khi ghép nối vào tầng Fusion ($64 + 4 = 68$ chiều $\to 32 \to$ Classifier & RUL Heads).
+* **Chưng Cất Tri Thức Phân Tách (Decoupled Knowledge Distillation - DKD, CVPR 2022)**:
+  $$L_\text{DKD} = \tau^2 \cdot (\alpha \cdot \text{TCKD} + \beta \cdot \text{NCKD}) \quad (\alpha=1.0, \beta=2.0, \tau=5.0)$$
+  Loại bỏ hoàn toàn hiện tượng sụp đổ độ dốc (Coupled Gradient Collapse) của KD truyền thống, ép mô hình Trò học trọn vẹn tương quan dải biên giữa các dạng lỗi khác nhau.
+* **Lượng Tử Hóa Vi Mạch Bit-True (Exact BatchNorm Folding & INT8 QAT)**:
+  Toàn bộ tham số BatchNorm được gấp trực tiếp vào ma trận trọng số Conv1D. Quá trình lượng tử hóa đối xứng tĩnh INT8 chia sẻ bộ nhân tái lượng tử hóa $(\text{mult}, \text{shift})$ với logic thanh ghi RTL.
+
+---
+
 ## 📐 V. BIỆN GIẢI ĐỘNG LỰC HỌC MÁY & ÁNH XẠ TẦN SỐ (KINEMATICS & FREQUENCY MAPPING)
 
 Tần số dao động va đập đặc trưng của vòng bi phụ thuộc vào kích thước hình học và tốc độ quay trục:
@@ -480,6 +497,8 @@ python scripts/hil_streamer.py --dry-run --test-loopback --max-frames 50 --fps 1
 
 Tất cả các tài liệu thực chiến chuyên sâu được lưu trữ tại thư mục [`docs/`](file:///d:/Gitrepo/VIbraDistill/docs):
 
+* 🧠 **Đặc Tả Chi Tiết Kiến Trúc AI & Học Máy Nhúng (AI Architecture Deep-Dive)**: [`docs/AI_ARCHITECTURE_DEEP_DIVE.md`](file:///d:/Gitrepo/VIbraDistill/docs/AI_ARCHITECTURE_DEEP_DIVE.md)  
+  *(Đặc tả chi tiết Teacher 1.13M, Student Micro 8.6k, DKD Loss, Dirichlet EDL, HopACP Q16.16, và phân tích phản biện chuyên gia).*
 * 📘 **Hướng Dẫn Thực Thi Từng Bước Cho Cả Đội (Step-by-Step Run Guide)**: [`docs/STEP_BY_STEP_RUN_GUIDE.md`](file:///d:/Gitrepo/VIbraDistill/docs/STEP_BY_STEP_RUN_GUIDE.md)  
   *(Sơ đồ nối dây Tang Primer 20K - ADXL345 - Sonix MCU - OLED - Rơ-le, bảng gán chân PMOD, hướng dẫn nạp Gowin Programmer, Keil MDK và bảng tra cứu lỗi).*
 * 📄 **Báo Cáo Thực Nghiệm AI & Đối Chuẩn SOTA**: [`docs/AI_Experimental_Synthesis_Report.md`](file:///d:/Gitrepo/VIbraDistill/docs/AI_Experimental_Synthesis_Report.md)  
@@ -574,6 +593,7 @@ VIbraDistill/
 │   ├── teacher_adxl345/                # [OK] Trọng số mô hình Teacher ResNet
 │   └── prognostics/                    # [OK] Trọng số mô hình dự đoán vòng đời RUL XJTU-SY
 ├── docs/                               # [OK - DOCUMENTATION] Tài liệu kỹ thuật, báo cáo nghiệm thu và biên bản bàn giao
+│   ├── AI_ARCHITECTURE_DEEP_DIVE.md    # [OK] Đặc tả chi tiết toán học kiến trúc AI, DKD & EDL
 │   ├── THU_HOI_DAP_TAI_GUI_DOI_NGU_PHAN_CUNG_HIL_FPGA.md # [OK] Thư bàn giao kỹ thuật & giải pháp HIL FPGA
 │   ├── STEP_BY_STEP_RUN_GUIDE.md       # [OK] Hướng dẫn chạy từng bước và đấu nối chân mạch phần cứng
 │   ├── AI_Experimental_Synthesis_Report.md # [OK] Báo cáo thực nghiệm khoa học AI và đối chuẩn IEEE SOTA
