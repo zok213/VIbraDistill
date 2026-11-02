@@ -120,7 +120,7 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
    * **Trả lời:** ĐÚNG! Con số $1000\,\text{Hz}$ là di tích ghi chú cũ từ profile cảm biến IIS3DWB ($13.333\,\text{kHz}$). Hệ số thực tế trong Verilog là chuẩn **$1,200.0\,\text{Hz}$** ($W_n = 0.20$ tại $12\,\text{kHz}$). Mã nguồn Python [`src/dsp/pipeline.py`](file:///d:/Gitrepo/VIbraDistill/src/dsp/pipeline.py) đã được khóa chặt sang $1,200\,\text{Hz}$.
 
 5. **Về 4 Giá Trị Đặc Trưng Prior Vật Lý:**  
-   * **Trả lời:** Đúng như phần cứng đang triển khai! Lõi NPU 12 kênh trên FPGA phân loại trực tiếp từ 257 bin phổ FFT mà **không cần nạp 4 giá trị Prior động** (gán cố định bằng 0). 4 giá trị Prior chỉ được dùng khi MCU Cortex-M0 chạy thuật toán mở rộng hoặc Conformal Tracking.
+   * **Trả lời:** Đúng như phần cứng đang triển khai! Lõi NPU 12 kênh trên FPGA phân loại trực tiếp từ 257 bin phổ FFT mà **không cần nạp 4 giá trị Prior động** (gán cố định bằng 0). 4 giá trị Prior động và tốc độ trục $f_r$ được MCU Cortex-M0 tính toán qua Timer Capture để phục vụ giám sát ngữ cảnh máy và thuật toán thống kê Conformal Tracking (HopACP Q16.16).
 
 ---
 
@@ -362,7 +362,8 @@ Khi thỏa mãn điều kiện sự cố, chân P1.0 xuất mức cao (Active-Hi
 *(Tài liệu đặc tả toán học chuyên sâu, số lượng tham số, phân rã đạo hàm chưng cất và cơ chế định lượng bất định xem tại: [`docs/AI_ARCHITECTURE_DEEP_DIVE.md`](docs/AI_ARCHITECTURE_DEEP_DIVE.md))*
 
 * **Mô Hình Thầy (Teacher 1D-ResNet Oracle ~1.13M Tham Số)**: Mạng Residual 4 tầng ($32 \to 64 \to 128 \to 256$ kênh) huấn luyện không ràng buộc trên GPU, khai thác toàn bộ tương quan phổ phi tuyến cấp cao để định hướng mô hình Trò.
-* **Mô Hình Trò (Student `VibraDistillMicro` Đúng 8,677 Tham Số, ~8.47 KB INT8)**:
+* **Mô Hình Trò (Student `VibraDistillMicro` 8,677 Tham Số / `VibraDistillTang20K` 41.8k Tham Số - 100% FPGA Execution)**:
+  Được thiết kế để tổng hợp và thực thi $100\%$ TRỰC TIẾP TRÊN PHẦN CỨNG VI MẠCH FPGA Gowin Tang Primer 20K (GW2A-LV18). Toàn bộ suy luận AI chạy trong Block SRAMs và mảng Systolic NPU / DSP18Es của FPGA, tuyệt đối không tiêu tốn RAM hay CPU của MCU giám sát.
   * **Stage 1 (Multi-Scale FALBlock)**: 3 nhánh chập song song $k=3$ (đỉnh Dirac $1\times BPFO/BPFI$), $k=7$ (cặp hài $2\times, 3\times$), $k=15$ (chùm dải biên điều chế $f \pm n \cdot f_r$).
   * **Physics-FiLM Modulator (P-FiLM)**: Điều chế affine bản đồ đặc trưng kênh bằng vector tiên nghiệm động lực học 4D ($\mathbf{f} \mapsto \gamma(\mathbf{p}) \odot \mathbf{f} + \beta(\mathbf{p})$).
   * **Stage 2 & 3 (Feature Aggregator)**: Chập co dải $\to$ `AdaptiveAvgPool1d(4)` sinh 64 chiều embedding phổ sâu.
