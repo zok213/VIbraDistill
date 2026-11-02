@@ -27,13 +27,17 @@ class StreamingDSPPipeline:
         self.sensor_type = sensor_type
         
         if envelope_cutoff is None:
-            envelope_cutoff = 400.0 if (sensor_type == 'adxl345' or abs(self.fs - 3200.0) < 100.0) else 1000.0
+            # Mode 1 (ADXL345, Fs=3200 Hz): Fc = 400 Hz (Nyquist/4) to capture up to 4x fault harmonics
+            # Mode 2 (HIL/CWRU, Fs=12000 Hz): Fc = 1200 Hz (Nyquist/5) to capture up to 7x-10x fault harmonics
+            envelope_cutoff = 400.0 if (sensor_type == 'adxl345' or abs(self.fs - 3200.0) < 100.0) else 1200.0
         
         # Hardware Stage 1: Causal FIR Filter
         self.fir = CausalFIRFilter(use_rtl_coeffs=use_rtl_coeffs, num_taps=fir_taps, fs=self.fs, sensor_type=sensor_type)
         
         # Hardware Stage 2: Causal Envelope Demodulator
-        self.envelope = CausalEnvelopeDemodulator(fc=envelope_cutoff, fs=self.fs, use_rtl_coeffs=False)
+        # Mode 2 RTL coefficients (0x08A4, 0x1148, 0x96E8, 0x34B2) have an exact mathematical cutoff of 1201.2 Hz @ Fs=12000 Hz
+        use_envelope_rtl = use_rtl_coeffs if abs(self.fs - 12000.0) < 100.0 else False
+        self.envelope = CausalEnvelopeDemodulator(fc=envelope_cutoff, fs=self.fs, use_rtl_coeffs=use_envelope_rtl)
         
         # Hardware Stage 3: Hann Window (512-point fixed ROM in FPGA)
         self.hann_window = 0.5 * (1.0 - np.cos(2.0 * np.pi * np.arange(self.window_size) / (self.window_size - 1)))
