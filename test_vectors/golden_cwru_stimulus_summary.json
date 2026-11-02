@@ -1,0 +1,94 @@
+{
+  "normal": {
+    "scores": [
+      2109,
+      273,
+      -678,
+      579
+    ],
+    "pred_class": 0,
+    "vacuity_u": 0.001349,
+    "spectrum_top10": [
+      127,
+      64,
+      18,
+      14,
+      7,
+      2,
+      5,
+      10,
+      9,
+      3
+    ],
+    "hex_file": "test_vectors/golden_cwru_normal_spectrum_int8.hex"
+  },
+  "inner": {
+    "scores": [
+      -187,
+      1938,
+      411,
+      758
+    ],
+    "pred_class": 1,
+    "vacuity_u": 0.001286,
+    "spectrum_top10": [
+      127,
+      65,
+      25,
+      36,
+      22,
+      9,
+      12,
+      12,
+      9,
+      4
+    ],
+    "hex_file": "test_vectors/golden_cwru_inner_spectrum_int8.hex"
+  },
+  "outer": {
+    "scores": [
+      -1577,
+      127,
+      2004,
+      1462
+    ],
+    "pred_class": 2,
+    "vacuity_u": 0.001112,
+    "spectrum_top10": [
+      127,
+      64,
+      15,
+      4,
+      13,
+      6,
+      16,
+      9,
+      7,
+      12
+    ],
+    "hex_file": "test_vectors/golden_cwru_outer_spectrum_int8.hex"
+  },
+  "ball": {
+    "scores": [
+      -63,
+      812,
+      631,
+      1866
+    ],
+    "pred_class": 3,
+    "vacuity_u": 0.001207,
+    "spectrum_top10": [
+      127,
+      65,
+      14,
+      31,
+      22,
+      3,
+      6,
+      6,
+      8,
+      4
+    ],
+    "hex_file": "test_vectors/golden_cwru_ball_spectrum_int8.hex"
+  }
+}
