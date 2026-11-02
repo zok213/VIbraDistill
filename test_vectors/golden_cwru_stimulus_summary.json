@@ -90,5 +90,28 @@
       4
     ],
     "hex_file": "test_vectors/golden_cwru_ball_spectrum_int8.hex"
+  },
+  "mixed": {
+    "scores": [
+      212,
+      536,
+      738,
+      2162
+    ],
+    "pred_class": 3,
+    "vacuity_u": 0.001095,
+    "spectrum_top10": [
+      127,
+      61,
+      11,
+      10,
+      19,
+      6,
+      13,
+      19,
+      23,
+      12
+    ],
+    "hex_file": "test_vectors/golden_cwru_mixed_spectrum_int8.hex"
   }
 }

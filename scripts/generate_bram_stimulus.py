@@ -33,12 +33,14 @@ def load_mat_signal(mat_path):
     raise ValueError(f"Could not find DE_time in {mat_path}")
 
 def normalize_to_int16(signal_window):
-    # Scale signal window to fit comfortably into 16-bit signed range [-32768, 32767]
-    # Max peak scaled to ~80% full scale (26000) to prevent overflow
+    # Scale signal window safely so that after passing through the 32-tap FIR filter
+    # (which has a peak gain of ~5.6 at 715 Hz resonance), the output will never
+    # saturate or overflow the 16-bit signed integer range [-32768, 32767].
+    # Setting the input peak to 4500 LSB ensures max FIR peak <= 25,200 LSB (< 32,767).
     max_val = np.max(np.abs(signal_window))
     if max_val < 1e-6:
         max_val = 1.0
-    scale = 26000.0 / max_val
+    scale = 4500.0 / max_val
     scaled = np.round(signal_window * scale).astype(np.int32)
     clamped = np.clip(scaled, -32768, 32767).astype(np.int16)
     return clamped
