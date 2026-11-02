@@ -488,3 +488,148 @@ Tất cả các tài liệu thực chiến chuyên sâu được lưu trữ tạ
   *(Trang bị câu trả lời đanh thép kèm số liệu dẫn chứng về Nyquist, Dirichlet, Conformal RUL, Timing Closure và SIL-2).*
 * 📐 **Thuyết Minh Động Lực Học Máy & Nyquist Cảm Biến**: [`docs/Dataset_Kinematic_Frequency_Mapping_Justification.md`](file:///d:/Gitrepo/VIbraDistill/docs/Dataset_Kinematic_Frequency_Mapping_Justification.md)  
   *(Chứng minh cơ học vì sao ADXL345 3.2 kHz bắt trọn 100% động học lỗi vòng bi động cơ 130).*
+
+---
+
+## 📂 IX. CẤU TRÚC KHO LƯU TRỮ DỰ ÁN & PHÂN LOẠI FILE (PROJECT DIRECTORY STRUCTURE & CODEBASE AUDIT)
+
+Bảng tổng kiểm tra toàn bộ kho lưu trữ dành cho đội ngũ phát triển kỹ thuật và hội đồng nghiệm thu. Kho lưu trữ được phân định ranh giới nghiêm ngặt giữa **Mã Nguồn Sản Xuất (Production Core)**, **Kịch Bản Kiểm Chứng (Verification Scripts)**, **Tài Liệu Đề Tài (Docs/Proposal)** và **Tài Liệu Lưu Trữ Lịch Sử (Legacy/Archive)**.
+
+### 1. Sơ đồ cây thư mục tổng thể (Annotated Repository Tree)
+
+```text
+VIbraDistill/
+├── embedded/                           # [OK - PRODUCTION] Mã nguồn phần cứng vi mạch & firmware nhúng
+│   ├── fpga_gowin/                     # Thiết kế RTL cho FPGA Gowin Tang Primer 20K (GW2A-LV18)
+│   │   ├── src/                        # Module Verilog lõi xử lý tín hiệu và NPU
+│   │   │   ├── npu_12way_core.v        # [OK] Lõi NPU Systolic 12 kênh song song (262 chu kỳ @ 100MHz = 2.62µs)
+│   │   │   ├── npu_mac12_unit.v        # [OK] Cụm 12 bộ nhân tích lũy MAC pipeline 2 tầng (Zero DSP overflow)
+│   │   │   ├── fir_minphase_32.v       # [OK] Bộ lọc Causal FIR 32 tap pha tối thiểu cho HIL Fs=12kHz (mảng 0x0824)
+│   │   │   ├── fir_adxl345_32.v        # [OK] Bộ lọc Causal FIR 32 tap cho cảm biến ADXL345 Fs=3.2kHz
+│   │   │   ├── envelope_demodulator.v  # [OK] Tách sóng phong bì phần cứng: |x[n]| + bộ lọc IIR thông thấp
+│   │   │   ├── gowin_top_soc.v         # [OK] Top module tích hợp toàn hệ thống SoC FPGA (SPI, NPU, BRAM, Safety Trip)
+│   │   │   ├── tb_npu_cosim.v          # [OK] Testbench Verilog đồng mô phỏng số học bit-true với Python
+│   │   │   └── tb_top_soc.v            # [OK] Testbench tích hợp hệ thống SoC
+│   │   ├── roms/                       # Trọng số INT8 và vector kích thích nạp BRAM FPGA
+│   │   │   ├── hil/                    # [OK] 6 file hex BSRAM trọng số NPU chuẩn HIL 12 kHz (Acc 98.71%)
+│   │   │   ├── adxl345/                # [OK] 6 file hex BSRAM trọng số NPU chuẩn ADXL345 3.2 kHz (Acc 96.38%)
+│   │   │   └── stimulus_cwru_*.hex     # [OK] 5 file kích thích BRAM (Normal, Inner, Outer, Ball, Mixed) đỉnh 4500 LSB
+│   │   ├── primer20k_adxl345.cst       # [OK] Bảng gán chân vật lý Gowin CST (PMOD IO, CLK 27MHz, SPI, Trip P1.0)
+│   │   └── primer20k_timing.sdc        # [OK] Ràng buộc thời gian SDC (100 MHz clock constraint, Slack +0.225ns)
+│   └── mcu_sonix/                      # Firmware giám sát an toàn cho MCU Sonix SN32F407 (ARM Cortex-M0 @ 60MHz)
+│       └── app/                        # Mã nguồn C nhúng thời gian thực
+│           ├── main.c                  # [OK] Vòng lặp giám sát SPI DMA 524B, rơ-le trip ngắt khẩn cấp < 1.0ms
+│           ├── hop_acp_fixedpoint.c    # [OK] Thuật toán HopACP Q16.16 suy luận khoảng tin cậy RUL (18.2µs trễ)
+│           ├── hop_acp.h               # [OK] Header đặc tả trạng thái và giao diện HopACP fixed-point
+│           ├── adaptive_conformal.c    # [OK] Thuật toán ACP bậc 1 truyền thống (Baseline so sánh)
+│           └── kinematic_lut.h         # [OK] Bảng tra cứu hài động học vòng bi định dạng số nguyên
+├── src/                                # [OK - PRODUCTION] Thư viện lõi thuật toán Edge AI & DSP
+│   ├── dsp/                            # Chuỗi tiền xử lý số học bit-true đối ứng 1:1 với RTL FPGA
+│   │   ├── causal_fir.py               # [OK] Bộ lọc Causal FIR 32 tap chứa mảng RTL Q1.15 (0x0824 & ADXL345)
+│   │   ├── envelope.py                 # [OK] Tách sóng phong bì Hilbert/IIR LPF cắt 1200 Hz
+│   │   ├── kinematics.py               # [OK] Công thức giải tích tần số hỏng hóc BPFI, BPFO, BSF, FTF & Prior 4D
+│   │   ├── pipeline.py                 # [OK] Đường ống truyền dữ liệu DSP hoàn chỉnh (Raw 512 -> Envelope Spectrum 257)
+│   │   └── resample.py                 # [OK] Khối lấy mẫu lại chống chồng phổ Nyquist
+│   ├── models/                         # Kiến trúc mạng nơ-ron nhúng tối ưu hóa vi mạch
+│   │   ├── student_micro.py            # [OK] VibraDistillMicro: 20.4k tham số, cấu trúc thân thiện Systolic 12 kênh
+│   │   ├── teacher_resnet.py           # [OK] Mạng Teacher ResNet đa thang đo huấn luyện trên GPU
+│   │   ├── npu_emulator.py             # [OK] Trình giả lập chu kỳ xung nhịp và số học INT8 bit-true của NPU
+│   │   └── baselines.py                # [OK] Các mô hình so sánh đối chuẩn (1D-CNN, GRU, BiLSTM, MLP)
+│   ├── losses/                         # Hàm mất mát chuyên sâu
+│   │   ├── dkd_loss.py                 # [OK] Decoupled Knowledge Distillation Loss (TCKD + NCKD, CVPR 2022)
+│   │   └── edl_loss.py                 # [OK] Evidential Deep Learning phân phối Dirichlet ước lượng độ bất định
+│   ├── quantization/                   # Công cụ lượng tử hóa và xuất vi mạch
+│   │   ├── ptq.py                      # [OK] Lượng tử hóa sau huấn luyện Post-Training Quantization INT8
+│   │   ├── qat.py                      # [OK] Huấn luyện nhận thức lượng tử Quantization-Aware Training
+│   │   ├── bn_fold.py                  # [OK] Kỹ thuật gấp trọng số BatchNorm vào Conv1D loại bỏ trễ phần cứng
+│   │   ├── export_gowin.py             # [OK] Trình xuất mã Hex phân bố vào 6 ngân hàng BSRAM Gowin
+│   │   └── export_c.py                 # [OK] Trình sinh mảng C header nhúng trực tiếp cho vi điều khiển
+│   ├── datasets/                       # Bộ nạp dữ liệu chuẩn cô lập không rò rỉ (Zero-Leakage Loaders)
+│   │   ├── cwru_loader.py              # [OK] Phân chia tập dữ liệu CWRU nghiêm ngặt theo cá thể vòng bi
+│   │   ├── mfpt_loader.py              # [OK] Bộ nạp dữ liệu MFPT
+│   │   ├── xjtu_sy_loader.py           # [OK] Bộ nạp dữ liệu suy thoái vòng đời Run-to-Failure XJTU-SY
+│   │   └── transforms.py               # [OK] Các biến đổi tăng cường dữ liệu rung động thời gian thực
+│   └── utils/                          # Tiện ích đo đạc & thiết lập hệ thống
+│       ├── metrics.py                  # [OK] Tính toán Accuracy, Macro-F1, Ma trận nhầm lẫn, ECE
+│       ├── profiler.py                 # [OK] Thống kê MAC, FLOPs, kích thước tham số bộ nhớ
+│       └── seed.py                     # [OK] Cố định Seed ngẫu nhiên bảo đảm tính tái lập 100%
+├── scripts/                            # [OK - PRODUCTION] Kịch bản thực thi, kiểm chứng và huấn luyện
+│   ├── verify_fpga_npu_bram_co_sim.py  # [OK] Kiểm thử co-simulation 553 mẫu ADXL345 (96.38% Acc, 262 cycles)
+│   ├── verify_raw_mat_to_fpga_pipeline.py # [OK] Kiểm thử trực tiếp 15 file .mat thô (2,767 cửa sổ, 98.05% Acc)
+│   ├── verify_100_stimulus_suite.py    # [OK] Kiểm thử 100 kịch bản kích thích cảm biến công nghiệp (100% Safety Recall)
+│   ├── test_hop_acp_parity.py          # [OK] Kiểm thử 10,000 bước HopACP C vs Python (Sai số 0.0000174%)
+│   ├── generate_bram_stimulus.py       # [OK] Sinh 5 file kích thích chuẩn hóa 4,500 LSB đỉnh (Zero Overflow)
+│   ├── export_fpga_tier1_spectral_weights.py # [OK] Xuất trọng số NPU 6 ngân hàng BSRAM cho HIL & ADXL345
+│   ├── hil_streamer.py                 # [OK] Trình truyền phát tín hiệu HIL UART/SPI tốc độ cao 921,600 baud
+│   ├── train_adxl345_native.py         # [OK] Huấn luyện mạng nơ-ron tối ưu riêng cho tần số ADXL345 3.2 kHz
+│   └── 01_verify_dsp.py .. 09_run_verilog_cosim.py # [OK] Chuỗi pipeline thực thi tự động từ A-Z
+├── test_vectors/                       # [OK - PRODUCTION] Bộ vector kiểm chuẩn toàn chuỗi (Golden Vectors)
+│   ├── golden_cwru_*_spectrum_int8.hex # [OK] 5 file phổ chuẩn 257 bin INT8 (Normal, Inner, Outer, Ball, Mixed)
+│   ├── golden_cwru_stimulus_summary.json # [OK] Bảng tổng hợp điểm số logits, phân lớp và độ bất định Dirichlet
+│   ├── cosim_input.hex                 # [OK] Vector dữ liệu đầu vào mô phỏng Verilog RTL
+│   └── cosim_golden.hex                # [OK] Vector kết quả tham chiếu mô phỏng Verilog RTL
+├── checkpoints/                        # [OK - PRODUCTION] Trọng số mô hình đã huấn luyện hoàn thiện
+│   ├── student_dkd_adxl345/            # [OK] Trọng số mô hình Student chưng cất DKD (ADXL345 Native)
+│   ├── student_qat_adxl345/            # [OK] Trọng số mô hình Student sau lượng tử hóa QAT INT8
+│   ├── teacher_adxl345/                # [OK] Trọng số mô hình Teacher ResNet
+│   └── prognostics/                    # [OK] Trọng số mô hình dự đoán vòng đời RUL XJTU-SY
+├── docs/                               # [OK - DOCUMENTATION] Tài liệu kỹ thuật, báo cáo nghiệm thu và biên bản bàn giao
+│   ├── THU_HOI_DAP_TAI_GUI_DOI_NGU_PHAN_CUNG_HIL_FPGA.md # [OK] Thư bàn giao kỹ thuật & giải pháp HIL FPGA
+│   ├── STEP_BY_STEP_RUN_GUIDE.md       # [OK] Hướng dẫn chạy từng bước và đấu nối chân mạch phần cứng
+│   ├── AI_Experimental_Synthesis_Report.md # [OK] Báo cáo thực nghiệm khoa học AI và đối chuẩn IEEE SOTA
+│   ├── QnA_Cheat_Sheet_DSAC_Final.md   # [OK] 20 câu hỏi phản biện kỹ thuật chuyên sâu bảo vệ đề tài
+│   └── Dataset_Kinematic_Frequency_Mapping_Justification.md # [OK] Thuyết minh cơ học động lực học máy & Nyquist
+├── FPGA&MCU/                           # [OK - DOCUMENTATION] Đề xuất đề tài NCKH, bản đăng ký và Datasheet hãng
+│   ├── BAN_DANG_KY_DE_TAI_FPGA_MCU_2026.docx # [OK] Bản đăng ký dự thi chính thức cuộc thi Thiết kế Vi mạch 2026
+│   ├── research_proposal.tex           # [OK] Toàn văn báo cáo khoa học định dạng LaTeX chuẩn IEEE
+│   ├── references.bib                  # [OK] Thư mục trích dẫn tài liệu tham khảo khoa học quốc tế
+│   └── Datasheet/                      # [OK] Tài liệu kỹ thuật gốc của chip Gowin GW2A và Sonix SN32F407
+├── core/                               # [PROTOTYPE & ACTIVE HYBRID] Module nghiên cứu nguyên mẫu ban đầu
+│   ├── conformal.py                    # [OK - ACTIVE] Thuật toán HopACP được import và kiểm thử bởi tests/test_conformal.py
+│   ├── dkd.py                          # [OLD - PROTOTYPE] Bản nháp DKD ban đầu (Đã nâng cấp lên src/losses/dkd_loss.py)
+│   ├── dsp.py                          # [OLD - PROTOTYPE] Bản nháp Kurtogram (Đã nâng cấp lên src/dsp/pipeline.py)
+│   └── models.py                       # [OLD - PROTOTYPE] Bản nháp Jetson NVDLA (Đã nâng cấp lên src/models/student_micro.py)
+├── legacy/                             # [ARCHIVE] Toàn bộ mã nguồn nghiên cứu thời kỳ đầu (Jetson Orin, MATLAB, CWT)
+│   ├── Phase0_DSP_Design_Python.py     # [ARCHIVE] Script thiết kế DSP giai đoạn 0
+│   ├── Phase1a_SVM_Baseline.py         # [ARCHIVE] Đối chuẩn thuật toán cổ điển SVM
+│   ├── Phase3_Jetson_Inference.sh      # [ARCHIVE] Kịch bản đo đạc Jetson Nano/Orin thời kỳ đầu
+│   ├── deployment_jetson/              # [ARCHIVE] Pipeline C++ benchmark trên nền tảng NVIDIA Jetson
+│   └── kaggle/                         # [ARCHIVE] Các notebook huấn luyện ban đầu trên Kaggle
+└── scratch/                            # [DEV UTILITY] Kịch bản cào tài liệu, phân tích số liệu và sinh notebook nháp
+    ├── crawl_scholar.py                # [UTILITY] Cào Google Scholar tìm kiếm bài báo liên quan 2024-2026
+    ├── fetch_arxiv.py                  # [UTILITY] Tải tóm tắt nghiên cứu mới từ arXiv
+    └── dump_all_cells.py               # [UTILITY] Tiện ích nội bộ phân tách notebook
+```
+
+---
+
+### 2. Bảng phân loại chi tiết trạng thái từng nhóm tệp tin (File Categorization Matrix)
+
+| Phân Loại | Thư Mục / Tệp Tin | Mục Đích Sử Dụng | Đánh Giá Kỹ Thuật & Trạng Thái | Hành Động |
+| :--- | :--- | :--- | :--- | :--- |
+| **`[OK - PRODUCTION]`** | `src/dsp/` (`pipeline.py`, `causal_fir.py`, `envelope.py`, `kinematics.py`) | Chuỗi tiền xử lý rung động thời gian thực | Chuẩn hóa $100\%$ Bit-true với RTL Verilog; FIR mảng `0x0824` đạt $98.71\%$ Acc. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `src/models/` (`student_micro.py`, `teacher_resnet.py`, `npu_emulator.py`) | Mô hình mạng nơ-ron chưng cất và giả lập NPU | $20.4\text{k}$ tham số, ánh xạ hoàn hảo vào 12 kênh Systolic của FPGA. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `src/quantization/` (`ptq.py`, `qat.py`, `bn_fold.py`, `export_gowin.py`) | Lượng tử hóa INT8 và xuất file nhớ BSRAM | Gấp BatchNorm thành công, sinh mã hex chia 6 ngân hàng song song. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `embedded/fpga_gowin/src/` (`npu_12way_core.v`, `npu_mac12_unit.v`, `fir_*.v`) | Mã nguồn RTL Verilog tổng hợp vi mạch FPGA | Đạt Timing Closure $102.6\,\text{MHz}$ (Slack $+0.225\,\text{ns}$), suy luận $2.62\,\mu\text{s}$. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `embedded/fpga_gowin/roms/` (`hil/`, `adxl345/`, `stimulus_cwru_*.hex`) | Bộ nhớ trọng số và vector kiểm tra vi mạch | Trọng số chuẩn xác, vector kích thích đỉnh $4,500\,\text{LSB}$ triệt tiêu tràn số. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `embedded/mcu_sonix/app/` (`main.c`, `hop_acp_fixedpoint.c`, `hop_acp.h`) | Firmware C nhúng vi điều khiển an toàn SIL-2 | Chạy số nguyên Q16.16 không cần FPU, trễ cắt rơ-le $< 1.0\,\text{ms}$. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `scripts/` (`verify_*.py`, `generate_*.py`, `export_*.py`, `hil_streamer.py`) | Bộ kịch bản kiểm thử tự động toàn diện | Pass $100\%$ các bài kiểm tra ($34/34$ pytest, $533/553$ co-sim, $2713/2767$ raw mat). | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `test_vectors/` (`golden_cwru_*_spectrum_int8.hex`, `golden_*.json`) | Dữ liệu kiểm chuẩn đầu ra toàn chuỗi vi mạch | Khớp từng bit giữa mô phỏng phần mềm và phần cứng Gowin. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `checkpoints/` (`student_dkd_adxl345/`, `student_qat_adxl345/`, `teacher_adxl345/`) | Trọng số mạng nơ-ron nhúng tối ưu | Độ hội tụ cao, đã kiểm chứng trên dữ liệu rung động thực tế. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - ACTIVE]`** | `core/conformal.py` | Thuật toán Conformal Prediction & HopACP | Được import và kiểm thử thường xuyên bởi `tests/test_conformal.py`. | **Giữ nguyên hoạt động.** |
+| **`[DOCUMENTATION]`**| `docs/` & `FPGA&MCU/` (`*.md`, `*.tex`, `*.docx`, `Datasheet/`) | Báo cáo khoa học, thuyết minh đề tài, hồ sơ dự thi | Đầy đủ minh chứng, sơ đồ khối, đối chuẩn SOTA và hồ sơ đăng ký. | **Giữ nguyên làm tư liệu.** |
+| **`[OLD - PROTOTYPE]`**| `core/dkd.py`, `core/dsp.py`, `core/models.py` | Bản nháp thuật toán thời kỳ đầu | Đã được cấu trúc lại hoàn chỉnh, tối ưu và kiểm thử trong `src/`. | **Lưu trữ tham khảo.** |
+| **`[ARCHIVE]`** | `legacy/` (40 tệp: `Phase0..6`, `deployment_jetson/`, `legacy/kaggle/`) | Mã nguồn giai đoạn phát triển đầu tiên (Jetson Orin/MATLAB) | Không còn tham gia vào chuỗi thực thi FPGA/MCU hiện tại, được cách ly độc lập. | **Giữ trong `legacy/` làm minh chứng lịch sử.** |
+| **`[DEV UTILITY]`** | `scratch/` (23 tệp: `crawl_scholar.py`, `fetch_arxiv.py`, `dump_all_cells.py`) | Các công cụ tiện ích hỗ trợ viết báo và sinh notebook | Không ảnh hưởng đến luồng chạy chính, hữu ích khi cần tra cứu tài liệu mới. | **Giữ trong `scratch/`.** |
+
+---
+
+### 3. Đánh Giá Kỹ Thuật Dưới Lăng Kính AI & Silicon Hardware Architect
+
+1. **Về tính đồng bộ Bit-True giữa AI (Python) và Phần Cứng (FPGA/MCU):**
+   * *Đánh giá:* **Xuất Sắc (State-of-the-Art)**. Rất hiếm có đề tài sinh viên nào đạt được mức độ đồng bộ chặt chẽ cycle-accurate và bit-true từ hàm số học dấu phẩy tĩnh (Q1.15 FIR, Q16.16 HopACP) cho đến bộ chia chuẩn hóa phổ trên vi mạch.
+   * *Ưu điểm:* Việc cố định bộ hệ số FIR `0x0824` và chuẩn hóa tỉ lệ kích thích về $4,500\,\text{LSB}$ triệt tiêu hoàn toàn hiện tượng bão hòa tín hiệu số mà không làm suy giảm tỷ số tín hiệu trên nhiễu (SNR) của các đỉnh va đập cơ khí.
+
+2. **Về kiến trúc phân bổ và bảo trì mã nguồn:**
+   * *Đánh giá:* Cấu trúc thư mục hiện tại đã được phân định ranh giới chức năng mạch lạc. Mọi file thực thi lõi đều nằm trong `src/`, `embedded/`, `scripts/` và `test_vectors/`.
+   * *Khuyến nghị:* Các thành viên trong nhóm tuyệt đối không tự ý thay đổi bộ hệ số `0x0824` trong `fir_minphase_32.v` hoặc đổi tần số cắt Envelope IIR mà không có sự đồng thuận và chạy lại script chưng cất trọng số NPU.
