@@ -510,6 +510,10 @@ python scripts/generate_multi_dataset_roms.py
 # 10. Chạy kiểm chứng toàn bộ 4 Suite kích thích đa tập dữ liệu trên NPU 12 kênh
 python scripts/verify_multi_dataset_fpga.py
 # ===> KẾT QUẢ MONG ĐỢI: 100% Pass bit-true parity, độ trễ 2.62 µs, 381,679 inf/s
+
+# 11. Chạy sinh biểu đồ chẩn đoán thời gian thực tích hợp Tiên lượng RUL & HopACP
+python scripts/realtime_diagnostic_monitor.py
+# ===> KẾT QUẢ MONG ĐỢI: Sinh 6 biểu đồ chuẩn công nghiệp tại docs/figures/diagnostic_cases/
 ```
 
 ---
@@ -518,6 +522,8 @@ python scripts/verify_multi_dataset_fpga.py
 
 Tất cả các tài liệu thực chiến chuyên sâu được lưu trữ tại thư mục [`docs/`](file:///d:/Gitrepo/VIbraDistill/docs):
 
+* 📈 **Đánh Giá 4 Trường Hợp Chẩn Đoán & Tích Hợp Tiên Lượng RUL (Diagnostic Cases & RUL Analysis)**: [`docs/DIAGNOSTIC_CASES_AND_RUL_PROGNOSTICS_ANALYSIS.md`](file:///d:/Gitrepo/VIbraDistill/docs/DIAGNOSTIC_CASES_AND_RUL_PROGNOSTICS_ANALYSIS.md)  
+  *(Phân tích cơ học sâu sắc 4 ca chẩn đoán, lý giải vật lý vì sao Ball Fault có Outer Race cao, tích hợp tiên lượng RUL và khoảng bảo đảm thống kê HopACP Q16.16).*
 * 🗄️ **Kiến Trúc Đa Tập Dữ Liệu & Phân Bổ ROM Vi Mạch (Multi-Dataset Taxonomy & ROM Benchmark)**: [`docs/MULTI_DATASET_TAXONOMY_AND_ROM_BENCHMARK.md`](file:///d:/Gitrepo/VIbraDistill/docs/MULTI_DATASET_TAXONOMY_AND_ROM_BENCHMARK.md)  
   *(Biện giải toàn diện 11 bộ dữ liệu 34.6 GB, lý do chọn CWRU làm mỏ neo HIL, kiến trúc Multi-Profile BSRAM 5 chế độ và kết quả kiểm thử vi mạch 4 bộ kích thích).*
 * 🧠 **Đặc Tả Chi Tiết Kiến Trúc AI & Học Máy Nhúng (AI Architecture Deep-Dive)**: [`docs/AI_ARCHITECTURE_DEEP_DIVE.md`](file:///d:/Gitrepo/VIbraDistill/docs/AI_ARCHITECTURE_DEEP_DIVE.md)  
