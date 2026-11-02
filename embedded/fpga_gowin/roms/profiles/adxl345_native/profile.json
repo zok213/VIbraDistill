@@ -1,0 +1,22 @@
+{
+  "profile_id": "PRF_ADXL",
+  "name": "ADXL345 MEMS Sensor Native (3.2 kHz Decimated)",
+  "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K + ADXL345 SPI",
+  "fs_hz": 3200,
+  "kinematics": {
+    "nb": 9,
+    "db_mm": 7.94,
+    "dp_mm": 39.04
+  },
+  "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\adxl345",
+  "biases": [
+    0,
+    -3,
+    8,
+    -4
+  ],
+  "accuracy_val": 96.38,
+  "macro_f1": 95.84,
+  "latency_us": 2.62,
+  "cycles_100mhz": 262
+}

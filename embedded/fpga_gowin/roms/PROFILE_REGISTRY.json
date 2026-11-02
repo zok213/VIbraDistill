@@ -1,0 +1,119 @@
+{
+  "prf01_cwru_motor_9ball": {
+    "profile_id": "PRF01",
+    "name": "CWRU Motor Bearing (9-Ball SKF 6205)",
+    "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K",
+    "fs_hz": 12000,
+    "kinematics": {
+      "nb": 9,
+      "db_mm": 7.94,
+      "dp_mm": 39.04,
+      "bpfi_hz": 157.94,
+      "bpfo_hz": 104.56,
+      "bsf_hz": 69.84
+    },
+    "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\hil",
+    "biases": [
+      -5,
+      -3,
+      14,
+      -6
+    ],
+    "accuracy_val": 98.71,
+    "macro_f1": 95.08,
+    "latency_us": 2.62,
+    "cycles_100mhz": 262
+  },
+  "prf02_mfpt_heavy_16ball": {
+    "profile_id": "PRF02",
+    "name": "MFPT Industrial Bearing (16-Ball Nice 1012)",
+    "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K",
+    "fs_hz": 12000,
+    "kinematics": {
+      "nb": 16,
+      "db_mm": 7.94,
+      "dp_mm": 53.0,
+      "bpfi_hz": 244.2,
+      "bpfo_hz": 155.8,
+      "bsf_hz": 135.2
+    },
+    "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\profiles\\prf02_mfpt_heavy_16ball",
+    "biases": [
+      9,
+      -21,
+      29,
+      -27
+    ],
+    "accuracy_val": 88.25,
+    "macro_f1": 87.2,
+    "latency_us": 2.62,
+    "cycles_100mhz": 262
+  },
+  "prf03_pronostia_rul": {
+    "profile_id": "PRF03",
+    "name": "PRONOSTIA FEMTO Accelerated Run-to-Failure RUL",
+    "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K + Cortex-M0 HopACP",
+    "fs_hz": 12000,
+    "kinematics": {
+      "nb": 13,
+      "db_mm": 3.5,
+      "dp_mm": 20.5,
+      "bpfi_hz": 221.7,
+      "bpfo_hz": 168.3,
+      "bsf_hz": 112.5
+    },
+    "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\hil",
+    "biases": [
+      -5,
+      -3,
+      14,
+      -6
+    ],
+    "conformal_coverage": 90.22,
+    "latency_us": 2.62,
+    "cycles_100mhz": 262
+  },
+  "prf04_gearbox_drivetrain": {
+    "profile_id": "PRF04",
+    "name": "SEU & PHM2009 Gearbox Drivetrain OOD Rejection",
+    "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K",
+    "fs_hz": 12000,
+    "kinematics": {
+      "gear_teeth_sun": 20,
+      "gear_teeth_planet": 40,
+      "gear_teeth_ring": 100
+    },
+    "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\hil",
+    "biases": [
+      -5,
+      -3,
+      14,
+      -6
+    ],
+    "target_epistemic_vacuity": 0.85,
+    "latency_us": 2.62,
+    "cycles_100mhz": 262
+  },
+  "adxl345_native": {
+    "profile_id": "PRF_ADXL",
+    "name": "ADXL345 MEMS Sensor Native (3.2 kHz Decimated)",
+    "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K + ADXL345 SPI",
+    "fs_hz": 3200,
+    "kinematics": {
+      "nb": 9,
+      "db_mm": 7.94,
+      "dp_mm": 39.04
+    },
+    "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\adxl345",
+    "biases": [
+      0,
+      -3,
+      8,
+      -4
+    ],
+    "accuracy_val": 96.38,
+    "macro_f1": 95.84,
+    "latency_us": 2.62,
+    "cycles_100mhz": 262
+  }
+}

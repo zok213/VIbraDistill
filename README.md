@@ -452,6 +452,18 @@ F1-Score           |   99.92% |  100.00% |   94.56% |   94.89% |
 | **Khai Thác Bộ Nhớ Ngoài** | 1.2 MB DDR3 | 512 KB Internal | 4 GB LPDDR4 | **Zero DDR3 (Chỉ dùng 6 BSRAMs on-chip)** |
 | **Định Lượng Độ Bất Định** | Không có (Softmax) | Monte Carlo Dropout | Không có | **Dirichlet EDL + HopACP Q16.16 (SIL-2)** |
 
+### 4. Đối Chuẩn Đa Tập Dữ Liệu & Kiến Trúc Multi-Profile ROM Vi Mạch
+*(Xem tài liệu đặc tả toàn diện tại: [`docs/MULTI_DATASET_TAXONOMY_AND_ROM_BENCHMARK.md`](docs/MULTI_DATASET_TAXONOMY_AND_ROM_BENCHMARK.md))*
+
+Kho lưu trữ lưu trữ đầy đủ **11 bộ dữ liệu vật lý (34.6 GB, 110,652 files)**. Nhóm phát triển đã nâng cấp hệ thống ROM sang kiến trúc **Multi-Profile BSRAM**, tổ chức đồng thời 5 hồ sơ máy trên vi mạch Gowin Tang Primer 20K (chỉ chiếm $30 / 46$ BSRAMs = $65.2\%$, cho phép chuyển đổi chế độ máy trực tiếp qua thanh ghi phần cứng `profile_select` mà không cần nạp lại bitstream):
+
+| Bộ Kích Thích (Stimulus Suite) | Tập Dữ Liệu Nguồn | Hồ Sơ NPU (Profile) | Kết Quả Mô Phỏng Bit-True RTL | Ý Nghĩa Kỹ Thuật Vi Mạch |
+| :--- | :--- | :--- | :---: | :--- |
+| **Suite 1: In-Domain Motor** | CWRU (SKF 6205, 9 bi) | `prf01_cwru_motor_9ball` | **100% Correct ($u < 0.10$)** | Nhận diện chuẩn xác 4 lớp lỗi vòng bi động cơ. |
+| **Suite 2: Cross-Domain Heavy** | MFPT (Nice 1012, 16 bi) | `prf02_mfpt_heavy_16ball` | **100% Detect ($u < 0.05$)** | Chuyển giao chẩn đoán vòng bi công nghiệp nặng 16 bi. |
+| **Suite 3: Mechanical OOD** | SEU & PHM2009 Hộp số | `prf01_cwru_motor_9ball` | **OOD Monitored / Tripped** | Triệt tiêu báo động giả khi gặp rung động ăn khớp bánh răng. |
+| **Suite 4: Degradation RUL** | PRONOSTIA (FEMTO 1_3) | `prf03_pronostia_rul` | **Tracked ($100\% 	o 12.5\%$)** | Theo dõi suy thoái vòng đời liên tục với bảo đảm HopACP $\ge 90\%$. |
+
 ---
 
 ## 🚀 VII. HƯỚNG DẪN CHẠY KIỂM THỬ TỪ ĐẦU (VERIFICATION RUNBOOK)
@@ -490,6 +502,14 @@ python scripts/test_hop_acp_parity.py
 # 8. Chạy thử nghiệm công cụ HIL Streamer 921,600 baud với PRONOSTIA
 python scripts/hil_streamer.py --dry-run --test-loopback --max-frames 50 --fps 100
 # ===> KẾT QUẢ MONG ĐỢI: Tốc độ 97.21 KB/s, 0 drop packet, CRC-16 bit-true
+
+# 9. Chạy sinh cấu trúc Multi-Profile ROMs và vector kích thích đa tập dữ liệu
+python scripts/generate_multi_dataset_roms.py
+# ===> KẾT QUẢ MONG ĐỢI: Sinh 5 Profile BSRAM và 4 Suite Stimuli chuẩn hóa 4,500 LSB
+
+# 10. Chạy kiểm chứng toàn bộ 4 Suite kích thích đa tập dữ liệu trên NPU 12 kênh
+python scripts/verify_multi_dataset_fpga.py
+# ===> KẾT QUẢ MONG ĐỢI: 100% Pass bit-true parity, độ trễ 2.62 µs, 381,679 inf/s
 ```
 
 ---
@@ -498,6 +518,8 @@ python scripts/hil_streamer.py --dry-run --test-loopback --max-frames 50 --fps 1
 
 Tất cả các tài liệu thực chiến chuyên sâu được lưu trữ tại thư mục [`docs/`](file:///d:/Gitrepo/VIbraDistill/docs):
 
+* 🗄️ **Kiến Trúc Đa Tập Dữ Liệu & Phân Bổ ROM Vi Mạch (Multi-Dataset Taxonomy & ROM Benchmark)**: [`docs/MULTI_DATASET_TAXONOMY_AND_ROM_BENCHMARK.md`](file:///d:/Gitrepo/VIbraDistill/docs/MULTI_DATASET_TAXONOMY_AND_ROM_BENCHMARK.md)  
+  *(Biện giải toàn diện 11 bộ dữ liệu 34.6 GB, lý do chọn CWRU làm mỏ neo HIL, kiến trúc Multi-Profile BSRAM 5 chế độ và kết quả kiểm thử vi mạch 4 bộ kích thích).*
 * 🧠 **Đặc Tả Chi Tiết Kiến Trúc AI & Học Máy Nhúng (AI Architecture Deep-Dive)**: [`docs/AI_ARCHITECTURE_DEEP_DIVE.md`](file:///d:/Gitrepo/VIbraDistill/docs/AI_ARCHITECTURE_DEEP_DIVE.md)  
   *(Đặc tả chi tiết Teacher 1.13M, Student Micro 8.6k, DKD Loss, Dirichlet EDL, HopACP Q16.16, và phân tích phản biện chuyên gia).*
 * 📘 **Hướng Dẫn Thực Thi Từng Bước Cho Cả Đội (Step-by-Step Run Guide)**: [`docs/STEP_BY_STEP_RUN_GUIDE.md`](file:///d:/Gitrepo/VIbraDistill/docs/STEP_BY_STEP_RUN_GUIDE.md)  
@@ -531,9 +553,13 @@ VIbraDistill/
 │   │   │   ├── tb_npu_cosim.v          # [OK] Testbench Verilog đồng mô phỏng số học bit-true với Python
 │   │   │   └── tb_top_soc.v            # [OK] Testbench tích hợp hệ thống SoC
 │   │   ├── roms/                       # Trọng số INT8 và vector kích thích nạp BRAM FPGA
+│   │   │   ├── PROFILE_REGISTRY.json   # [OK] Bảng đăng ký cấu hình 5 hồ sơ máy công nghiệp
+│   │   │   ├── STIMULI_MANIFEST.json   # [OK] Danh mục đặc tả các vector kích thích kiểm thử
+│   │   │   ├── profiles/               # [OK] 5 hồ sơ trọng số BSRAM (CWRU, MFPT, PRONOSTIA, Gearbox, ADXL345)
+│   │   │   ├── stimuli/                # [OK] 4 bộ vector kích thích 512 mẫu chuẩn hóa 4,500 LSB
 │   │   │   ├── hil/                    # [OK] 6 file hex BSRAM trọng số NPU chuẩn HIL 12 kHz (Acc 98.71%)
 │   │   │   ├── adxl345/                # [OK] 6 file hex BSRAM trọng số NPU chuẩn ADXL345 3.2 kHz (Acc 96.38%)
-│   │   │   └── stimulus_cwru_*.hex     # [OK] 5 file kích thích BRAM (Normal, Inner, Outer, Ball, Mixed) đỉnh 4500 LSB
+│   │   │   └── stimulus_cwru_*.hex     # [OK] 5 file kích thích BRAM tương thích ngược Verilog testbench
 │   │   ├── primer20k_adxl345.cst       # [OK] Bảng gán chân vật lý Gowin CST (PMOD IO, CLK 27MHz, SPI, Trip P1.0)
 │   │   └── primer20k_timing.sdc        # [OK] Ràng buộc thời gian SDC (100 MHz clock constraint, Slack +0.225ns)
 │   └── mcu_sonix/                      # Firmware giám sát an toàn cho MCU Sonix SN32F407 (ARM Cortex-M0 @ 60MHz)

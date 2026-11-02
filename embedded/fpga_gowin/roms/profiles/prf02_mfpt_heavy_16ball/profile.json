@@ -1,0 +1,25 @@
+{
+  "profile_id": "PRF02",
+  "name": "MFPT Industrial Bearing (16-Ball Nice 1012)",
+  "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K",
+  "fs_hz": 12000,
+  "kinematics": {
+    "nb": 16,
+    "db_mm": 7.94,
+    "dp_mm": 53.0,
+    "bpfi_hz": 244.2,
+    "bpfo_hz": 155.8,
+    "bsf_hz": 135.2
+  },
+  "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\profiles\\prf02_mfpt_heavy_16ball",
+  "biases": [
+    9,
+    -21,
+    29,
+    -27
+  ],
+  "accuracy_val": 88.25,
+  "macro_f1": 87.2,
+  "latency_us": 2.62,
+  "cycles_100mhz": 262
+}

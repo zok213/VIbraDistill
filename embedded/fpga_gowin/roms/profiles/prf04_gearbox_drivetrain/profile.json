@@ -1,0 +1,21 @@
+{
+  "profile_id": "PRF04",
+  "name": "SEU & PHM2009 Gearbox Drivetrain OOD Rejection",
+  "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K",
+  "fs_hz": 12000,
+  "kinematics": {
+    "gear_teeth_sun": 20,
+    "gear_teeth_planet": 40,
+    "gear_teeth_ring": 100
+  },
+  "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\hil",
+  "biases": [
+    -5,
+    -3,
+    14,
+    -6
+  ],
+  "target_epistemic_vacuity": 0.85,
+  "latency_us": 2.62,
+  "cycles_100mhz": 262
+}

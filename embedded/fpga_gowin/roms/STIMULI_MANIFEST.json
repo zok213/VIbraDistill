@@ -1,0 +1,124 @@
+{
+  "cwru": {
+    "description": "In-Domain CWRU Motor (SKF 6205, 9-Ball, 12 kHz)",
+    "count": 5,
+    "files": {
+      "stimulus_cwru_normal.hex": {
+        "description": "Normal Baseline (SKF 6205, Load 0 HP)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1122.93,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/cwru/stimulus_cwru_normal.hex"
+      },
+      "stimulus_cwru_inner.hex": {
+        "description": "Inner Race Defect (7-mil, BPFI 157.9 Hz)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1088.01,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/cwru/stimulus_cwru_inner.hex"
+      },
+      "stimulus_cwru_outer.hex": {
+        "description": "Outer Race Defect (7-mil, BPFO 104.5 Hz)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 941.54,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/cwru/stimulus_cwru_outer.hex"
+      },
+      "stimulus_cwru_ball.hex": {
+        "description": "Ball Defect (7-mil, BSF 69.8 Hz)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1394.66,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/cwru/stimulus_cwru_ball.hex"
+      },
+      "stimulus_cwru_mixed.hex": {
+        "description": "Severe Compound Wear (21-mil Unseen)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1414.75,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/cwru/stimulus_cwru_mixed.hex"
+      }
+    }
+  },
+  "mfpt_crossdomain": {
+    "description": "Cross-Domain MFPT Industrial (Nice 1012, 16-Ball, 12 kHz Polyphase)",
+    "count": 3,
+    "files": {
+      "stimulus_mfpt_baseline.hex": {
+        "description": "MFPT Baseline Healthy (Nice 1012, 16 balls, 97.6k -> 12k)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1188.8,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/mfpt_crossdomain/stimulus_mfpt_baseline.hex"
+      },
+      "stimulus_mfpt_outer.hex": {
+        "description": "MFPT Outer Race Fault (270 lbs load, 48.8k -> 12k)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1251.73,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/mfpt_crossdomain/stimulus_mfpt_outer.hex"
+      },
+      "stimulus_mfpt_inner.hex": {
+        "description": "MFPT Inner Race Fault (Variable load, 48.8k -> 12k)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 581.34,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/mfpt_crossdomain/stimulus_mfpt_inner.hex"
+      }
+    }
+  },
+  "ood_gearbox": {
+    "description": "Mechanical OOD Gearbox & Drivetrain (SEU & PHM2009, 12 kHz Polyphase)",
+    "count": 3,
+    "files": {
+      "stimulus_seu_gearbox_health.hex": {
+        "description": "SEU Drivetrain Healthy Planetary Gearbox (OOD Baseline)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 2065.08,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/ood_gearbox/stimulus_seu_gearbox_health.hex"
+      },
+      "stimulus_seu_gearbox_chipped.hex": {
+        "description": "SEU Planetary Gear Chipped Tooth (OOD Mechanical Vacuity u >= 0.85)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 2147.04,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/ood_gearbox/stimulus_seu_gearbox_chipped.hex"
+      },
+      "stimulus_phm2009_gear_wear.hex": {
+        "description": "PHM2009 Industrial Gearbox Tooth Flank Wear (OOD Epistemic Alert)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1214.46,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/ood_gearbox/stimulus_phm2009_gear_wear.hex"
+      }
+    }
+  },
+  "pronostia_degradation": {
+    "description": "PRONOSTIA FEMTO Run-to-Failure Degradation (Bearing 1_3, 12 kHz Polyphase)",
+    "count": 3,
+    "files": {
+      "stimulus_pronostia_early_life.hex": {
+        "description": "PRONOSTIA Bearing 1_3 Early Life (t = 5% RUL, Healthy, 25.6k -> 12k)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1402.61,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/pronostia_degradation/stimulus_pronostia_early_life.hex"
+      },
+      "stimulus_pronostia_mid_life.hex": {
+        "description": "PRONOSTIA Bearing 1_3 Mid Life (t = 50% RUL, Degrading, 25.6k -> 12k)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1401.11,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/pronostia_degradation/stimulus_pronostia_mid_life.hex"
+      },
+      "stimulus_pronostia_end_of_life.hex": {
+        "description": "PRONOSTIA Bearing 1_3 End of Life (t = 98% RUL, Terminal, 25.6k -> 12k)",
+        "samples": 512,
+        "peak_lsb": 4500,
+        "rms_lsb": 1362.97,
+        "hex_path": "embedded/fpga_gowin/roms/stimuli/pronostia_degradation/stimulus_pronostia_end_of_life.hex"
+      }
+    }
+  }
+}
