@@ -188,6 +188,7 @@ def main():
     print(f" OVERALL HARDWARE ACCURACY      : {overall_acc:.2f}%")
     print(f" MACRO-AVERAGED F1-SCORE        : {macro_f1:.2f}%")
     print("=" * 78)
+    return correct_samples, total_samples, overall_acc, macro_f1
 
 if __name__ == '__main__':
     main()

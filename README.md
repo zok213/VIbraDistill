@@ -518,6 +518,10 @@ python scripts/realtime_diagnostic_monitor.py
 # 12. Chạy kiểm chứng tiên lượng RUL từ file MATLAB .mat chuẩn (HopACP 90% Conformal & SIL-2 Trip)
 python scripts/verify_mat_rul_prognostics.py
 # ===> KẾT QUẢ MONG ĐỢI: HopACP Coverage 91.41% (>= 90%), MAE 0.224h, Trip ngắt an toàn trước sự cố 101.7 phút
+
+# 13. Chạy kiểm tra TOÀN BỘ 10 bộ ROM vi mạch và tập dữ liệu chỉ với 1 click (All-In-One Master Test)
+python scripts/test_all_roms_suites.py
+# ===> KẾT QUẢ MONG ĐỢI: 10/10 bộ kiểm thử PASSED 100%, tổng thời gian ~7.6 giây
 ```
 
 ---
