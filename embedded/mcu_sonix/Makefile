@@ -18,7 +18,8 @@ BUILD_DIR = build
 
 SRCS = $(APP_DIR)/main.c \
        $(APP_DIR)/vibradistill_model.c \
-       $(APP_DIR)/adaptive_conformal.c
+       $(APP_DIR)/adaptive_conformal.c \
+       $(APP_DIR)/hop_acp_fixedpoint.c
 
 INCLUDES = -I$(APP_DIR)
 
