@@ -75,38 +75,39 @@ The codebase stores 34.6 GB of raw sensor data across 11 testbeds. Below is the 
 
 ## III. Multi-Profile BSRAM Silicon Architecture (Gowin Tang Primer 20K)
 
-### 1. Memory Optimization & Concurrent Profile Storage
+### 1. Physical Silicon BSRAM Allocation (`gowin_top_soc.v`)
 The Gowin GW2A-LV18 FPGA contains **46 Dual-Port Block SRAMs (BSRAMs)**, each $18\text{ Kb}$ ($2048 \times 9\text{ bits}$ or $1024 \times 18\text{ bits}$).
 - The 12-way parallel SIMD systolic MAC engine (`npu_12way_core.v`) operates on 257 spectral bins ($k = 0 \dots 256$).
 - Each bank stores $257 \times 16\text{-bit words}$ ($[15:8] = \text{Channel } 2b+1$, $[7:0] = \text{Channel } 2b$).
-- Exactly **6 BSRAMs** are required for one complete 12-channel model profile.
-- **Key Silicon Finding:** 5 full industrial profiles require $5 \times 6 = 30\text{ BSRAMs}$, utilizing only **65.2%** of the on-chip BSRAM pool!
+- Exactly **6 BSRAMs** are active in hardware for the 12-channel model weights.
+- In the top-level SoC ([`embedded/fpga_gowin/src/gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v)), the hardware is parameterized via `USE_ADXL345`:
+  * `USE_ADXL345 = 0`: In-Domain Industrial HIL Mode ($12.0\,\text{kHz}$, CWRU SKF 6205, 98.05% Acc, `roms/hil/`).
+  * `USE_ADXL345 = 1`: Physical MEMS Accelerometer Mode ($3.2\,\text{kHz}$, ADXL345 SPI, 96.38% Acc, `roms/adxl345/`).
 
 ```
-Gowin GW2A-LV18 BSRAM Allocation (46 Banks Total):
-+-------------------------------------------------------------+
-| BSRAM 00..05 : PRF01 - CWRU Motor Bearing (12 kHz HIL)      | [13.04%]
-| BSRAM 06..11 : PRF02 - MFPT Industrial Bearing (16-Ball)    | [13.04%]
-| BSRAM 12..17 : PRF03 - PRONOSTIA Run-to-Failure Prognostics | [13.04%]
-| BSRAM 18..23 : PRF04 - SEU / PHM2009 Gearbox Drivetrain     | [13.04%]
-| BSRAM 24..29 : PRF_ADXL - ADXL345 Native (3.2 kHz SPI)      | [13.04%]
-| BSRAM 30..45 : Available for FFT Buffers & DSP Ping-Pong    | [34.78%]
-+-------------------------------------------------------------+
-Total Profile Utilization: 30 / 46 BSRAMs (65.22%) -> ZERO External DDR Needed!
+Gowin GW2A-LV18 Physical Silicon BSRAM Utilization (46 Banks Total):
++-----------------------------------------------------------------+
+| BSRAM 00..05 : Active 12-Channel NPU Weights (6 BSRAMs)         | [13.04%]
+| BSRAM 06..17 : Real FFT Pipeline & Ping-Pong Buffers            | [26.09%]
+| BSRAM 18..20 : Causal FIR Window & Delay Line Buffers           | [ 6.52%]
+| BSRAM 21..45 : Available Headroom for On-Chip Upgrades          | [54.35%]
++-----------------------------------------------------------------+
+Total Active Hardware BSRAM Utilization: ~21 / 46 BSRAMs (~45.65%)
+-> 100% Autonomous On-Chip Operation: ZERO External DDR3 RAM Required!
 ```
 
-### 2. Multi-Profile Directory Structure (`embedded/fpga_gowin/roms/profiles/`)
-The ROMs have been organized into formal modular profiles, each accompanied by its machine geometry, sampling rate, dual-port hex/mi banks, and biases:
+### 2. Multi-Dataset Evaluation Roles & Directory Structure
+The repository organizes multi-dataset test suites and model weights to support both the **$2.62\,\mu\text{s}$ FPGA Reflex Classifier** and the **Continuous Host/MCU RUL Prognostics Engine**:
 
 ```
 embedded/fpga_gowin/roms/
 ├── PROFILE_REGISTRY.json           <- Master JSON machine manifest
 ├── STIMULI_MANIFEST.json           <- Master stimulus vector manifest
 ├── profiles/
-│   ├── prf01_cwru_motor_9ball/     <- CWRU 9-ball (98.71% Acc, Biases: -5, -3, 14, -6)
+│   ├── prf01_cwru_motor_9ball/     <- CWRU 9-ball (98.05% Acc, Biases: -5, -3, 14, -6)
 │   ├── prf02_mfpt_heavy_16ball/    <- MFPT 16-ball (88.25% Acc, Biases: 9, -21, 29, -27)
-│   ├── prf03_pronostia_rul/        <- FEMTO RUL degradation tracking
-│   ├── prf04_gearbox_drivetrain/   <- Gearbox drivetrain OOD monitoring
+│   ├── prf03_pronostia_rul/        <- Host/MCU HopACP RUL Prognostics (Coverage 93.51%, MAE 1.675h)
+│   ├── prf04_gearbox_drivetrain/   <- Mechanical OOD Rejection against PRF01 (u >= 0.85)
 │   └── adxl345_native/             <- ADXL345 3.2 kHz MEMS mode (96.38% Acc)
 └── stimuli/
     ├── cwru/                       <- In-domain motor bearing vectors (5 files)

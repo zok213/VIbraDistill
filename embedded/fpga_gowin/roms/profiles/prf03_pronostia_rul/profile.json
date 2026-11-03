@@ -1,15 +1,17 @@
 {
   "profile_id": "PRF03",
   "name": "PRONOSTIA FEMTO Accelerated Run-to-Failure RUL",
-  "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K + Cortex-M0 HopACP",
-  "fs_hz": 12000,
+  "target_hardware": "Heterogeneous Co-Design: FPGA DSP Front-End + Host/MCU HopACP Q16.16",
+  "architecture_role": "Continuous RUL Prognostics (Evaluated via checkpoints/prognostics/pronostia_rul_micro.pt)",
+  "fs_hz": 25600,
   "kinematics": {
     "nb": 13,
     "db_mm": 3.5,
-    "dp_mm": 20.5,
-    "bpfi_hz": 221.7,
-    "bpfo_hz": 168.3,
-    "bsf_hz": 112.5
+    "dp_mm": 26.0,
+    "bpfi_hz": 221.25,
+    "bpfo_hz": 168.75,
+    "bsf_hz": 109.38,
+    "ftf_hz": 12.98
   },
   "source_weights": "D:\\Gitrepo\\VIbraDistill\\embedded\\fpga_gowin\\roms\\hil",
   "biases": [
@@ -18,7 +20,10 @@
     14,
     -6
   ],
-  "conformal_coverage": 90.22,
+  "conformal_coverage": 93.51,
+  "mae_hours": 1.675,
+  "rmse_hours": 2.018,
+  "sil2_warning_margin_min": 101.5,
   "latency_us": 2.62,
   "cycles_100mhz": 262
 }

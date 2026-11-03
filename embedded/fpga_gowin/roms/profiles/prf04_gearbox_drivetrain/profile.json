@@ -1,7 +1,8 @@
 {
   "profile_id": "PRF04",
   "name": "SEU & PHM2009 Gearbox Drivetrain OOD Rejection",
-  "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K",
+  "target_hardware": "Gowin GW2A-LV18 Tang Primer 20K (Evaluated against PRF01 Motor Classifier)",
+  "architecture_role": "Mechanical Out-of-Distribution (OOD) Epistemic Vacuity Verification",
   "fs_hz": 12000,
   "kinematics": {
     "gear_teeth_sun": 20,
