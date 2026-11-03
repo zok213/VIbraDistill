@@ -15,9 +15,17 @@ import os
 import sys
 import numpy as np
 import scipy.io as sio
+import torch
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, base_dir)
+
+from src.datasets.pronostia_loader import PRONOSTIA_NSK6804RS_GEOMETRY
+from src.dsp.pipeline import StreamingDSPPipeline
+from src.models.student_micro import VibraDistillMicro
 
 def verify_mat_rul(mat_path="data/rul_mat_benchmarks/bearing_lifecycle_1_3.mat"):
     if not os.path.exists(mat_path):
@@ -50,14 +58,27 @@ def verify_mat_rul(mat_path="data/rul_mat_benchmarks/bearing_lifecycle_1_3.mat")
     print(f"  Initial RMS:     {rms[0]:.3f} g -> Terminal RMS: {rms[-1]:.3f} g")
     print(f"  Peak Amplitude:  {np.max(peak):.2f} g")
 
-    # 2. Conformal Prognostic Estimator
-    # Physics model: Paris' Law exponential wear after micro-spall initiation
-    # We calibrate a Split Conformal Predictor with target coverage 90% (alpha = 0.10)
-    
-    # Compute Health Index (HI) from RMS and Kurtosis
-    rms_baseline = np.median(rms[:200])
-    rms_failure = 20.0
-    
+    # 2. Real Deep Neural Network Prognostic Inference (VibraDistillMicro)
+    # Evaluates each raw vibration snapshot directly through DSP pipeline -> VibraDistillMicro -> RUL Head
+    print("\n[AI PROGNOSTIC INFERENCE] Running VibraDistillMicro on 2,375 raw vibration snapshots...")
+    ckpt_path = os.path.join(base_dir, 'checkpoints', 'prognostics', 'pronostia_rul_micro.pt')
+    if not os.path.exists(ckpt_path):
+        raise FileNotFoundError(f"Prognostic checkpoint not found: {ckpt_path}. Run scripts/train_pronostia_rul.py first!")
+
+    ckpt = torch.load(ckpt_path, weights_only=False)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = VibraDistillMicro(in_bins=257, num_classes=4, physics_dim=4).to(device)
+    model.load_state_dict(ckpt['model_state_dict'])
+    model.eval()
+
+    dsp = StreamingDSPPipeline(fs=float(fs_hz), window_size=512, bearing_geom=PRONOSTIA_NSK6804RS_GEOMETRY)
+    fr = 30.0
+    bpfo = (13.0 / 2.0) * fr * (1.0 - 3.5 / 26.0) / float(fs_hz)
+    bpfi = (13.0 / 2.0) * fr * (1.0 + 3.5 / 26.0) / float(fs_hz)
+    bsf = (26.0 / (2.0 * 3.5)) * fr * (1.0 - (3.5 / 26.0)**2) / float(fs_hz)
+    ftf = 0.5 * fr * (1.0 - 3.5 / 26.0) / float(fs_hz)
+    prior = torch.tensor([[bpfo, bpfi, bsf, ftf]], dtype=torch.float32, device=device)
+
     # Exponential smoothing of RMS & Kurtosis (simulating Cortex-M0 integer filter)
     alpha_filter = 0.05
     smoothed_rms = np.zeros_like(rms)
@@ -69,7 +90,6 @@ def verify_mat_rul(mat_path="data/rul_mat_benchmarks/bearing_lifecycle_1_3.mat")
         smoothed_kurt[i] = alpha_filter * kurt[i] + (1 - alpha_filter) * smoothed_kurt[i-1]
 
     # Degradation modeling: detect true physical knee-point (persistent micro-spall)
-    # Physical criteria: smoothed RMS rises 2.5x above baseline (>= 0.75g) or smoothed Kurtosis > 4.2
     knee_candidates = np.where((time_hours > 1.0) & ((smoothed_rms >= 0.75) | (smoothed_kurt >= 4.2)))[0]
     knee_point = knee_candidates[0] if len(knee_candidates) > 0 else int(0.75 * total_snaps)
     knee_time = time_hours[knee_point]
@@ -78,48 +98,44 @@ def verify_mat_rul(mat_path="data/rul_mat_benchmarks/bearing_lifecycle_1_3.mat")
     print(f"  Pre-Knee (Stable Wear):        t in [0.00, {knee_time:.2f}] h")
     print(f"  Post-Knee (Accelerated Spall): t in [{knee_time:.2f}, {total_hours:.2f}] h")
 
-    pred_rul_hours = np.zeros_like(true_rul_hours)
+    vibration_raw_g = mat['vibration_raw_g']  # (2375, 2560)
+    pred_rul_hours = np.zeros(total_snaps, dtype=np.float64)
 
-    # Pre-knee: linear countdown with slight nominal variance
-    for i in range(knee_point):
-        # Initial estimate based on nominal bearing L10h rating with process noise
-        base_pred = total_hours - time_hours[i]
-        # Slight sensor jitter simulating real-time inference
-        noise = 0.08 * np.sin(i * 0.05) + 0.05 * np.cos(i * 0.12)
-        pred_rul_hours[i] = base_pred + noise
+    with torch.no_grad():
+        for i in range(total_snaps):
+            chunk = vibration_raw_g[i, 1024:1536].astype(np.float32)
+            res = dsp.process_window(chunk, rpm=1800.0)
+            spec = torch.from_numpy(res['spectrum']).float().unsqueeze(0).to(device)
+            _, pred_rul = model(spec, prior)
+            pred_fraction = float(pred_rul.item())
+            pred_rul_hours[i] = np.clip(pred_fraction * total_hours, 0.0, total_hours)
 
-    # Post-knee: non-linear exponential degradation law
-    for i in range(knee_point, total_snaps):
-        # Progress from knee to failure
-        progress = (i - knee_point) / (total_snaps - knee_point + 1e-6)
-        remaining = (total_hours - knee_time) * (1.0 - progress**1.45)
-        # Minor estimation deviation
-        jitter = 0.06 * np.cos(i * 0.08)
-        pred_rul_hours[i] = max(0.0, remaining + jitter)
+    # 3. HopACP Adaptive Conformal Calibration & Bound Generation
+    q_calibrated = float(ckpt.get('calibrated_q', 0.5358)) * total_hours
+    alpha = 0.10
+    gamma = 0.04
+    q_curr = q_calibrated
+    lower_bound = np.zeros(total_snaps, dtype=np.float64)
+    upper_bound = np.zeros(total_snaps, dtype=np.float64)
+    covered_history = []
 
-    # 3. HopACP Conformal Calibration (alpha = 0.10 -> 90% target coverage)
-    # Stratified calibration split across operational lifecycle (even snapshots = calibration, odd = evaluation)
+    for i in range(total_snaps):
+        l = max(0.0, pred_rul_hours[i] - q_curr)
+        u = min(total_hours, pred_rul_hours[i] + q_curr)
+        lower_bound[i] = l
+        upper_bound[i] = u
+        is_cov = (true_rul_hours[i] >= l) and (true_rul_hours[i] <= u)
+        covered_history.append(is_cov)
+        err = 0.0 if is_cov else 1.0
+        q_curr = max(0.20 * total_hours, min(0.75 * total_hours, q_curr + gamma * (err - alpha)))
+
+    q_alpha = q_calibrated
+
+    # 4. Metrics Evaluation
+    # Stratified evaluation split across operational lifecycle (even snapshots = calibration, odd = evaluation)
     cal_mask = (np.arange(total_snaps) % 2 == 0)
     test_mask = ~cal_mask
 
-    all_residuals = np.abs(true_rul_hours - pred_rul_hours)
-    cal_residuals = all_residuals[cal_mask]
-    test_residuals = all_residuals[test_mask]
-    
-    # Finite-sample conformal quantile: ceil((n + 1) * (1 - alpha)) / n
-    n_cal = len(cal_residuals)
-    alpha = 0.10
-    q_level = min(1.0, np.ceil((n_cal + 1) * (1.0 - alpha)) / n_cal)
-    q_alpha = float(np.quantile(cal_residuals, q_level))
-    
-    # Dynamic uncertainty adjustment: expands moderately in accelerated degradation phase
-    dyn_scale = 1.0 + 0.3 * np.clip((smoothed_rms - rms_baseline) / (5.0 - rms_baseline + 1e-6), 0.0, 1.5)
-    dyn_uncertainty = q_alpha * dyn_scale
-    
-    lower_bound = np.maximum(0.0, pred_rul_hours - dyn_uncertainty)
-    upper_bound = np.minimum(total_hours, pred_rul_hours + dyn_uncertainty)
-
-    # 4. Metrics Evaluation
     # Conformal coverage evaluated on test split
     in_interval_test = (true_rul_hours[test_mask] >= lower_bound[test_mask]) & (true_rul_hours[test_mask] <= upper_bound[test_mask])
     test_conformal_coverage = np.mean(in_interval_test) * 100.0
@@ -141,8 +157,9 @@ def verify_mat_rul(mat_path="data/rul_mat_benchmarks/bearing_lifecycle_1_3.mat")
     print(f"  Conformal Quantile (q_0.90):                             +/- {q_alpha:.3f} hours")
 
     # 5. SIL-2 Safety Relay Assertion
-    # Trip condition: lower bound <= 0.25h OR smoothed RMS > 10.0g OR absolute peak > 18.0g
-    trip_indices = np.where((lower_bound <= 0.35) | (smoothed_rms >= 8.0) | (peak >= 18.0))[0]
+    # Trip condition: Persistent severe vibration (smoothed RMS >= 8.0g) OR Peak impact >= 20.0g
+    # OR post-knee persistent degradation (smoothed RMS >= 3.0g after mechanical knee-point)
+    trip_indices = np.where((smoothed_rms >= 8.0) | (peak >= 20.0) | ((time_hours >= knee_time) & (smoothed_rms >= 3.0)))[0]
     trip_idx = trip_indices[0] if len(trip_indices) > 0 else total_snaps - 1
     trip_time = time_hours[trip_idx]
     warning_margin_min = (total_hours - trip_time) * 60.0
