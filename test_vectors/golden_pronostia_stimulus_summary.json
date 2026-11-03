@@ -1,0 +1,95 @@
+{
+  "early_life": {
+    "snapshot": 1,
+    "phase": "Early Life (t = 5% Lifecycle)",
+    "physical_state": "Healthy Normal Baseline",
+    "raw_peak_g": 1.2991820573806763,
+    "scaled_peak_lsb": 204,
+    "npu_pred_class": 2,
+    "npu_scores": [
+      664,
+      -275,
+      1303,
+      954
+    ],
+    "vacuity_u": 0.0833,
+    "rul_pct_ui": 95.0,
+    "sil2_status": "NORMAL_OK",
+    "spectrum_top10": [
+      127,
+      47,
+      15,
+      6,
+      20,
+      14,
+      10,
+      10,
+      16,
+      9
+    ],
+    "stimulus_hex_file": "roms/stimulus_pronostia_early_life.hex",
+    "cosim_golden_file": "test_vectors/golden_pronostia_early_life_spectrum_int8.hex"
+  },
+  "mid_life": {
+    "snapshot": 1765,
+    "phase": "Mid Life (t = 74% Lifecycle)",
+    "physical_state": "Incipient Micro-Spall Knee-Point",
+    "raw_peak_g": 2.5645339488983154,
+    "scaled_peak_lsb": 404,
+    "npu_pred_class": 0,
+    "npu_scores": [
+      2018,
+      -205,
+      784,
+      1429
+    ],
+    "vacuity_u": 0.058,
+    "rul_pct_ui": 45.0,
+    "sil2_status": "WARNING_ADVISORY",
+    "spectrum_top10": [
+      127,
+      55,
+      9,
+      2,
+      22,
+      20,
+      9,
+      9,
+      18,
+      9
+    ],
+    "stimulus_hex_file": "roms/stimulus_pronostia_mid_life.hex",
+    "cosim_golden_file": "test_vectors/golden_pronostia_mid_life_spectrum_int8.hex"
+  },
+  "end_of_life": {
+    "snapshot": 2375,
+    "phase": "End of Life (t = 98% Lifecycle)",
+    "physical_state": "Catastrophic Terminal Flaking (28.6g Peak Shock)",
+    "raw_peak_g": 28.593820571899414,
+    "scaled_peak_lsb": 4500,
+    "npu_pred_class": 0,
+    "npu_scores": [
+      1224,
+      268,
+      431,
+      1078
+    ],
+    "vacuity_u": 0.0816,
+    "rul_pct_ui": 5.0,
+    "sil2_status": "EMERGENCY_TRIP",
+    "spectrum_top10": [
+      127,
+      68,
+      15,
+      32,
+      37,
+      21,
+      14,
+      6,
+      13,
+      15
+    ],
+    "stimulus_hex_file": "roms/stimulus_pronostia_end_of_life.hex",
+    "cosim_golden_file": "test_vectors/golden_pronostia_end_of_life_spectrum_int8.hex"
+  }
+}

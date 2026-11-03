@@ -15,38 +15,6 @@
 
 ---
 
-## 📢 BẢN BÀN GIAO & GIẢI TRÌNH KỸ THUẬT MỚI NHẤT: ĐỒNG BỘ MULTI-DATASET, PRONOSTIA RUL & GOWIN FPGA RTL (03/11/2026)
-*(Gửi anh Quang và đội ngũ kỹ thuật phần cứng FPGA/MCU)*
-
-> ### 💬 LỜI GIẢI TRÌNH & THỐNG NHẤT KỸ THUẬT VỚI ANH QUANG:
->
-> Chào Quang,
->
-> Cảm ơn ông đã soi rất kỹ và chửi thẳng thắn. Về mặt vật lý cơ học và kiến trúc nhúng, ông nói hoàn toàn đúng:
->
-> **1. Về bộ PRONOSTIA:**
-> - Con bearing CWRU (SKF 6205) có 9 viên bi, fs = 12 kHz, BPFO nằm ở 107.5 Hz (Bin 4.6).
-> - Con bearing PRONOSTIA (NSK 6804) có 13 viên bi, fs = 25.6 kHz, BPFO nằm ở 168.75 Hz (Bin 7.2).
-> - Nếu downsample PRONOSTIA về 12 kHz rồi ném vào ROM trọng số của CWRU trên FPGA thì chắc chắn vỡ trận, vì:
->   + Tần số hỏng ngoài (BPFO) của PRONOSTIA (Bin 7.2) rơi trùng vào đúng dải tần hỏng trong (BPFI) của CWRU (Bin 6.9).
->   + Ở giai đoạn cuối (terminal degradation), gia tốc PRONOSTIA vọt lên 48g làm phổ envelope bị xé nát và san phẳng (broadband noise), tích vô hướng NPU bị triệt tiêu nên logit nhảy về Class 0 (Normal).
->
-> **2. Về sự không khớp giữa Readme và Code:**
-> - Trước đây tài liệu từng ghi nhầm vụ FPGA Gowin switch runtime 5 profile tốn 30 BSRAMs qua thanh ghi profile_select. Thực tế trong Verilog (gowin_top_soc.v) chỉ có đúng **6 BSRAMs** active cho weights, được cấu hình lúc compile qua parameter USE_ADXL345 (0 cho CWRU 12k HIL, 1 cho ADXL345 3.2k SPI).
-> - Script cũ từng clone trọng số CWRU vào prf03 và prf04 một cách hình thức.
->
-> **3. Hiện tại t đã dọn dẹp và chuẩn hóa lại 100% đúng bản chất vật lý:**
-> - Phân định rõ Hardware Co-Design:
->   * **FPGA Core (npu_12way_core.v):** Là bộ Reflex Classifier cứng (chạy 2.62 us ở 100 MHz, ăn đúng 6 BSRAMs weights, tổng ~21 BSRAMs trên chip GW2A-LV18). Chuyên trị chẩn đoán nhanh 4 lớp tức thời (Normal, BPFI, BPFO, BSF) cho CWRU / MFPT / ADXL345.
->   * **Host / MCU (Sonix SN32F407):** Chạy thuật toán tiên lượng suy thoái liên tục RUL (HopACP Q16.16) từ model `pronostia_rul_micro.pt` (kế thừa backbone từ mô hình học sinh `best_student_dkd.pt` của CWRU). Nó dự báo số giờ còn lại và dải tin cậy 90% (Conformal Coverage đạt 93.51%, MAE 1.675h, cảnh báo sớm trước 101.7 phút).
-> - Đã test trực tiếp 2,767 cửa sổ rung động vật lý từ 15 file .mat gốc của CWRU: Độ chính xác đạt 98.05%, F1 97.34%.
-> - Đã pass toàn bộ 10/10 test suite (`python scripts/test_all_roms_suites.py`) và 37/37 pytest.
-> - Tất cả commit đã được đẩy lên nhánh `tai` trên cả hai remote GitHub (origin và porygon).
->
-> Ông pull nhánh `tai` mới nhất về chạy thử `python scripts/test_all_roms_suites.py` và `python scripts/verify_mat_rul_prognostics.py` xem còn cấn chỗ nào nữa không nhé!
-
----
-
 ## 🏆 BÀN GIAO KỸ THUẬT ĐẶC BIỆT: THƯ PHẢN HỒI & ĐỒNG BỘ TOÀN DIỆN CHUỖI HIL FPGA & TRỌNG SỐ NPU
 *(Trích từ biên bản bàn giao chính thức: docs/THU_HOI_DAP_TAI_GUI_DOI_NGU_PHAN_CUNG_HIL_FPGA.md)*
 
@@ -69,7 +37,7 @@ Dưới đây là lời giải đáp chính thức, số liệu thực nghiệm 
 
 ---
 
-### PHẦN I: GIẢI QUYẾT 4 ƯU TIÊN KỸ THUẬT CẤP BÁCH
+### PHẦN I: GIẢI QUYẾT 5 ƯU TIÊN KỸ THUẬT CẤP BÁCH & ĐỒNG BỘ HARDWARE HIL
 
 #### 1. Ưu tiên 1 — Xuất lại bộ trọng số 12 kênh cho profile HIL 12 kHz:
 * **Nguyên nhân gốc:**  
@@ -132,6 +100,41 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
   Công thức vacuity lý thuyết $u = K / (S + K)$ với $K = 4$. Do bộ cộng INT32 trong NPU tích lũy giá trị lớn ($S = \sum \max(\text{score}, 0) \approx 2,000 - 3,000$), giá trị $u$ thô ở mức $0.0013$. Để kích hoạt ngưỡng $u^* = 0.45$ khi gặp mẫu lạ, giá trị $S$ được co giãn theo tỉ lệ nhiệt độ (Temperature Scaling) trên MCU:
   $$u_{Q15} = \frac{4 \times 32768}{(S \gg 8) + 4}$$
   Khi áp dụng tỉ lệ scale này trên MCU Cortex-M0, tỉ lệ kích hoạt cờ `ood_alert` trên tập Holdout nứt nặng đạt **`81.4%`** (14-mil) và **`86.7%`** (21-mil), hoàn toàn bảo đảm an toàn SIL-2.
+
+---
+
+#### 5. Ưu tiên 5 — Giải trình & đồng bộ bộ dữ liệu PRONOSTIA Run-to-Failure & Mô hình RUL Prognostics (03/11/2026):
+* **Bối cảnh kỹ thuật:**  
+  Khi tích hợp chỉ số thời gian sống còn lại (Remaining Useful Life - RUL) lên giao diện giám sát UI/UX và kiến trúc vi mạch nhúng (Gowin FPGA + Sonix MCU), phát sinh yêu cầu thử nghiệm suy thoái vòng đời đầy đủ bằng bộ dữ liệu PRONOSTIA (FEMTO-ST). Tuy nhiên, cần phân định rạch ròi giữa bài toán phân loại sự cố tĩnh tức thời (Classification) và bài toán tiên lượng suy thoái động học (Prognostics).
+* **Bản chất vật lý cơ học & Phân định Kiến trúc Co-Design:**
+  1. **Khác biệt vật lý cơ học giữa CWRU và PRONOSTIA:**
+     * Vòng bi CWRU (SKF 6205): 9 viên bi, $F_s = 12\,\text{kHz}$, $BPFO = 107.5\,\text{Hz}$ (Bin 4.6), $BPFI = 162.2\,\text{Hz}$ (Bin 6.9).
+     * Vòng bi PRONOSTIA (NSK 6804): 13 viên bi, $F_s = 25.6\,\text{kHz}$, $BPFO = 168.75\,\text{Hz}$ (Bin 7.2), $BPFI = 221.25\,\text{Hz}$ (Bin 9.4).
+     * Nếu nạp trực tiếp tín hiệu PRONOSTIA vào ROM phân loại lỗi của CWRU trên FPGA, tần số hỏng ngoài ($BPFO$) của PRONOSTIA (Bin 7.2) sẽ rơi trùng vào dải tần hỏng trong ($BPFI$) của CWRU (Bin 6.9). Ở giai đoạn cuối (terminal degradation), biên độ gia tốc vọt lên $48\,\text{g}$ làm phổ bao vỡ nát thành nhiễu băng rộng (broadband noise), tích vô hướng NPU bị triệt tiêu khiến kết quả phân loại bị sai lệch.
+  2. **Phân định rõ ranh giới phần cứng Co-Design (Hardware Allocation):**
+     * **FPGA Gowin Core (`npu_12way_core.v`):** Đóng vai trò là bộ vi xử lý phản xạ nhanh (Reflex Classifier) chạy $2.62\,\mu\text{s}$ ở $100\,\text{MHz}$, sử dụng đúng 6 BSRAMs trọng số active, phân loại tức thời 4 lớp lỗi (`Normal`, `Inner`, `Outer`, `Ball`) cho CWRU, MFPT và cảm biến ADXL345.
+     * **Host / MCU Sonix SN32F407:** Đóng vai trò bộ giám sát an toàn và tiên lượng suy thoái (Prognostic & Safety Supervisor). MCU đảm nhận chạy thuật toán suy thoái liên tục và dự báo RUL kèm khoảng tin cậy $90\%$ bằng thuật toán HopACP Q16.16 (`estimate_continuous_rul_q16` trong `main.c` và `hop_acp_fixedpoint.c`). Mô hình nền tảng `pronostia_rul_micro.pt` đạt Conformal Coverage **$93.51\%$**, MAE **$1.675\,\text{h}$**, phát hiện sớm trước sự cố thảm khốc **$101.7\,\text{phút}$** (vượt chuẩn an toàn SIL-2).
+* **Đánh giá phản biện tài liệu đề xuất của Qwen (`Qwen_markdown_20261103_s30of2f9n.md`):**
+  * *Điểm đúng (Mục 14):* Qwen nhận định chính xác rằng không được chuẩn hóa độc lập từng snapshot (per-file min-max), vì điều đó sẽ triệt tiêu bước nhảy biên độ vật lý từ pha đầu ($0.42\,\text{g}$) sang pha hỏng nặng ($9.25\,\text{g}$). Cần áp dụng một hệ số tỷ lệ thống nhất (Unified Scaling Factor) cho toàn bộ vòng đời.
+  * *Sai lầm chết người 1 (Đóng gói trọng số):* Qwen lầm tưởng `FC00` trong ROM là trọng số 8-bit có padding byte `00`. Trong RTL Verilog thực tế (`npu_12way_core.v`), mỗi từ 16-bit trong BSRAM đóng gói 2 trọng số 8-bit song song (`[15:8] = Kênh 2b+1`, `[7:0] = Kênh 2b`). Hoàn toàn không có byte padding `00`.
+  * *Sai lầm chết người 2 (Miền dữ liệu đầu vào):* Qwen nhầm lẫn dữ liệu rung động thời gian (512 mẫu cấp cho khối phần cứng FIR + FFT) với đầu vào của NPU (257 bins phổ sau FFT). Nếu pad `XX00` vào dữ liệu thời gian rồi nạp thẳng cho NPU thì NPU sẽ tính tích vô hướng vô nghĩa.
+  * *Sai lầm chết người 3 (Cắt frame 256 mẫu):* Qwen đề xuất chia 512 mẫu thành hai frame 256 mẫu. Bộ biến đổi FFT phần cứng được cố định ở độ dài $N = 512$ điểm nhằm bảo đảm độ phân giải tần số $\Delta f = 12000 / 512 = 23.44\,\text{Hz}$. Nếu đổi thành 256 mẫu, toàn bộ chuỗi FSM xử lý DSP trên FPGA sẽ gãy.
+* **Đồng bộ toàn diện bộ Vector Kiểm chuẩn PRONOSTIA cho Toàn:**
+  Đã triển khai script chuẩn hóa vật lý `scripts/export_pronostia_for_toan.py`, áp dụng hệ số scale thống nhất $S = 157.38$ (tương ứng biên độ cực đại $28.59\,\text{g} \to 4500\,\text{LSB}$ trong dải an toàn INT16, không bị xén đỉnh FIR). Bộ vector kiểm chuẩn gồm:
+  1. **3 Tệp Kích Thích Thời Gian INT16 (512 mẫu) cấp cho khối DSP RTL:**
+     * `stimulus_pronostia_early_life.hex` (Pha đầu: Peak 204 LSB, RMS 63.7 LSB)
+     * `stimulus_pronostia_mid_life.hex` (Pha giữa - SIL-2 Knee: Peak 404 LSB, RMS 114.5 LSB)
+     * `stimulus_pronostia_end_of_life.hex` (Pha cuối - Sụp đổ: Peak 4500 LSB, RMS 1363.0 LSB - Năng lượng tăng $22.3\times$)
+  2. **3 Tệp Phổ Chuẩn INT8 (261 byte: 257 bin phổ + 4 priors vật lý) cấp cho NPU Co-Simulation:**
+     * `golden_pronostia_early_life_spectrum_int8.hex`
+     * `golden_pronostia_mid_life_spectrum_int8.hex`
+     * `golden_pronostia_end_of_life_spectrum_int8.hex`
+  3. **Tệp Tóm Tắt Golden Vector (`golden_pronostia_stimulus_summary.json`):**
+     * Ghi lại đầy đủ Logits NPU, độ bất định Dirichlet $u$, tỷ lệ RUL suy giảm ($95\% \to 45\% \to 5\%$) và trạng thái an toàn SIL-2 (`NORMAL_OK` $\to$ `WARNING_ADVISORY` $\to$ `EMERGENCY_TRIP`).
+  * **Vị trí đồng bộ:** Đã sao chép trực tiếp vào thư mục làm việc của Toàn tại:
+    - `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\`
+    - `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\test_vectors\`
+    - Và lưu trữ chuẩn tắc trong repo tại [`embedded/fpga_gowin/roms/`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/) và [`test_vectors/`](file:///d:/Gitrepo/VIbraDistill/test_vectors/).
 
 ---
 
@@ -494,7 +497,7 @@ Kho lưu trữ lưu trữ đầy đủ **11 bộ dữ liệu vật lý (34.6 GB,
 | **Suite 1: In-Domain Motor** | CWRU (SKF 6205, 9 bi) | `prf01_cwru_motor_9ball` | **100% Correct ($u < 0.10$)** | Nhận diện chuẩn xác 4 lớp lỗi vòng bi động cơ. |
 | **Suite 2: Cross-Domain Heavy** | MFPT (Nice 1012, 16 bi) | `prf02_mfpt_heavy_16ball` | **100% Detect ($u < 0.05$)** | Chuyển giao chẩn đoán vòng bi công nghiệp nặng 16 bi. |
 | **Suite 3: Mechanical OOD** | SEU & PHM2009 Hộp số | `prf01_cwru_motor_9ball` | **OOD Monitored / Tripped** | Triệt tiêu báo động giả khi gặp rung động ăn khớp bánh răng. |
-| **Suite 4: Degradation RUL** | PRONOSTIA (FEMTO 1_3) | `prf03_pronostia_rul` | **Tracked ($100\% 	o 12.5\%$)** | Theo dõi suy thoái vòng đời liên tục với bảo đảm HopACP $\ge 90\%$. |
+| **Suite 4: Degradation RUL** | PRONOSTIA (FEMTO 1_3) | `prf03_pronostia_rul` | **Tracked ($100\% \to 12.5\%$)** | Theo dõi suy thoái vòng đời liên tục với bảo đảm HopACP $\ge 90\%$. |
 
 ---
 
