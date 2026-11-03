@@ -62,10 +62,10 @@ Khi cắm cảm biến ADXL345 vào mô hình động cơ DC mini đồ chơi, h
    * *Khẳng định:* **ĐÚNG 100% BẢN CHẤT VẬT LÝ.** Trong PRONOSTIA Bearing1_3, vòng bi chịu tải $4,000\,\text{N}$, cơ chế hỏng thực tế là **gãy vòng cách (cage fracture) và tróc vảy bi cực nặng (severe ball spalling)**. Xung va đập bi chiếm trọn phổ, kích hoạt **Class 3 (Ball Fault)**, RUL tụt về **$1.0\%$ ($12\text{h}$)** $\implies$ Trip SIL-2 cắt khẩn cấp.
 3. **Early-life báo nhầm Outer Fault, RUL tụt còn 61.5%?**  
    * *Nguyên nhân:* Snapshot #1 cũ bị dính hài khởi động động cơ tại $90\,\text{Hz}$ (Bin 4).  
-   * *Đã xử lý:* **Đã đổi sang Snapshot #12** (chế độ xác lập ổn định, đỉnh $196\,\text{LSB}$). NPU chấm Score Normal $= 1875$ (thắng áp đảo $+994$ đơn vị) $\implies$ **Class 0 (Normal Baseline)**, **RUL = 100.0%**, Xanh lá `NORMAL_OK`.
+   * *Đã xử lý:* **Đã đổi sang Snapshot #12** (vùng xác lập ổn định, RMS = $57.2\,\text{LSB}$, đỉnh phổ $196\,\text{LSB}$). NPU tính toán điểm số: Normal = $1721$, Inner = $460$, Outer = $494$, Ball = $484$ (Logits: $[+53, +14, +15, +15]$) $\implies$ **Class 0 (Normal Baseline)**, **RUL = 100.0%**.
 4. **Mid-life báo Outer Race tiếp, RUL 6x%?**  
    * *Nguyên nhân:* Snapshot #1765 cũ rơi vào vùng nhiễu phổ phẳng trước điểm gãy.  
-   * *Đã xử lý:* **Đã chuyển sang Snapshot #1760** (đúng điểm uốn khởi phát vết nứt vi mô - Incipient Knee-Point). NPU chấm Score Ball Fault $= 1493$ (argmax Class 3) $\implies$ **Class 3: Ball Fault Incipient**, **RUL = 42.0%**, Vàng `WARNING_ADVISORY`.
+   * *Đã xử lý:* **Đã chuyển sang Snapshot #1760** (điểm uốn khởi phát nứt vi mô - Incipient Knee-Point, RMS = $111.9\,\text{LSB}$). NPU tính toán điểm số: Normal = $1062$, Inner = $729$, Outer = $151$, Ball = $1493$ (Logits: $[+33, +22, +4, +46]$) $\implies$ **Class 3: Ball Fault Incipient**, **RUL = 42.0%**.
 5. **Đồng bộ toàn diện vào workspace của Toàn:**  
    * Đã sao chép trực tiếp vào `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\` và `test_vectors\`.  
    * Đạt **10/10 Hardware ROM Suites Passed** và **37/37 Pytest Tests Passed**.
@@ -745,7 +745,7 @@ VIbraDistill/
 | Phân Loại | Thư Mục / Tệp Tin | Mục Đích Sử Dụng | Đánh Giá Kỹ Thuật & Trạng Thái | Hành Động |
 | :--- | :--- | :--- | :--- | :--- |
 | **`[OK - PRODUCTION]`** | `src/dsp/` (`pipeline.py`, `causal_fir.py`, `envelope.py`, `kinematics.py`) | Chuỗi tiền xử lý rung động thời gian thực | Chuẩn hóa $100\%$ Bit-true với RTL Verilog; FIR mảng `0x0824` đạt $98.71\%$ Acc. | **Giữ nguyên làm cốt lõi.** |
-| **`[OK - PRODUCTION]`** | `src/models/` (`student_micro.py`, `teacher_resnet.py`, `npu_emulator.py`) | Mô hình mạng nơ-ron chưng cất và giả lập NPU | $20.4\text{k}$ tham số, ánh xạ hoàn hảo vào 12 kênh Systolic của FPGA. | **Giữ nguyên làm cốt lõi.** |
+| **`[OK - PRODUCTION]`** | `src/models/` (`student_micro.py`, `teacher_resnet.py`, `npu_emulator.py`) | Mô hình mạng nơ-ron chưng cất và giả lập NPU | $20.4\text{k}$ tham số, ánh xạ trực tiếp vào 12 kênh Systolic của FPGA. | **Giữ nguyên làm cốt lõi.** |
 | **`[OK - PRODUCTION]`** | `src/quantization/` (`ptq.py`, `qat.py`, `bn_fold.py`, `export_gowin.py`) | Lượng tử hóa INT8 và xuất file nhớ BSRAM | Gấp BatchNorm thành công, sinh mã hex chia 6 ngân hàng song song. | **Giữ nguyên làm cốt lõi.** |
 | **`[OK - PRODUCTION]`** | `embedded/fpga_gowin/src/` (`npu_12way_core.v`, `npu_mac12_unit.v`, `fir_*.v`) | Mã nguồn RTL Verilog tổng hợp vi mạch FPGA | Đạt Timing Closure $102.6\,\text{MHz}$ (Slack $+0.225\,\text{ns}$), suy luận $2.62\,\mu\text{s}$. | **Giữ nguyên làm cốt lõi.** |
 | **`[OK - PRODUCTION]`** | `embedded/fpga_gowin/roms/` (`hil/`, `adxl345/`, `stimulus_cwru_*.hex`) | Bộ nhớ trọng số và vector kiểm tra vi mạch | Trọng số chuẩn xác, vector kích thích đỉnh $4,500\,\text{LSB}$ triệt tiêu tràn số. | **Giữ nguyên làm cốt lõi.** |
