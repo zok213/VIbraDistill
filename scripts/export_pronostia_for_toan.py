@@ -4,9 +4,9 @@ Export Unified-Scale PRONOSTIA Stimulus & Golden Vectors for Toan & FPGA Testben
 ================================================================================
 Generates:
   1. 16-bit Time-Domain Stimulus Hex (512 samples) with UNIFIED SCALE:
-     - stimulus_pronostia_early_life.hex  (Snapshot #1, Healthy, peak ~200 LSB)
-     - stimulus_pronostia_mid_life.hex    (Snapshot #1765, SIL-2 Knee-Point, peak ~400 LSB)
-     - stimulus_pronostia_end_of_life.hex  (Snapshot #2375, Terminal Failure, peak 4500 LSB)
+     - stimulus_pronostia_early_life.hex  (Snapshot #12, Healthy Steady-State Baseline, peak ~200 LSB)
+     - stimulus_pronostia_mid_life.hex    (Snapshot #1760, SIL-2 Incipient Knee-Point, peak ~400 LSB)
+     - stimulus_pronostia_end_of_life.hex  (Snapshot #2372, Terminal Flaking Failure, peak 4500 LSB)
   2. 257-bin INT8 Spectrum + 4 Prior Golden Vectors (261 lines) for NPU cosim:
      - golden_pronostia_early_life_spectrum_int8.hex
      - golden_pronostia_mid_life_spectrum_int8.hex
@@ -53,10 +53,10 @@ def load_raw_window(snap_num):
     res -= np.mean(res)
     return res
 
-print("[1] Loading raw PRONOSTIA snapshots (Early: #1, Mid: #1765, End: #2375)...")
-w_early = load_raw_window(1)
-w_mid = load_raw_window(1765)
-w_end = load_raw_window(2375)
+print("[1] Loading raw PRONOSTIA snapshots (Early: #12, Mid: #1760, End: #2372)...")
+w_early = load_raw_window(12)
+w_mid = load_raw_window(1760)
+w_end = load_raw_window(2372)
 
 # Unified Scaling across all 3 lifecycle stages
 global_peak = max(np.max(np.abs(w_early)), np.max(np.abs(w_mid)), np.max(np.abs(w_end)))
@@ -118,7 +118,7 @@ res_end = simulate_fpga_inference(s_end_16, w_cwru, b_cwru, dsp)
 
 summary = {
     "early_life": {
-        "snapshot": 1,
+        "snapshot": 12,
         "phase": "Early Life (t = 5% Lifecycle)",
         "physical_state": "Healthy Normal Baseline",
         "raw_peak_g": float(np.max(np.abs(w_early))),
@@ -126,37 +126,37 @@ summary = {
         "npu_pred_class": res_early['pred_class'],
         "npu_scores": res_early['scores'],
         "vacuity_u": res_early['vacuity_float'],
-        "rul_pct_ui": 95.0,
+        "rul_pct_ui": 100.0,
         "sil2_status": "NORMAL_OK",
         "spectrum_top10": [int(x) for x in int8_early[:10]],
         "stimulus_hex_file": "roms/stimulus_pronostia_early_life.hex",
         "cosim_golden_file": "test_vectors/golden_pronostia_early_life_spectrum_int8.hex"
     },
     "mid_life": {
-        "snapshot": 1765,
+        "snapshot": 1760,
         "phase": "Mid Life (t = 74% Lifecycle)",
-        "physical_state": "Incipient Micro-Spall Knee-Point",
+        "physical_state": "Incipient Ball Fault Knee-Point",
         "raw_peak_g": float(np.max(np.abs(w_mid))),
         "scaled_peak_lsb": int(np.max(np.abs(s_mid_16))),
         "npu_pred_class": res_mid['pred_class'],
         "npu_scores": res_mid['scores'],
         "vacuity_u": res_mid['vacuity_float'],
-        "rul_pct_ui": 45.0,
+        "rul_pct_ui": 42.0,
         "sil2_status": "WARNING_ADVISORY",
         "spectrum_top10": [int(x) for x in int8_mid[:10]],
         "stimulus_hex_file": "roms/stimulus_pronostia_mid_life.hex",
         "cosim_golden_file": "test_vectors/golden_pronostia_mid_life_spectrum_int8.hex"
     },
     "end_of_life": {
-        "snapshot": 2375,
+        "snapshot": 2372,
         "phase": "End of Life (t = 98% Lifecycle)",
-        "physical_state": "Catastrophic Terminal Flaking (28.6g Peak Shock)",
+        "physical_state": "Catastrophic Terminal Flaking (Ball Spalling)",
         "raw_peak_g": float(np.max(np.abs(w_end))),
         "scaled_peak_lsb": int(np.max(np.abs(s_end_16))),
         "npu_pred_class": res_end['pred_class'],
         "npu_scores": res_end['scores'],
         "vacuity_u": res_end['vacuity_float'],
-        "rul_pct_ui": 5.0,
+        "rul_pct_ui": 1.0,
         "sil2_status": "EMERGENCY_TRIP",
         "spectrum_top10": [int(x) for x in int8_end[:10]],
         "stimulus_hex_file": "roms/stimulus_pronostia_end_of_life.hex",

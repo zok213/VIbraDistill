@@ -122,15 +122,15 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
 * **Đồng bộ toàn diện bộ Vector Kiểm chuẩn PRONOSTIA cho Toàn:**
   Đã triển khai script chuẩn hóa vật lý `scripts/export_pronostia_for_toan.py`, áp dụng hệ số scale thống nhất $S = 157.38$ (tương ứng biên độ cực đại $28.59\,\text{g} \to 4500\,\text{LSB}$ trong dải an toàn INT16, không bị xén đỉnh FIR). Bộ vector kiểm chuẩn gồm:
   1. **3 Tệp Kích Thích Thời Gian INT16 (512 mẫu) cấp cho khối DSP RTL:**
-     * `stimulus_pronostia_early_life.hex` (Pha đầu: Peak 204 LSB, RMS 63.7 LSB)
-     * `stimulus_pronostia_mid_life.hex` (Pha giữa - SIL-2 Knee: Peak 404 LSB, RMS 114.5 LSB)
-     * `stimulus_pronostia_end_of_life.hex` (Pha cuối - Sụp đổ: Peak 4500 LSB, RMS 1363.0 LSB - Năng lượng tăng $22.3\times$)
+     * stimulus_pronostia_early_life.hex (Snapshot #12 - Pha đầu ổn định: Peak 196 LSB, RMS 57.2 LSB $\implies$ NPU phân loại **Class 0: Normal Baseline**, RUL = **100.0%**, NORMAL_OK)
+     * stimulus_pronostia_mid_life.hex (Snapshot #1760 - Điểm uốn khởi phát hư hỏng: Peak 366 LSB, RMS 111.9 LSB $\implies$ NPU nhận diện **Class 3: Ball Fault Incipient**, RUL = **42.0%**, WARNING_ADVISORY)
+     * stimulus_pronostia_end_of_life.hex (Snapshot #2372 - Sụp đổ cơ học tróc vảy bi: Peak 4500 LSB, RMS 1272.6 LSB $\implies$ NPU chốt **Class 3: Ball Fault Catastrophic**, RUL = **1.0%** (12h), EMERGENCY_TRIP)
   2. **3 Tệp Phổ Chuẩn INT8 (261 byte: 257 bin phổ + 4 priors vật lý) cấp cho NPU Co-Simulation:**
      * `golden_pronostia_early_life_spectrum_int8.hex`
      * `golden_pronostia_mid_life_spectrum_int8.hex`
      * `golden_pronostia_end_of_life_spectrum_int8.hex`
   3. **Tệp Tóm Tắt Golden Vector (`golden_pronostia_stimulus_summary.json`):**
-     * Ghi lại đầy đủ Logits NPU, độ bất định Dirichlet $u$, tỷ lệ RUL suy giảm ($95\% \to 45\% \to 5\%$) và trạng thái an toàn SIL-2 (`NORMAL_OK` $\to$ `WARNING_ADVISORY` $\to$ `EMERGENCY_TRIP`).
+     * Ghi lại đầy đủ Logits NPU, độ bất định Dirichlet $, tỷ lệ RUL suy giảm (.0\% \to 42.0\% \to 1.0\%$) và trạng thái an toàn SIL-2 (NORMAL_OK $\to$ WARNING_ADVISORY $\to$ EMERGENCY_TRIP).
   * **Vị trí đồng bộ:** Đã sao chép trực tiếp vào thư mục làm việc của Toàn tại:
     - `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\`
     - `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\test_vectors\`
