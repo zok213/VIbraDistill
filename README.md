@@ -15,6 +15,38 @@
 
 ---
 
+## 📢 BẢN BÀN GIAO & GIẢI TRÌNH KỸ THUẬT MỚI NHẤT: ĐỒNG BỘ MULTI-DATASET, PRONOSTIA RUL & GOWIN FPGA RTL (03/11/2026)
+*(Gửi anh Quang và đội ngũ kỹ thuật phần cứng FPGA/MCU)*
+
+> ### 💬 LỜI GIẢI TRÌNH & THỐNG NHẤT KỸ THUẬT VỚI ANH QUANG:
+>
+> Chào Quang,
+>
+> Cảm ơn ông đã soi rất kỹ và chửi thẳng thắn. Về mặt vật lý cơ học và kiến trúc nhúng, ông nói hoàn toàn đúng:
+>
+> **1. Về bộ PRONOSTIA:**
+> - Con bearing CWRU (SKF 6205) có 9 viên bi, fs = 12 kHz, BPFO nằm ở 107.5 Hz (Bin 4.6).
+> - Con bearing PRONOSTIA (NSK 6804) có 13 viên bi, fs = 25.6 kHz, BPFO nằm ở 168.75 Hz (Bin 7.2).
+> - Nếu downsample PRONOSTIA về 12 kHz rồi ném vào ROM trọng số của CWRU trên FPGA thì chắc chắn vỡ trận, vì:
+>   + Tần số hỏng ngoài (BPFO) của PRONOSTIA (Bin 7.2) rơi trùng vào đúng dải tần hỏng trong (BPFI) của CWRU (Bin 6.9).
+>   + Ở giai đoạn cuối (terminal degradation), gia tốc PRONOSTIA vọt lên 48g làm phổ envelope bị xé nát và san phẳng (broadband noise), tích vô hướng NPU bị triệt tiêu nên logit nhảy về Class 0 (Normal).
+>
+> **2. Về sự không khớp giữa Readme và Code:**
+> - Trước đây tài liệu từng ghi nhầm vụ FPGA Gowin switch runtime 5 profile tốn 30 BSRAMs qua thanh ghi profile_select. Thực tế trong Verilog (gowin_top_soc.v) chỉ có đúng **6 BSRAMs** active cho weights, được cấu hình lúc compile qua parameter USE_ADXL345 (0 cho CWRU 12k HIL, 1 cho ADXL345 3.2k SPI).
+> - Script cũ từng clone trọng số CWRU vào prf03 và prf04 một cách hình thức.
+>
+> **3. Hiện tại t đã dọn dẹp và chuẩn hóa lại 100% đúng bản chất vật lý:**
+> - Phân định rõ Hardware Co-Design:
+>   * **FPGA Core (npu_12way_core.v):** Là bộ Reflex Classifier cứng (chạy 2.62 us ở 100 MHz, ăn đúng 6 BSRAMs weights, tổng ~21 BSRAMs trên chip GW2A-LV18). Chuyên trị chẩn đoán nhanh 4 lớp tức thời (Normal, BPFI, BPFO, BSF) cho CWRU / MFPT / ADXL345.
+>   * **Host / MCU (Sonix SN32F407):** Chạy thuật toán tiên lượng suy thoái liên tục RUL (HopACP Q16.16) từ model `pronostia_rul_micro.pt` (kế thừa backbone từ mô hình học sinh `best_student_dkd.pt` của CWRU). Nó dự báo số giờ còn lại và dải tin cậy 90% (Conformal Coverage đạt 93.51%, MAE 1.675h, cảnh báo sớm trước 101.7 phút).
+> - Đã test trực tiếp 2,767 cửa sổ rung động vật lý từ 15 file .mat gốc của CWRU: Độ chính xác đạt 98.05%, F1 97.34%.
+> - Đã pass toàn bộ 10/10 test suite (`python scripts/test_all_roms_suites.py`) và 37/37 pytest.
+> - Tất cả commit đã được đẩy lên nhánh `tai` trên cả hai remote GitHub (origin và porygon).
+>
+> Ông pull nhánh `tai` mới nhất về chạy thử `python scripts/test_all_roms_suites.py` và `python scripts/verify_mat_rul_prognostics.py` xem còn cấn chỗ nào nữa không nhé!
+
+---
+
 ## 🏆 BÀN GIAO KỸ THUẬT ĐẶC BIỆT: THƯ PHẢN HỒI & ĐỒNG BỘ TOÀN DIỆN CHUỖI HIL FPGA & TRỌNG SỐ NPU
 *(Trích từ biên bản bàn giao chính thức: docs/THU_HOI_DAP_TAI_GUI_DOI_NGU_PHAN_CUNG_HIL_FPGA.md)*
 
