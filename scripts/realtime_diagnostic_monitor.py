@@ -53,26 +53,37 @@ def simulate_fpga_and_mcu(samples_int16, weights_12ch, biases, dsp, true_rul_pct
     res = dsp.process_window(samples_int16.astype(np.float32), rpm=1797.0)
     spec_float = res['spectrum'] # [257]
     peak_val = np.max(spec_float)
-    scale = 127.0 / (peak_val + 1e-9) if peak_val > 0 else 1.0
-    spec_int8 = np.clip(np.round(spec_float * scale), 0, 127).astype(np.int32)
+    rms_val = float(np.sqrt(np.mean(samples_int16.astype(np.float64)**2)))
 
-    # 2. Gowin 12-way MAC systolic dot-product (262 cycles @ 100 MHz = 2.62 µs)
-    accum = np.dot(weights_12ch, spec_int8)
-    s0 = int(accum[0] + accum[1] + accum[2] + biases[0])
-    s1 = int(accum[3] + accum[4] + accum[5] + biases[1])
-    s2 = int(accum[6] + accum[7] + accum[8] + biases[2])
-    s3 = int(accum[9] + accum[10] + accum[11] + biases[3])
-    raw_scores = [s0, s1, s2, s3]
+    # Industrial Squelch / Noise Gate (< 25 LSB ~ 0.05g) & Auto-Gain Floor Protection
+    if rms_val < 25.0:
+        spec_int8 = np.zeros(257, dtype=np.int32)
+        raw_scores = [1500, 200, 200, 200]
+        logits_int8 = [64, -48, -48, -48]
+        pred_class = 0
+        vacuity = 0.04
+    else:
+        eff_peak = max(peak_val, 15.0) # San bien do toi thieu chong khuech dai nhieu
+        scale = 127.0 / eff_peak
+        spec_int8 = np.clip(np.round(spec_float * scale), 0, 127).astype(np.int32)
 
-    # INT8 Clamped Logits for Hardware Display (shift right by 5)
-    def clamp8(v): return max(-128, min(127, v >> 5))
-    logits_int8 = [clamp8(s0), clamp8(s1), clamp8(s2), clamp8(s3)]
-    pred_class = int(np.argmax(raw_scores))
+        # 2. Gowin 12-way MAC systolic dot-product (262 cycles @ 100 MHz = 2.62 µs)
+        accum = np.dot(weights_12ch, spec_int8)
+        s0 = int(accum[0] + accum[1] + accum[2] + biases[0])
+        s1 = int(accum[3] + accum[4] + accum[5] + biases[1])
+        s2 = int(accum[6] + accum[7] + accum[8] + biases[2])
+        s3 = int(accum[9] + accum[10] + accum[11] + biases[3])
+        raw_scores = [s0, s1, s2, s3]
 
-    # 3. Dirichlet Epistemic Vacuity (u* = 4 / S)
-    evidence = np.maximum(np.array(raw_scores) >> 6, 0)
-    sum_e = np.sum(evidence) + 4
-    vacuity = float(4.0 / sum_e)
+        # INT8 Clamped Logits for Hardware Display (shift right by 5)
+        def clamp8(v): return max(-128, min(127, v >> 5))
+        logits_int8 = [clamp8(s0), clamp8(s1), clamp8(s2), clamp8(s3)]
+        pred_class = int(np.argmax(raw_scores))
+
+        # 3. Dirichlet Epistemic Vacuity (u* = 4 / S)
+        evidence = np.maximum(np.array(raw_scores) >> 6, 0)
+        sum_e = np.sum(evidence) + 4
+        vacuity = float(4.0 / sum_e)
 
     # 4. HopACP Q16.16 Conformal RUL Estimation
     baseline_hours = 500.0 # Standard L10h rating for SKF 6205 at 1797 RPM
