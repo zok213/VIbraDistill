@@ -11,7 +11,8 @@
 
 module envelope_demodulator #(
     parameter WIDTH        = 16,
-    parameter USE_ADXL345  = 1   // 1: ADXL345 (Fc=400Hz @ Fs=3.2kHz), 0: HIL (Fc=1000Hz @ Fs=13.333kHz)
+    parameter USE_ADXL345  = 0,  // 1: ADXL345 (Fc=400Hz @ Fs=3.2kHz), 0: HIL (Fc=1200Hz @ Fs=12kHz)
+    parameter USE_HIL      = 0   // Backwards compatibility alias for HIL SoC top-level
 )(
     input  wire                          clk,        // 50 MHz / 100 MHz System Clock
     input  wire                          rst_n,      // Synchronous Active-Low Reset
