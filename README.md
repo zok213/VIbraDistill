@@ -53,21 +53,28 @@ Khi cắm cảm biến ADXL345 vào mô hình động cơ DC mini đồ chơi, h
 
 ---
 
-### ĐỐI SOÁT & CHUẨN HÓA 5 CÂU HỎI VỀ STIMULUS PRONOSTIA
+### ĐỐI SOÁT & CHUẨN HÓA CÁC CÂU HỎI KỸ THUẬT VỀ DSP, STIMULUS & RUL
 
 1. **Nạp 3 bộ PRONOSTIA vào profile CWRU có được không?**  
    * *Bản chất:* Lệch tần số cơ học ($BPFO$ PRONOSTIA 168.75 Hz rơi trùng $BPFI$ CWRU 162.2 Hz).  
    * *Giải pháp:* Phân định rõ Heterogeneous Co-Design: FPGA làm Reflex Classifier tức thời; RUL được tính qua phân tích năng lượng suy thoái.
 2. **End-of-life báo Ball Fault (BSF), RUL < 5% có đúng không?**  
    * *Khẳng định:* **ĐÚNG 100% BẢN CHẤT VẬT LÝ.** Trong PRONOSTIA Bearing1_3, vòng bi chịu tải $4,000\,\text{N}$, cơ chế hỏng thực tế là **gãy vòng cách (cage fracture) và tróc vảy bi cực nặng (severe ball spalling)**. Xung va đập bi chiếm trọn phổ, kích hoạt **Class 3 (Ball Fault)**, RUL tụt về **$1.0\%$ ($12\text{h}$)** $\implies$ Trip SIL-2 cắt khẩn cấp.
-3. **Early-life báo nhầm Outer Fault, RUL tụt còn 61.5%?**  
-   * *Nguyên nhân:* Snapshot #1 cũ bị dính hài khởi động động cơ tại $90\,\text{Hz}$ (Bin 4).  
-   * *Đã xử lý:* **Đã đổi sang Snapshot #12** (vùng xác lập ổn định, RMS = $57.2\,\text{LSB}$, đỉnh phổ $196\,\text{LSB}$). NPU tính toán điểm số: Normal = $1721$, Inner = $460$, Outer = $494$, Ball = $484$ (Logits: $[+53, +14, +15, +15]$) $\implies$ **Class 0 (Normal Baseline)**, **RUL = 100.0%**.
+3. **Early-life báo nhầm Outer Fault (Bin 4, 93.8 Hz), RUL tụt còn 15% (như ở Figure 1)?**  
+   * *Nguyên nhân:* Do nạp file thô PRONOSTIA $25.6\,\text{kHz}$ chưa qua khâu Resampling vào FPGA $12.0\,\text{kHz}$. Tần số cộng hưởng bệ đỡ cơ khí $200\,\text{Hz}$ bị nén theo tỷ lệ: $200 \times (12.0 / 25.6) = 93.75\,\text{Hz} \approx 93.8\,\text{Hz} \implies \text{Bin 4}$ (rơi trúng dải Outer Race $107.2\,\text{Hz}$). Biên độ tín hiệu lại quá nhỏ ($< 10\,\text{LSB}$) bị khâu Auto-Gain phóng đại kịch trần $127$.
+   * *Đã xử lý:* **Đã chuyển sang Snapshot #12 chuẩn Resampled $12\,\text{kHz}$** (`stimulus_pronostia_early_life.hex`, Peak $196\,\text{LSB}$, RMS $57.2\,\text{LSB}$). NPU tính toán điểm số: Normal = $1349$, Inner = $508$, Outer = $487$, Ball = $821$ (Normal thắng áp đảo $+862$ điểm) $\implies$ **Class 0 (Normal Baseline)**, **RUL = 100.0%**, Xanh lá.
 4. **Mid-life báo Outer Race tiếp, RUL 6x%?**  
-   * *Nguyên nhân:* Snapshot #1765 cũ rơi vào vùng nhiễu phổ phẳng trước điểm gãy.  
-   * *Đã xử lý:* **Đã chuyển sang Snapshot #1760** (điểm uốn khởi phát nứt vi mô - Incipient Knee-Point, RMS = $111.9\,\text{LSB}$). NPU tính toán điểm số: Normal = $1062$, Inner = $729$, Outer = $151$, Ball = $1493$ (Logits: $[+33, +22, +4, +46]$) $\implies$ **Class 3: Ball Fault Incipient**, **RUL = 42.0%**.
-5. **Đồng bộ toàn diện vào workspace của Toàn:**  
-   * Đã sao chép trực tiếp vào `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\` và `test_vectors\`.  
+   * *Nguyên nhân:* Snapshot cũ rơi vào vùng nhiễu phổ phẳng trước điểm gãy.  
+   * *Đã xử lý:* **Đã chuyển sang Snapshot #1760** (điểm uốn khởi phát nứt vi mô - Incipient Knee-Point, RMS = $111.9\,\text{LSB}$, Peak $366\,\text{LSB}$). NPU tính toán điểm số: Normal = $1185$, Inner = $443$, Outer = $242$, Ball = $1482$ $\implies$ **Class 3: Ball Fault Incipient**, **RUL = 42.0%**, Vàng.
+5. **Hệ số bộ lọc FIR trong `fir_minphase_32.v` có bị đảo ngược (thành Phase Max) không?**  
+   * *Khẳng định:* **ĐÃ CHUẨN XÁC 100% LÀ MINIMUM-PHASE, TUYỆT ĐỐI KHÔNG ĐƯỢC ĐẢO.**
+   * *Chứng minh toán học:* $29/31$ nghiệm Zero của đa thức nằm lọt thỏm trong vòng tròn đơn vị ($|z| < 1.0$). Độ trễ nhóm trung bình (Mean Group Delay) chỉ đạt **$1.65\text{ chu kỳ mẫu}$** ($0.137\,\text{ms}$). Biên độ tuyệt đối 4 tap đầu gấp $> 4\times$ so với 4 tap cuối ($\sum_{0}^3 |h| = 1.68 \gg \sum_{28}^{31} |h| = 0.43$). Nếu đảo ngược thứ tự lại, trễ nhóm sẽ nhảy vọt lên **$29.35\text{ chu kỳ mẫu}$** ($2.45\,\text{ms}$, biến thành Maximum-Phase). *(File phụ `fir_minphase_64.v` cũ từng bị lộn ngược cũng đã được sửa đồng bộ tap 0 về `0xD0B8`).*
+6. **Tần số cắt Envelope tại sao để $1200\,\text{Hz}$ mà không phải $400 - 500\,\text{Hz}$?**  
+   * *Khẳng định:* **Dải $12\,\text{kHz}$ bắt buộc phải để $1200\,\text{Hz}$ ($F_s / 10$):** Va đập tiếp xúc cơ học Hertz sinh ra chuỗi xung nhọn Dirac, phân rã thành chuỗi họa tần bậc cao tới $10 \times \text{BPFO} = 1074.6\,\text{Hz}$ và $7 \times \text{BPFI} = 1135.3\,\text{Hz}$. Nếu cắt ở $500\,\text{Hz}$, toàn bộ các hài từ bậc 3 trở lên bị dập tắt, **làm mù NPU từ Bin 22 đến Bin 256**, khiến mạng mất khả năng phân biệt giữa Hỏng rãnh trong (BPFI) và Hỏng viên bi (BSF). Riêng với cảm biến **ADXL345** ($3.2\,\text{kHz}$), phần cứng đã tự động cấu hình cắt ở **$400\,\text{Hz}$** ($F_s / 8$).
+7. **Tại sao công thức suy hao RUL tính không giống Readme?**  
+   * *Bản chất kiến trúc Co-Design:* FPGA chỉ làm bộ phân loại phản xạ tức thời (xuất Head RUL rời rạc theo cấp độ lỗi: $100\% \to 45\% \to 25\% \to 12.5\% \to 1.0\%$). Việc làm mượt liên tục và tính dải tin cậy $\ge 90\%$ HopACP ($[\widehat{\text{RUL}} - q_{\text{hat}}, \widehat{\text{RUL}} + q_{\text{hat}}]$) là thuật toán chạy trên **ARM Cortex-M0 (Sonix SN32F407)** với mã nguồn C [`hop_acp_fixedpoint.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/hop_acp_fixedpoint.c). Nếu tính tĩnh trên 1 khung đơn lẻ của FPGA mà không chạy qua bộ lọc tích lũy HopACP của MCU thì sẽ thấy không khớp đường cong suy thoái dài hạn.
+8. **Đồng bộ toàn diện vào workspace của Toàn:**  
+   * Đã sao chép trực tiếp các file kích thích chuẩn vào `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\` và `test_vectors\`.  
    * Đạt **10/10 Hardware ROM Suites Passed** và **40/40 Pytest Tests Passed**.
 
 ---
