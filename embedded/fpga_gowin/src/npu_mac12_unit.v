@@ -150,24 +150,19 @@ module npu_mac12_unit (
     wire signed [63:0] rounded_val  = pipe1_scaled_prod + round_offset;
     wire signed [63:0] shifted_val  = rounded_val >>> pipe1_shift;
 
+    wire signed [7:0] clamped_val = (shifted_val > 64'sd127)  ? 8'sd127 :
+                                    (shifted_val < -64'sd128) ? -8'sd128 :
+                                    shifted_val[7:0];
+
     always @(posedge clk) begin
         if (!rst_n) begin
             act_out   <= 8'sd0;
             act_valid <= 1'b0;
-        end else if (pipe1_valid) begin : CLAMP
-            reg signed [7:0] clamped;
-            if (shifted_val > 64'sd127) begin
-                clamped = 8'sd127;
-            end else if (shifted_val < -64'sd128) begin
-                clamped = -8'sd128;
-            end else begin
-                clamped = shifted_val[7:0];
-            end
-
-            if (pipe1_relu && (clamped < 8'sd0)) begin
+        end else if (pipe1_valid) begin
+            if (pipe1_relu && (clamped_val < 8'sd0)) begin
                 act_out <= 8'sd0;
             end else begin
-                act_out <= clamped;
+                act_out <= clamped_val;
             end
             act_valid <= 1'b1;
         end else begin
