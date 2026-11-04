@@ -136,8 +136,15 @@ uint16_t estimate_shaft_speed_tacholess(const uint16_t *spectrum, uint16_t num_b
         delta_q8 = (num * 256) / denom;
     }
     
-    /* Spectral bin resolution df = 13333 Hz / 512 = 26.041 Hz (26042 milli-Hz) */
-    uint32_t f_shaft_mhz = ((uint32_t)(max_bin * 256 + delta_q8) * 26042UL) >> 8;
+    /* Spectral bin resolution:
+     * Profile 1 (HIL CWRU / PRONOSTIA): df = 12000 Hz / 512 = 23.4375 Hz (23438 milli-Hz)
+     * Profile 2 (ADXL345 Native):       df = 3200 Hz  / 512 = 6.25 Hz    (6250 milli-Hz)
+     */
+#if defined(USE_ADXL345_PROFILE) && (USE_ADXL345_PROFILE == 1)
+    uint32_t f_shaft_mhz = ((uint32_t)(max_bin * 256 + delta_q8) * 6250UL) >> 8;
+#else
+    uint32_t f_shaft_mhz = ((uint32_t)(max_bin * 256 + delta_q8) * 23438UL) >> 8;
+#endif
     uint16_t est_rpm = (uint16_t)((f_shaft_mhz * 60UL) / 1000UL);
     if (est_rpm < 1650 || est_rpm > 1850) {
         return 1797; /* Physical induction motor slip bounds clamp to nominal */

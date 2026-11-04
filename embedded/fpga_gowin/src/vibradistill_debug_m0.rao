@@ -1,0 +1,179 @@
+<?xml version="1" encoding="UTF-8"?>
+<GAO_CONFIG>
+    <Version>3.0</Version>
+    <Mode>Standard</Mode>
+    <AoCore index="0" sample_clock="clk_100m" trig_type="0" storage_depth="2048" window_num="1" capture_amount="2048" implementation="0" trigger_pos="128" module_name="gowin_top_soc" force_trigger_by_falling_edge="false" capture_init_data_enabled="false">
+        <SignalList>
+            <Bus capture_enable="true" name="sample_in[15:0]">
+                <Signal>sample_in[15]</Signal>
+                <Signal>sample_in[14]</Signal>
+                <Signal>sample_in[13]</Signal>
+                <Signal>sample_in[12]</Signal>
+                <Signal>sample_in[11]</Signal>
+                <Signal>sample_in[10]</Signal>
+                <Signal>sample_in[9]</Signal>
+                <Signal>sample_in[8]</Signal>
+                <Signal>sample_in[7]</Signal>
+                <Signal>sample_in[6]</Signal>
+                <Signal>sample_in[5]</Signal>
+                <Signal>sample_in[4]</Signal>
+                <Signal>sample_in[3]</Signal>
+                <Signal>sample_in[2]</Signal>
+                <Signal>sample_in[1]</Signal>
+                <Signal>sample_in[0]</Signal>
+            </Bus>
+            <Signal capture_enable="true">sample_strobe</Signal>
+            <Bus capture_enable="true" name="fir_out[15:0]">
+                <Signal>fir_out[15]</Signal>
+                <Signal>fir_out[14]</Signal>
+                <Signal>fir_out[13]</Signal>
+                <Signal>fir_out[12]</Signal>
+                <Signal>fir_out[11]</Signal>
+                <Signal>fir_out[10]</Signal>
+                <Signal>fir_out[9]</Signal>
+                <Signal>fir_out[8]</Signal>
+                <Signal>fir_out[7]</Signal>
+                <Signal>fir_out[6]</Signal>
+                <Signal>fir_out[5]</Signal>
+                <Signal>fir_out[4]</Signal>
+                <Signal>fir_out[3]</Signal>
+                <Signal>fir_out[2]</Signal>
+                <Signal>fir_out[1]</Signal>
+                <Signal>fir_out[0]</Signal>
+            </Bus>
+            <Signal capture_enable="true">fir_valid</Signal>
+            <Bus capture_enable="true" name="env_out[15:0]">
+                <Signal>env_out[15]</Signal>
+                <Signal>env_out[14]</Signal>
+                <Signal>env_out[13]</Signal>
+                <Signal>env_out[12]</Signal>
+                <Signal>env_out[11]</Signal>
+                <Signal>env_out[10]</Signal>
+                <Signal>env_out[9]</Signal>
+                <Signal>env_out[8]</Signal>
+                <Signal>env_out[7]</Signal>
+                <Signal>env_out[6]</Signal>
+                <Signal>env_out[5]</Signal>
+                <Signal>env_out[4]</Signal>
+                <Signal>env_out[3]</Signal>
+                <Signal>env_out[2]</Signal>
+                <Signal>env_out[1]</Signal>
+                <Signal>env_out[0]</Signal>
+            </Bus>
+            <Signal capture_enable="true">env_valid</Signal>
+            <Bus capture_enable="true" name="mag_data[15:0]">
+                <Signal>mag_data[15]</Signal>
+                <Signal>mag_data[14]</Signal>
+                <Signal>mag_data[13]</Signal>
+                <Signal>mag_data[12]</Signal>
+                <Signal>mag_data[11]</Signal>
+                <Signal>mag_data[10]</Signal>
+                <Signal>mag_data[9]</Signal>
+                <Signal>mag_data[8]</Signal>
+                <Signal>mag_data[7]</Signal>
+                <Signal>mag_data[6]</Signal>
+                <Signal>mag_data[5]</Signal>
+                <Signal>mag_data[4]</Signal>
+                <Signal>mag_data[3]</Signal>
+                <Signal>mag_data[2]</Signal>
+                <Signal>mag_data[1]</Signal>
+                <Signal>mag_data[0]</Signal>
+            </Bus>
+            <Signal capture_enable="true">mag_valid</Signal>
+            <Signal capture_enable="true">mag_sop</Signal>
+            <Signal capture_enable="true">mag_eop</Signal>
+            <Signal capture_enable="true">norm_busy</Signal>
+            <Signal capture_enable="true">norm_npu_start_pulse</Signal>
+            <Bus capture_enable="true" name="norm_npu_data[7:0]">
+                <Signal>norm_npu_data[7]</Signal>
+                <Signal>norm_npu_data[6]</Signal>
+                <Signal>norm_npu_data[5]</Signal>
+                <Signal>norm_npu_data[4]</Signal>
+                <Signal>norm_npu_data[3]</Signal>
+                <Signal>norm_npu_data[2]</Signal>
+                <Signal>norm_npu_data[1]</Signal>
+                <Signal>norm_npu_data[0]</Signal>
+            </Bus>
+            <Signal capture_enable="true">norm_npu_valid</Signal>
+            <Signal capture_enable="true">npu_ready</Signal>
+            <Signal capture_enable="true">npu_done</Signal>
+            <Bus capture_enable="true" name="npu_pred_class[1:0]">
+                <Signal>npu_pred_class[1]</Signal>
+                <Signal>npu_pred_class[0]</Signal>
+            </Bus>
+            <Bus capture_enable="true" name="npu_vacuity_q15[15:0]">
+                <Signal>npu_vacuity_q15[15]</Signal>
+                <Signal>npu_vacuity_q15[14]</Signal>
+                <Signal>npu_vacuity_q15[13]</Signal>
+                <Signal>npu_vacuity_q15[12]</Signal>
+                <Signal>npu_vacuity_q15[11]</Signal>
+                <Signal>npu_vacuity_q15[10]</Signal>
+                <Signal>npu_vacuity_q15[9]</Signal>
+                <Signal>npu_vacuity_q15[8]</Signal>
+                <Signal>npu_vacuity_q15[7]</Signal>
+                <Signal>npu_vacuity_q15[6]</Signal>
+                <Signal>npu_vacuity_q15[5]</Signal>
+                <Signal>npu_vacuity_q15[4]</Signal>
+                <Signal>npu_vacuity_q15[3]</Signal>
+                <Signal>npu_vacuity_q15[2]</Signal>
+                <Signal>npu_vacuity_q15[1]</Signal>
+                <Signal>npu_vacuity_q15[0]</Signal>
+            </Bus>
+            <Signal capture_enable="true">npu_ood_alert</Signal>
+            <Signal capture_enable="true">mcu_spi_sck</Signal>
+            <Signal capture_enable="true">mcu_spi_cs_n</Signal>
+            <Signal capture_enable="true">mcu_spi_mosi</Signal>
+            <Signal capture_enable="true">mcu_irq_pulse</Signal>
+            <Signal capture_enable="true">led_infer_busy</Signal>
+        </SignalList>
+        <Triggers>
+            <Trigger index="0">
+                <SignalList>
+                    <Signal>norm_npu_start_pulse</Signal>
+                </SignalList>
+            </Trigger>
+            <Trigger index="1">
+                <SignalList>
+                    <Signal>sample_strobe</Signal>
+                </SignalList>
+            </Trigger>
+            <Trigger index="2"/>
+            <Trigger index="3"/>
+            <Trigger index="4"/>
+            <Trigger index="5"/>
+            <Trigger index="6"/>
+            <Trigger index="7"/>
+            <Trigger index="8"/>
+            <Trigger index="9"/>
+            <Trigger index="10"/>
+            <Trigger index="11"/>
+            <Trigger index="12"/>
+            <Trigger index="13"/>
+            <Trigger index="14"/>
+            <Trigger index="15"/>
+        </Triggers>
+        <MatchUnits>
+            <MatchUnit index="0" enabled="1" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="1" value1="0" trigger="0"/>
+            <MatchUnit index="1" enabled="1" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="1" value1="0" trigger="1"/>
+            <MatchUnit index="2" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="3" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="4" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="5" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="6" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="7" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="8" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="9" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="10" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="11" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="12" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="13" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="14" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+            <MatchUnit index="15" enabled="0" match_type="0" counter_enable="0" counter_width="2" counter="2" countinuous="0" func="0" value0="" value1=""/>
+        </MatchUnits>
+        <Expressions type="Static">
+            <Expression>M0</Expression>
+            <Expression>M1</Expression>
+        </Expressions>
+    </AoCore>
+    <GAO_ID>1100011000001011</GAO_ID>
+</GAO_CONFIG>

@@ -62,7 +62,7 @@
 
 ### Q9 (Giám khảo DSP): "Độ phân giải tần số FFT 512-point là bao nhiêu? Có bị hiện tượng rò rỉ phổ không?"
 **Trả lời của Toàn**:
-> "Thưa Thầy, với $F_s = 13.333\,\text{kHz}$ và $N = 512$, độ phân giải tần số là $\Delta f = \frac{13333}{512} \approx 26.04\,\text{Hz}$ (hoặc $\Delta f = 6.25\,\text{Hz}$ tại $F_s = 3.2\,\text{kHz}$). 
+> "Thưa Thầy, với $F_s = 12.0\,\text{kHz}$ và $N = 512$, độ phân giải tần số là $\Delta f = \frac{12000}{512} = 23.4375\,\text{Hz} \approx 23.44\,\text{Hz}$ (hoặc $\Delta f = \frac{3200}{512} = 6.25\,\text{Hz}$ tại $F_s = 3.2\,\text{kHz}$). 
 > Để triệt tiêu rò rỉ phổ (Spectral Leakage), chúng tôi áp dụng cửa sổ Hanning trước khối FFT, giảm búp sóng phụ xuống dưới $-31.5\,\text{dB}$. Đồng thời, mô hình NPU tích hợp vector đặc trưng vật lý 8 chiều (Physics Kinematic Vector) được trích xuất bằng phép nội suy parabol 3 điểm, khắc phục hoàn toàn hiện tượng picket-fence effect."
 
 ### Q10 (Giám khảo DSP): "Đo tốc độ động cơ bằng encoder quang 30 PPR như thế nào để tránh sai số khi motor rung giật?"

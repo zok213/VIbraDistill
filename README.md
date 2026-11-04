@@ -226,7 +226,15 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
         * Cả hai profile đều giữ tỷ lệ dải thông chuẩn hóa $W_n \approx 0.20 \dots 0.25$ so với tần số Nyquist.
      * **Kết luận dứt khoát:** Tần số cắt **$1,200\,\text{Hz}$ là tối ưu vật lý và chuẩn xác tuyệt đối**, bảo đảm giữ trọn vẹn cả 3 dải phổ con cho 12 kênh MAC trên Gowin FPGA.
 
-5. **Về 4 Giá Trị Đặc Trưng Prior Vật Lý:**  
+5. **Nâng cấp Vi mạch 18-bit DSP cho Bộ Lọc IIR (Khắc phục lỗi tràn số Q1.15 cũ):**  
+   * Ở chế độ HIL ($F_s = 12\,\text{kHz}, F_c = 1,200\,\text{Hz}$), hệ số phản hồi Butterworth bậc 2 có giá trị lý thuyết:
+     $$a_1 = -1.1429805$$
+   * Vì $|a_1| > 1.0$, giá trị này **vượt quá dải biểu diễn 16-bit signed Q1.15** ($[-32768, 32767]$). Bản Verilog cũ ép thành `16'sh96E8` ($-26904$), gây lệch tần số cắt lên tới $2,191\,\text{Hz}$ (lệch $65\%$).
+   * **Giải pháp 18-bit Gowin DSP:** Khối `DSP18E` trên Gowin GW2A-18 hỗ trợ ngõ vào 18-bit signed. Chúng tôi mở rộng hệ số sang `signed [17:0]` trong [`envelope_demodulator.v`](embedded/fpga_gowin/src/envelope_demodulator.v):
+     $$A_1 = -1.1429805 \times 32768 = -37453 \implies \mathbf{18\text{'sd}-37453}$$
+     Các tích số multiplier mở rộng lên 34-bit signed, bộ cộng tích lũy 36-bit. Tần số cắt thực tế đạt **$1,198.97\,\text{Hz}$ (sai số $< 0.09\%$)**, hệ số tương quan với mô phỏng float đạt **$1.000000$** (sai số cực đại giảm từ $6,504$ LSB xuống còn **$4.4$ LSB**).
+
+6. **Về 4 Giá Trị Đặc Trưng Prior Vật Lý:**  
    * **Trả lời:** Đúng như phần cứng đang triển khai! Lõi NPU 12 kênh trên FPGA phân loại trực tiếp từ 257 bin phổ FFT mà **không cần nạp 4 giá trị Prior động** (gán cố định bằng 0). 4 giá trị Prior động và tốc độ trục $f_r$ được MCU Cortex-M0 tính toán qua Timer Capture để phục vụ giám sát ngữ cảnh máy và thuật toán thống kê Conformal Tracking (HopACP Q16.16).
 
 ---

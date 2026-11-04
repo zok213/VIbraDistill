@@ -13,12 +13,12 @@
 `timescale 1ns / 1ps
 
 module npu_12way_core #(
-    parameter WEIGHT_FILE_BANK0 = "roms/adxl345/npu_weights_bank0.hex",
-    parameter WEIGHT_FILE_BANK1 = "roms/adxl345/npu_weights_bank1.hex",
-    parameter WEIGHT_FILE_BANK2 = "roms/adxl345/npu_weights_bank2.hex",
-    parameter WEIGHT_FILE_BANK3 = "roms/adxl345/npu_weights_bank3.hex",
-    parameter WEIGHT_FILE_BANK4 = "roms/adxl345/npu_weights_bank4.hex",
-    parameter WEIGHT_FILE_BANK5 = "roms/adxl345/npu_weights_bank5.hex",
+    parameter WEIGHT_FILE_BANK0 = "src/roms/hil/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = "src/roms/hil/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = "src/roms/hil/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = "src/roms/hil/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = "src/roms/hil/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = "src/roms/hil/npu_weights_bank5.hex",
     parameter signed [31:0] BIAS_0 = 32'sd0,
     parameter signed [31:0] BIAS_1 = -32'sd3,
     parameter signed [31:0] BIAS_2 = 32'sd8,
@@ -55,7 +55,7 @@ module npu_12way_core #(
         if (in_valid) begin
             if (in_addr < 9'd257) begin
                 spectrum_mem[in_addr] <= in_data;
-            end else if (in_addr < 9'd261) begin
+            end else if (in_addr < 9'd261) begin 
                 prior_mem[in_addr - 9'd257] <= in_data;
             end
         end
@@ -128,16 +128,15 @@ module npu_12way_core #(
     // =========================================================================
     // 4. Main FSM Execution Controller
     // =========================================================================
-    localparam S_IDLE      = 4'd0;
-    localparam S_COMPUTE   = 4'd1;
-    localparam S_DRAIN_1   = 4'd2;
-    localparam S_DRAIN_2   = 4'd3;
-    localparam S_SUM       = 4'd4;
-    localparam S_DECIDE    = 4'd5;
-    localparam S_CHECK     = 4'd6;
-    localparam S_WAIT_DIV  = 4'd7;
-    localparam S_DONE      = 4'd8;
-
+    localparam S_IDLE      = 3'd0;
+    localparam S_COMPUTE   = 3'd1;
+    localparam S_DRAIN_1   = 3'd2;
+    localparam S_DRAIN_2   = 3'd3;
+    localparam S_SUM       = 3'd4;
+    localparam S_DECIDE    = 3'd5;
+    localparam S_WAIT_DIV  = 3'd6;
+    localparam S_DONE      = 3'd7;
+    localparam S_CHECK     = 4'd8;
     reg [3:0]   state;
     reg [8:0]   step_cnt;
 
@@ -279,10 +278,10 @@ module npu_12way_core #(
                     };
 
                     // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
-                    // Pipeline register: latch sum_evidence non-blocking to decouple comparator carry-chain
+                                        // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
                     sum_evidence <= get_evidence(score_0) + get_evidence(score_1) +
                                     get_evidence(score_2) + get_evidence(score_3) + 18'd4;
-                    state <= S_CHECK;
+                    state        <= S_CHECK;
                 end
 
                 S_CHECK: begin

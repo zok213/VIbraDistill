@@ -1,0 +1,50 @@
+//======================================================================
+// Physical Constraints (CST) cho Tang Primer 20K Dock Lite
+// Chip: GW2A-LV18PG256C8/I7
+// Top Module: gowin_top_soc
+//======================================================================
+
+// ------------------------------------------------------------------
+// 1. Clock 27 MHz (Thach anh tren Core Board)
+// ------------------------------------------------------------------
+IO_LOC "clk_27m" H11;
+IO_PORT "clk_27m" IO_TYPE=LVCMOS33;
+
+// ------------------------------------------------------------------
+// 2. Nut nhan Reset (S1 / Key1 tren board Tang Primer 20K)
+// ------------------------------------------------------------------
+IO_LOC "rst_n_pin" T3;
+IO_PORT "rst_n_pin" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+// ------------------------------------------------------------------
+// 3. SPI Telemetry sang MCU Sonix SN32F407 (Header GPIO 3.3V)
+// ------------------------------------------------------------------
+IO_LOC "mcu_spi_sck"   P11;
+IO_PORT "mcu_spi_sck"   IO_TYPE=LVCMOS33 DRIVE=8;
+
+IO_LOC "mcu_spi_cs_n"  R13;
+IO_PORT "mcu_spi_cs_n"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+IO_LOC "mcu_spi_mosi"  T14;
+IO_PORT "mcu_spi_mosi"  IO_TYPE=LVCMOS33 DRIVE=8;
+
+IO_LOC "mcu_irq_pulse" R11;
+IO_PORT "mcu_irq_pulse" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// ------------------------------------------------------------------
+// 4. UART Direct Spectrum Streamer (USB Virtual COM tren Pin M11)
+// ------------------------------------------------------------------
+IO_LOC "uart_txd"      M11;
+IO_PORT "uart_txd"      IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+// ------------------------------------------------------------------
+// 5. LED Debug / Status
+// ------------------------------------------------------------------
+IO_LOC "led_alive"      N16;
+IO_PORT "led_alive"      IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+IO_LOC "led_infer_busy" L14;
+IO_PORT "led_infer_busy" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+IO_LOC "led_ood_alert"  L16;
+IO_PORT "led_ood_alert"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;

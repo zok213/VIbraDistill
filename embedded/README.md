@@ -42,12 +42,16 @@ graph TD
 
 ### 1. `embedded/fpga_gowin/` — Verilog RTL Core
 * **`src/fir_minphase_32.v`**: 
-  - 32-tap causal minimum-phase bandpass FIR filter ($2000 - 5000$ Hz @ $f_s = 13.333$ kHz).
+  - 32-tap causal minimum-phase bandpass FIR filter:
+    - Profile 1 (HIL CWRU / PRONOSTIA): $2000 - 5000$ Hz @ $f_s = 12.0$ kHz. Group delay: 2 samples ($0.167$ ms).
+    - Profile 2 (Native ADXL345): $500 - 1400$ Hz @ $f_s = 3.2$ kHz. Group delay: 2.76 samples ($0.86$ ms).
   - 4-multiplier time-multiplexed folded MAC architecture: executes 32 taps in exactly 8 clock cycles (80 ns @ 100 MHz).
   - Synchronous reset (`rst_n`) preventing LUT explosion in Gowin DSP18E slices.
 * **`src/envelope_demodulator.v`**:
   - Full-wave absolute value rectifier: $v_\text{rect}[n] = |x[n]|$.
-  - 3-stage pipelined Direct-Form I 2nd-order IIR Butterworth low-pass filter (cutoff $f_c = 1000$ Hz).
+  - 3-stage pipelined Direct-Form I 2nd-order IIR Butterworth low-pass filter:
+    - Profile 1: $f_c = 1,200$ Hz @ $f_s = 12.0$ kHz with 18-bit signed coefficients ($A_1 = -37453$).
+    - Profile 2: $f_c = 400$ Hz @ $f_s = 3.2$ kHz with 18-bit signed coefficients ($A_1 = -30894$).
 * **`src/spi_master_packet16.v`**:
   - Transmits a compact 16-byte telemetry frame to the MCU at 4.0 MHz SPI clock.
   - Generates hardware CRC-16-CCITT checksum and enforces a $25\,\mu\text{s}$ wakeup guardband for the Cortex-M0.

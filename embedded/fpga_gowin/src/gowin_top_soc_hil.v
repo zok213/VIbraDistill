@@ -1,64 +1,70 @@
-// ============================================================================
-// Module Name: gowin_top_soc
-// Description: Top-Level Gowin Primer 20K Edge AI SoC Architecture (Pure HIL Mode)
-//              End-to-End Autonomous Hardware Pipeline:
-//                1. HIL BSRAM Vector Replay Engine (12 kHz sample rate generator)
-//                2. 32-Tap Causal Min-Phase FIR Bandpass (280 - 1400 Hz @ 12 kHz)
-//                3. Causal Envelope Demodulator (Rectifier + Butterworth IIR LPF)
-//                4. Hanning Window (512 points)
-//                5. Gowin FFT 512 IP Core + 257-Bin Filter + Magnitude (mag_isqrt)
-//                6. 12-Way Systolic Spectral NPU Accelerator (2.60 µs @ 100 MHz)
-//                7. Hardware Telemetry & Inference SPI Master to Sonix SN32F407 MCU
-// ============================================================================
 
 `timescale 1ns / 1ps
 
 module gowin_top_soc #(
-    // 512-Sample Time-Domain Stimulus Hex File for HIL Replay Engine
-    // Options in src/test_npu/roms/:
-    //   stimulus_cwru_normal.hex, stimulus_cwru_ball.hex, stimulus_cwru_inner.hex, stimulus_cwru_outer.hex
-    //   stimulus_pronostia_early_life.hex, stimulus_pronostia_mid_life.hex, stimulus_pronostia_end_of_life.hex
-    parameter HIL_VECTOR_FILE   = "src/test_npu/roms/stimulus_cwru_normal.hex",
-    parameter WEIGHT_FILE_BANK0 = "src/test_npu/roms/hil/npu_weights_bank0.hex",
-    parameter WEIGHT_FILE_BANK1 = "src/test_npu/roms/hil/npu_weights_bank1.hex",
-    parameter WEIGHT_FILE_BANK2 = "src/test_npu/roms/hil/npu_weights_bank2.hex",
-    parameter WEIGHT_FILE_BANK3 = "src/test_npu/roms/hil/npu_weights_bank3.hex",
-    parameter WEIGHT_FILE_BANK4 = "src/test_npu/roms/hil/npu_weights_bank4.hex",
-    parameter WEIGHT_FILE_BANK5 = "src/test_npu/roms/hil/npu_weights_bank5.hex"
+    // File song rung tho 16-bit (stimulus_cwru_normal, inner, outer, ball)
+    parameter STIMULUS_FILE     = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/stimulus_pronostia_early_life.hex",
+    parameter SAMPLE_DIV        = 8357,   // 100 MHz / 12 kHz
+    // 6 Bank trong so NPU cho che do HIL 12 kHz
+    parameter WEIGHT_FILE_BANK0 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank5.hex",
+    // 4 Bias chuan cua mang NPU o che do HIL
+    parameter signed [31:0] BIAS_0 = -32'sd5,
+    parameter signed [31:0] BIAS_1 = -32'sd3,
+    parameter signed [31:0] BIAS_2 =  32'sd14,
+    parameter signed [31:0] BIAS_3 = -32'sd6
 )(
     input  wire                 clk_27m,          
     input  wire                 rst_n_pin,        
     
+    // Giao tiep SPI Telemetry sang Sonix SN32F407
     output wire                 mcu_spi_sck,      
     output wire                 mcu_spi_cs_n,     
     output wire                 mcu_spi_mosi,     
     output wire                 mcu_irq_pulse,    
     
+    // Xuat pho truc tiep len PC qua UART (Tang Primer 20K pin M11)
+    output wire                 uart_txd,
+    
+    // Den bao trang thai
     output reg                  led_alive,        
     output reg                  led_infer_busy,   
     output reg                  led_ood_alert     
 );
 
     // =========================================================================
-    // 1. Quản lý Clock & Reset
+    // 1. Quan ly Clock & Reset (27 MHz -> 100 MHz)
     // =========================================================================
 `ifdef SIMULATION
     wire clk_100m = clk_27m;
     wire pll_lock = 1'b1;
 `else
     wire clk_100m;
-    wire pll_lock = 1'b1; // IP Core Gowin_rPLL không xuất chân lock, ta gán cứng 1'b1
+    wire pll_lock;
     
-    // Gọi IP Core PLL đã được tạo sẵn trong dự án
     Gowin_rPLL u_pll_100m (
-        .clkout(clk_100m),
-        .reset (~rst_n_pin), // Nút nhấn tích cực mức thấp -> đảo lại cho PLL
-        .clkin (clk_27m)
+        .clkout (clk_100m),
+        .lock   (pll_lock),
+        .reset  (~rst_n_pin),
+        .clkin  (clk_27m)
     );
 `endif
 
-    wire sys_rst_n = rst_n_pin & pll_lock;
+    // Reset dong bo hoa theo xung nhip 100MHz (Async assert, Sync deassert)
+    reg [1:0] rst_sync;
+    always @(posedge clk_100m or negedge pll_lock or negedge rst_n_pin) begin
+        if (!rst_n_pin || !pll_lock)
+            rst_sync <= 2'b00;
+        else
+            rst_sync <= {rst_sync[0], 1'b1};
+    end
+    wire sys_rst_n = rst_sync[1];
 
+    // Mach dem tao xung nhip tim led_alive (~3 Hz)
     reg [23:0] heartbeat_cnt;
     always @(posedge clk_100m or negedge sys_rst_n) begin
         if (!sys_rst_n) begin
@@ -71,40 +77,37 @@ module gowin_top_soc #(
     end
 
     // =========================================================================
-    // 2. Khối HIL Vector Replay Engine (12 kHz)
+    // 2. Khoi HIL Vector Replay Engine (12 kHz)
     // =========================================================================
-    reg [13:0] sample_div_cnt;
-    reg        hil_sample_strobe;
-    reg [8:0]  hil_addr; 
-    reg signed [15:0] hil_sample_bram [0:511];
+    reg signed [15:0] stim_bram [0:511];
+    initial $readmemh(STIMULUS_FILE, stim_bram);
 
-    initial begin
-        $readmemh(HIL_VECTOR_FILE, hil_sample_bram);
-    end
+    reg [13:0]        stim_div_cnt;
+    reg [8:0]         stim_addr; 
+    reg signed [15:0] sample_in;
+    reg               sample_strobe;
 
     always @(posedge clk_100m or negedge sys_rst_n) begin
         if (!sys_rst_n) begin
-            sample_div_cnt    <= 14'd0;
-            hil_sample_strobe <= 1'b0;
-            hil_addr          <= 9'd0;
+            stim_div_cnt  <= 14'd0;
+            stim_addr     <= 9'd0;
+            sample_in     <= 16'sd0;
+            sample_strobe <= 1'b0;
         end else begin
-            // Chuan hoa theo rPLL 100.286 MHz: 100,285,714 Hz / 12,000 Hz = 8357 chu ky (8356 + 1)
-            if (sample_div_cnt >= 14'd8356) begin
-                sample_div_cnt    <= 14'd0;
-                hil_sample_strobe <= 1'b1;
-                hil_addr          <= (hil_addr == 9'd511) ? 9'd0 : (hil_addr + 1'b1);
+            sample_strobe <= 1'b0;
+            if (stim_div_cnt >= (SAMPLE_DIV - 1)) begin
+                stim_div_cnt  <= 14'd0;
+                sample_in     <= stim_bram[stim_addr];
+                stim_addr     <= (stim_addr == 9'd511) ? 9'd0 : (stim_addr + 1'b1);
+                sample_strobe <= 1'b1;
             end else begin
-                sample_div_cnt    <= sample_div_cnt + 1'b1;
-                hil_sample_strobe <= 1'b0;
+                stim_div_cnt <= stim_div_cnt + 1'b1;
             end
         end
     end
 
-    wire signed [15:0] sample_in     = hil_sample_bram[hil_addr];
-    wire               sample_strobe = hil_sample_strobe;
-
     // =========================================================================
-    // 3. Stage 1 DSP: FIR 32-Tap
+    // 3. Stage 1 DSP: 32-Tap Causal Min-Phase FIR
     // =========================================================================
     wire signed [15:0] fir_out;
     wire               fir_valid;
@@ -113,7 +116,7 @@ module gowin_top_soc #(
         .DATA_WIDTH  (16),
         .COEFF_WIDTH (16),
         .TAPS        (32)
-    ) u_fir_legacy (
+    ) u_fir (
         .clk        (clk_100m),
         .rst_n      (sys_rst_n),
         .sample_en  (sample_strobe),
@@ -123,14 +126,14 @@ module gowin_top_soc #(
     );
 
     // =========================================================================
-    // 4. Stage 2 DSP: Envelope Demodulator
+    // 4. Stage 2 DSP: Causal Envelope Demodulator (USE_HIL = 1 cho Fc = 1000 Hz)
     // =========================================================================
     wire signed [15:0] env_out;
     wire               env_valid;
 
     envelope_demodulator #(
-        .WIDTH        (16),
-        .USE_HIL  (0) 
+        .WIDTH   (16),
+        .USE_HIL (1) // USE_HIL = 1 cho HIL Profile (Fc = 1200 Hz, DC Gain = 1.0)
     ) u_envelope (
         .clk        (clk_100m),
         .rst_n      (sys_rst_n),
@@ -141,73 +144,112 @@ module gowin_top_soc #(
     );
 
     // =========================================================================
-    // 5. Stage 2.5 DSP: Cửa sổ Hanning 512
+    // 5. Stage 2.5 DSP: Cua so Hanning 512 diem
     // =========================================================================
-    wire signed [15:0] win_out;
-    wire               win_valid;
-    wire               win_sop;
+    wire signed [15:0] win_data;
+    wire               win_valid, win_sop, win_eop;
 
-    hann_window u_hann_window (
+    hann_window u_hann (
         .clk        (clk_100m),
         .rst_n      (sys_rst_n),
         .in_valid   (env_valid),
         .in_data    (env_out),
         .out_valid  (win_valid),
-        .out_data   (win_out),
+        .out_data   (win_data),
         .out_sop    (win_sop),
-        .out_eop    ()
+        .out_eop    (win_eop)
     );
 
     // =========================================================================
-    // 6. Stage 3 DSP: FFT Wrapper
+    // 6. Stage 3 DSP: FFT Wrapper & Trinh trich xuat bien do
     // =========================================================================
+    wire        mag_valid, mag_sop, mag_eop;
+    wire [8:0]  mag_idx;
     wire [15:0] mag_data;
-    wire [8:0]  mag_bin_idx;
-    wire        mag_valid;
-    wire        fft_frame_done;
+    wire        err_overrun, err_timeout, err_sync;
 
-    fft_wrapper u_fft_wrapper (
-        .clk        (clk_100m),
-        .rst_n      (sys_rst_n),
-        .in_data    (win_out),
-        .in_valid   (win_valid),
-        .in_sop     (win_sop),
-        .mag_idx    (mag_bin_idx),
-        .mag_data   (mag_data),
-        .mag_valid  (mag_valid),
-        .mag_sop    (),
-        .mag_eop    (),
-        .err_overrun(),
-        .err_timeout(),
-        .err_sync   ()
+    fft_wrapper u_fft (
+        .clk         (clk_100m),
+        .rst_n       (sys_rst_n),
+        .in_valid    (win_valid),
+        .in_data     (win_data),
+        .in_sop      (win_sop),
+        .mag_valid   (mag_valid),
+        .mag_idx     (mag_idx),
+        .mag_data    (mag_data),
+        .mag_sop     (mag_sop),
+        .mag_eop     (mag_eop),
+        .err_overrun (err_overrun),
+        .err_timeout (err_timeout),
+        .err_sync    (err_sync)
     );
 
-    // Giả lập tín hiệu frame_done để kích hoạt NPU (vì wrapper cũ không xuất ra trực tiếp)
-    assign fft_frame_done = mag_valid && (mag_bin_idx == 9'd256);
-
     // =========================================================================
-    // 7. Dual-Port BRAM Lưu Phổ
+    // 7. Spectrum BRAM (257 x 16-bit) phuc vu truyen tin SPI & Normalizer
     // =========================================================================
     reg [15:0] spectrum_bram [0:256];
     wire [8:0]  spi_bram_addr;
     wire [15:0] spi_bram_data;
     assign spi_bram_data = spectrum_bram[spi_bram_addr];
 
+    wire [8:0]  norm_bram_rd_addr;
+    reg  [15:0] norm_bram_rd_data;
+
     always @(posedge clk_100m) begin
-        if (mag_valid && (mag_bin_idx <= 9'd256)) begin
-            spectrum_bram[mag_bin_idx] <= mag_data;
-        end
+        if (mag_valid && (mag_idx <= 9'd256))
+            spectrum_bram[mag_idx] <= mag_data;
+        norm_bram_rd_data <= spectrum_bram[norm_bram_rd_addr];
     end
 
     // =========================================================================
-    // 8. Stage 4 NPU: Gowin 12-Way Core
+    // 7.1 UART Direct Spectrum Streamer (Baudrate 921600 len PC)
     // =========================================================================
-    reg                 npu_start;
+    spectrum_uart_streamer #(
+        .CLK_HZ (100_285_714),
+        .BAUD   (921600)
+    ) u_spectrum_uart (
+        .clk        (clk_100m),
+        .rst_n      (sys_rst_n),
+        .bram_we    (mag_valid),
+        .bram_addr  (mag_idx),
+        .bram_data  (mag_data),
+        .frame_done (mag_eop),
+        .uart_txd   (uart_txd)
+    );
+
+    // =========================================================================
+    // 7.2 Stage 3.5: Chuan hoa pho dinh cao (Peak Spectrum Normalizer)
+    // =========================================================================
+    wire                norm_npu_valid;
+    wire [8:0]          norm_npu_addr;
+    wire signed [7:0]   norm_npu_data;
+    wire                norm_npu_start_pulse;
+    wire                norm_busy;
+
+    spec_normalizer #(
+        .RD_LAT    (1),
+        .WR_SETTLE (2)
+    ) u_normalizer (
+        .clk             (clk_100m),
+        .rst_n           (sys_rst_n),
+        .fft_valid       (mag_valid),
+        .fft_sop         (mag_sop),
+        .fft_eop         (mag_eop),
+        .fft_mag         (mag_data),
+        .bram_rd_addr    (norm_bram_rd_addr),
+        .bram_rd_data    (norm_bram_rd_data),
+        .npu_valid       (norm_npu_valid),
+        .npu_addr        (norm_npu_addr),
+        .npu_data        (norm_npu_data),
+        .npu_start_pulse (norm_npu_start_pulse),
+        .busy            (norm_busy)
+    );
+
+    // =========================================================================
+    // 8. Stage 4 NPU: Nhan vector chuan hoa [0..127] tu spec_normalizer
+    // =========================================================================
     wire                npu_ready;
     wire                npu_done;
-    reg                 npu_in_valid;
-    reg  [8:0]          npu_in_addr;
-    reg  signed [7:0]   npu_in_data;
 
     wire [1:0]          npu_pred_class;
     wire signed [31:0]  npu_logits;
@@ -221,16 +263,20 @@ module gowin_top_soc #(
         .WEIGHT_FILE_BANK2 (WEIGHT_FILE_BANK2),
         .WEIGHT_FILE_BANK3 (WEIGHT_FILE_BANK3),
         .WEIGHT_FILE_BANK4 (WEIGHT_FILE_BANK4),
-        .WEIGHT_FILE_BANK5 (WEIGHT_FILE_BANK5)
+        .WEIGHT_FILE_BANK5 (WEIGHT_FILE_BANK5),
+        .BIAS_0            (BIAS_0),
+        .BIAS_1            (BIAS_1),
+        .BIAS_2            (BIAS_2),
+        .BIAS_3            (BIAS_3)
     ) u_npu (
         .clk             (clk_100m),
         .rst_n           (sys_rst_n),
-        .start           (npu_start),
+        .start           (norm_npu_start_pulse),
         .ready           (npu_ready),
         .done            (npu_done),
-        .in_valid        (npu_in_valid),
-        .in_addr         (npu_in_addr),
-        .in_data         (npu_in_data),
+        .in_valid        (norm_npu_valid),
+        .in_addr         (norm_npu_addr),
+        .in_data         (norm_npu_data),
         .predicted_class (npu_pred_class),
         .logits_packed   (npu_logits),
         .vacuity_q15     (npu_vacuity_q15),
@@ -239,10 +285,13 @@ module gowin_top_soc #(
     );
 
     // =========================================================================
-    // 9. Stage 5 SPI DMA Telemetry
+    // 9. Stage 5 SPI DMA Telemetry sang MCU
     // =========================================================================
     reg         spi_start_tx;
     wire        spi_tx_busy;
+
+    // Thu thap co loi phan cung dua vao byte trang thai goi tin SPI
+    wire [15:0] status_flags = {5'd0, err_sync, err_timeout, err_overrun, 5'd0, 1'b1, 2'b00};
 
     spi_master_packet #(
         .TOTAL_BYTES (524),
@@ -252,8 +301,9 @@ module gowin_top_soc #(
         .rst_n                  (sys_rst_n),
         .start_tx               (spi_start_tx),
         .npu_pred_class         (npu_pred_class),
+        .npu_ood_alert          (npu_ood_alert),
         .dirichlet_max_evidence (npu_vacuity_q15[15:8]),
-        .hardware_status_flags  (16'h0004), 
+        .hardware_status_flags  (status_flags),
         .bram_addr              (spi_bram_addr),
         .bram_data              (spi_bram_data),
         .spi_sck                (mcu_spi_sck),
@@ -264,127 +314,51 @@ module gowin_top_soc #(
     );
 
     // =========================================================================
-    // 10. Master Control Sequencer
+    // 10. Master Control Sequencer (Kich hoat suy luan & Ban goi tin)
     // =========================================================================
-   localparam SEQ_IDLE   = 3'd0;
-    localparam SEQ_LOAD   = 3'd1;
-    localparam SEQ_START  = 3'd2;
-    localparam SEQ_WAIT   = 3'd3;
-    localparam SEQ_TX     = 3'd4;
-    localparam SEQ_DELAY  = 3'd5;
+    localparam SEQ_IDLE  = 2'd0;
+    localparam SEQ_WAIT  = 2'd1;
+    localparam SEQ_TX    = 2'd2;
+    localparam SEQ_DELAY = 2'd3;
 
-    reg [2:0]   seq_state;
-    reg [9:0]   load_idx;        // Dùng 10-bit để đếm an toàn đến 257 không bị tràn
-    reg [23:0]  timer_cnt;
-    reg         new_frame_ready;
-
-    // Các thanh ghi đệm Pipeline cho bộ nạp phổ
-    reg [15:0]  load_raw_data;
-    reg [8:0]   load_addr_pipe;
-    reg         load_valid_pipe;
+    reg [1:0] seq_state;
 
     always @(posedge clk_100m or negedge sys_rst_n) begin
         if (!sys_rst_n) begin
-            new_frame_ready <= 1'b0;
-        end else if (fft_frame_done) begin
-            new_frame_ready <= 1'b1;
-        end else if (seq_state == SEQ_LOAD) begin
-            new_frame_ready <= 1'b0;
-        end
-    end
-
-    always @(posedge clk_100m or negedge sys_rst_n) begin
-        if (!sys_rst_n) begin
-            seq_state       <= SEQ_IDLE;
-            load_idx        <= 10'd0;
-            timer_cnt       <= 24'd0;
-            npu_start       <= 1'b0;
-            npu_in_valid    <= 1'b0;
-            npu_in_addr     <= 9'd0;
-            npu_in_data     <= 8'sd0;
-            spi_start_tx    <= 1'b0;
-            led_infer_busy  <= 1'b0;
-            led_ood_alert   <= 1'b0;
-            load_raw_data   <= 16'd0;
-            load_addr_pipe  <= 9'd0;
-            load_valid_pipe <= 1'b0;
+            seq_state      <= SEQ_IDLE;
+            spi_start_tx   <= 1'b0;
+            led_infer_busy <= 1'b0;
+            led_ood_alert  <= 1'b0;
         end else begin
-            led_infer_busy <= (seq_state != SEQ_IDLE && seq_state != SEQ_DELAY);
+            led_infer_busy <= (seq_state == SEQ_WAIT) || norm_busy;
             led_ood_alert  <= npu_ood_alert;
 
             case (seq_state)
                 SEQ_IDLE: begin
-                    npu_start       <= 1'b0;
-                    npu_in_valid    <= 1'b0;
-                    spi_start_tx    <= 1'b0;
-                    load_idx        <= 10'd0;
-                    load_valid_pipe <= 1'b0;
-                    timer_cnt       <= timer_cnt + 1'b1;
-
-                    if ((new_frame_ready || timer_cnt >= 24'd10_000_000) && npu_ready && !spi_tx_busy) begin
-                        timer_cnt <= 24'd0;
-                        seq_state <= SEQ_LOAD;
+                    spi_start_tx <= 1'b0;
+                    // Kich hoat cho NPU khi bin FFT cuoi cung vua nap xong
+                    if (mag_eop && npu_ready && !spi_tx_busy) begin
+                        seq_state <= SEQ_WAIT;
                     end
-                end
-
-                SEQ_LOAD: begin
-                    // Tầng 1: Đọc thô từ BRAM vào thanh ghi đệm (chỉ mất ~2.5 ns)
-                    if (load_idx <= 10'd256) begin
-                        load_raw_data   <= spectrum_bram[load_idx];
-                        load_addr_pipe  <= load_idx[8:0];
-                        load_valid_pipe <= 1'b1;
-                        load_idx        <= load_idx + 1'b1;
-                    end else begin
-                        load_valid_pipe <= 1'b0;
-                    end
-
-                    // Tầng 2: Bão hòa logic từ thanh ghi đệm đưa sang NPU (chỉ mất ~3.5 ns)
-                    npu_in_valid <= load_valid_pipe;
-                    npu_in_addr  <= load_addr_pipe;
-                    npu_in_data  <= (load_raw_data[15:8] != 8'd0) ?
-                ((load_raw_data[15:8] > 8'd127) ? 8'sd127 : load_raw_data[15:8]) :
-                ((load_raw_data[7:0]  > 8'd127) ? 8'sd127 : load_raw_data[7:0]);
-
-                    // Kết thúc khi toàn bộ 257 bin đã được nạp qua cả 2 tầng
-                    if (load_idx > 10'd256 && !load_valid_pipe) begin
-                        load_idx  <= 10'd0;
-                        seq_state <= SEQ_START;
-                    end
-                end
-
-                SEQ_START: begin
-                    npu_in_valid <= 1'b0;
-                    npu_start    <= 1'b1;
-                    seq_state    <= SEQ_WAIT;
                 end
 
                 SEQ_WAIT: begin
-                    npu_start <= 1'b0;
                     if (npu_done) begin
-                        if (!spi_tx_busy) begin
-                            spi_start_tx <= 1'b1;
-                            seq_state    <= SEQ_TX;
-                        end else begin
-                            seq_state    <= SEQ_DELAY;
-                        end
+                        spi_start_tx <= 1'b1;
+                        seq_state    <= SEQ_TX;
                     end
                 end
 
                 SEQ_TX: begin
                     spi_start_tx <= 1'b0;
-                    if (spi_tx_busy) begin
-                        seq_state <= SEQ_DELAY;
-                    end
+                    if (spi_tx_busy) seq_state <= SEQ_DELAY;
                 end
 
                 SEQ_DELAY: begin
-                    if (!spi_tx_busy) begin
-                        seq_state <= SEQ_IDLE;
-                    end
+                    if (!spi_tx_busy) seq_state <= SEQ_IDLE;
                 end
-
-                default: seq_state <= SEQ_IDLE;
             endcase
         end
     end
+
 endmodule

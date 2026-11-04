@@ -1,0 +1,12 @@
+# 1. Tạo thư viện mô phỏng
+vlib work
+vmap work work
+
+# 2. Biên dịch 3 file Verilog
+vlog npu_mac12_unit.v
+vlog npu_12way_core.v
+vlog tb_npu_cosim.v
+
+# 3. Nạp và chạy mô phỏng
+vsim -quiet work.tb_npu_cosim
+run -all

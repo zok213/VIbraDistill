@@ -13,7 +13,7 @@
 module envelope_demodulator #(
     parameter WIDTH        = 16,
     parameter USE_ADXL345  = 0,  // 1: ADXL345 (Fc=400Hz @ Fs=3.2kHz), 0: HIL (Fc=1200Hz @ Fs=12kHz)
-    parameter USE_HIL      = 0   // Backwards compatibility alias for HIL SoC top-level
+    parameter USE_HIL      = 1   // 1: HIL Profile (Fc=1200Hz @ Fs=12kHz), 0: ADXL345 Profile (Fc=400Hz @ Fs=3.2kHz)
 )(
     input  wire                          clk,        // 50 MHz / 100 MHz System Clock
     input  wire                          rst_n,      // Synchronous Active-Low Reset
@@ -29,19 +29,20 @@ module envelope_demodulator #(
 
     // Fixed-Point Butterworth 2nd-Order LPF Coefficients Scaled in Q3.15 Format
     // Dual-Mode Selection:
-    //   Mode 1 (USE_ADXL345 = 1): Fc = 400 Hz  @ Fs = 3,200 Hz (ADXL345 Profile)
-    //   Mode 2 (USE_ADXL345 = 0): Fc = 1200 Hz @ Fs = 12,000 Hz (Industrial CWRU / HIL Profile)
+    //   Mode 1 (IS_ADXL = 1): Fc = 400 Hz  @ Fs = 3,200 Hz (ADXL345 Profile)
+    //   Mode 2 (IS_ADXL = 0): Fc = 1200 Hz @ Fs = 12,000 Hz (Industrial CWRU / HIL Profile)
     //
     // Note on 18-bit DSP Slices:
     // For Mode 2, a1 = -1.1429805. Scaled by 32768 (Q15), A1 = -37453.
     // Because |a1| > 1.0, A1 exceeds the 16-bit signed range [-32768, 32767].
     // Gowin GW2A-18 MULT18X18 DSP blocks natively support 18-bit signed operands.
     // We use signed [17:0] coefficients to guarantee zero coefficient overflow.
-    localparam signed [17:0] B0 = USE_ADXL345 ? 18'sd3199   :  18'sd2210;  // 0.097631 vs 0.067455
-    localparam signed [17:0] B1 = USE_ADXL345 ? 18'sd6398   :  18'sd4421;  // 0.195262 vs 0.134911
-    localparam signed [17:0] B2 = USE_ADXL345 ? 18'sd3199   :  18'sd2210;  // 0.097631 vs 0.067455
-    localparam signed [17:0] A1 = USE_ADXL345 ? -18'sd30894 : -18'sd37453; // -0.942809 vs -1.142981
-    localparam signed [17:0] A2 = USE_ADXL345 ?  18'sd10923 :  18'sd13527; //  0.333333 vs  0.412802
+    localparam IS_ADXL = (USE_ADXL345 != 0) || (USE_HIL == 0);
+    localparam signed [17:0] B0 = IS_ADXL ? 18'sd3199   :  18'sd2210;  // 0.097631 vs 0.067455
+    localparam signed [17:0] B1 = IS_ADXL ? 18'sd6398   :  18'sd4421;  // 0.195262 vs 0.134911
+    localparam signed [17:0] B2 = IS_ADXL ? 18'sd3199   :  18'sd2210;  // 0.097631 vs 0.067455
+    localparam signed [17:0] A1 = IS_ADXL ? -18'sd30894 : -18'sd37453; // -0.942809 vs -1.142981
+    localparam signed [17:0] A2 = IS_ADXL ?  18'sd10923 :  18'sd13527; //  0.333333 vs  0.412802
 
     reg signed [WIDTH-1:0] v_z1, v_z2;
     reg signed [WIDTH-1:0] e_z1, e_z2;

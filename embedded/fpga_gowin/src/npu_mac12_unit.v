@@ -154,7 +154,7 @@ module npu_mac12_unit (
         if (!rst_n) begin
             act_out   <= 8'sd0;
             act_valid <= 1'b0;
-        end else if (pipe1_valid) begin
+        end else if (pipe1_valid) begin : CLAMP
             reg signed [7:0] clamped;
             if (shifted_val > 64'sd127) begin
                 clamped = 8'sd127;

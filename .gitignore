@@ -67,3 +67,12 @@ legacy/notebooks/*.ipynb
 kaggle/datasets/*/*.zip
 experiments/kaggle_output/
 scratch/
+
+# Keil MDK build artifacts
+*.uvguix.*
+embedded/mcu_sonix/obj/
+embedded/mcu_sonix/Listings/
+embedded/mcu_sonix/Objects/
+
+# Modelsim simulation work
+embedded/fpga_gowin/src/test_npu/work/
