@@ -115,6 +115,21 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
 
 ---
 
+
+6. **Về Hiện Tượng Nạp File Early PRONOSTIA Bị Báo Lỗi Rãnh Ngoài (Outer Race BPFO 93.8 Hz) & RUL 15%:**
+   * **Băn khoăn thực tế của Toàn:** Toàn chụp màn hình gửi: Khung #150 báo đỉnh $93.8\,\text{Hz}$ (Bin 4), Logit Outer Race $= +125$, Normal $= -128$, RUL $= 15.0\%$ cảnh báo đỏ `MAINTENANCE REQUIRED`. Toàn thắc mắc sao nạp file Early mà không ra Normal $100\%$ như README?
+   * **Phân tích bản chất AI & DSP (Khẳng định: Không phải AI lỗi mà là Lệch Tần Số Lấy Mẫu):**
+     1. **Nguyên nhân gốc rễ:** PRONOSTIA đo ở tần số gốc $F_{s,\text{gốc}} = 25,600\,\text{Hz}$. Đường ống FPGA NPU được thiết kế cho chuẩn $F_{s,\text{fpga}} = 12,000\,\text{Hz}$. Tỉ lệ lệch là $25,600 / 12,000 = \mathbf{2.133\times}$.
+     2. Khi nạp thẳng 512 mẫu mà **không Resample**, mọi tần số rung động vật lý bị co ngắn: $f_{\text{hiển thị}} = f_{\text{thực}} / 2.133$. Các dao động tự nhiên quanh $200\,\text{Hz}$ bị kéo tụt xuống đúng **$93.8\,\text{Hz}$ (Bin 4 của FFT 512)**.
+     3. Tần số $93.8\,\text{Hz}$ rơi trúng dải khuyết tật rãnh ngoài ($BPFO = 107.2\,\text{Hz}$ nằm kẹp giữa Bin 4 và Bin 5), kích hoạt cực đại Ngân hàng trọng số Lớp 2 (Outer Race). NPU tính toán thật $100\%$ và phát hiện năng lượng tập trung tại đây nên kết luận Outer Race.
+     4. Đồng thời, việc script cũ chuẩn hóa độc lập từng khung (`24000 / max_abs`) đã khuếch đại biên độ rung êm ($0.35\,\text{g}$) của giai đoạn Early lên kịch trần, làm nổi các đỉnh nhiễu giả.
+   * **Đã xử lý dứt điểm & Kiểm chứng thực nghiệm:**
+     * Trong [`scripts/hil_streamer.py`](file:///d:/Gitrepo/VIbraDistill/scripts/hil_streamer.py), đã bổ sung bộ lọc nội suy chuẩn `resample_vibration_signal(raw, 25600.0, 12000.0)` và áp dụng thang đo vật lý thống nhất $1,200\,\text{LSB/g}$.
+     * Khi có Resampling, đỉnh phổ quay về đúng tần số trục $23.4\,\text{Hz}$ (Bin 1). Điểm số NPU: **Normal vọt lên $+1,482$ (Snap 12) và $+2,172$ (Snap 150)**, Outer Race tụt xuống $350$.
+     * Hệ thống nhận diện chuẩn xác **$100\%$ Normal Baseline, RUL = $100.0\%$, Xanh lá NORMAL_OK**, hoàn toàn khớp đúng với mô tả trong README!
+
+---
+
 ### PHẦN III: KẾT LUẬN & HÀNH ĐỘNG TIẾP THEO
 
 1. Toàn chỉ cần lấy 6 file ROM HIL mới tại `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\hil\` nạp vào BRAM.
