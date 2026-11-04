@@ -23,7 +23,7 @@ Dưới đây là lời giải đáp chính thức, số liệu thực nghiệm 
 * **Nguyên nhân gốc:**  
   Trước đây thư mục `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\hil\` vô tình bị copy đè bởi các file hex của `adxl345`, dẫn đến trục tần số bị lệch $3.75$ lần (đỉnh BPFI ở ADXL nằm ở bin 26, trong khi HIL 12 kHz nằm tại bin 7).
 * **Đã xử lý dứt điểm:**  
-  Tài đã chạy huấn luyện và xuất lại toàn bộ 6 file ROM ngân hàng trọng số chuẩn HIL ($F_s = 12,000\,\text{Hz}$, dải tần $0 - 6,000\,\text{Hz}$, Envelope Cutoff $1,200\,\text{Hz}$, mảng FIR `0x0824`):
+  Tài đã chạy huấn luyện và xuất lại toàn bộ 6 file ROM ngân hàng trọng số chuẩn HIL ($F_s = 12,000\,\text{Hz}$, dải tần $0 - 6,000\,\text{Hz}$, Envelope Cutoff $1,200\,\text{Hz}$, mảng FIR True Min-Phase `0xD0B8` (chuẩn hóa từ `0x0824`)):
   * Đường dẫn repo: [`embedded/fpga_gowin/roms/hil/npu_weights_bank0..5.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/hil/)
   * Đã copy đồng bộ thẳng vào workspace của Toàn: `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\hil\`
   * **Hệ số Biases chuẩn xác của 4 lớp:**
@@ -93,8 +93,9 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
    * **Nguyên nhân:** Script tạo stimulus cũ chuẩn hóa theo đỉnh từng cửa sổ (`scale = 26000 / max_val`). Vì tín hiệu Normal thực tế rất bé ($\approx 0.3\,\text{g}$ so với lỗi $\approx 2.3\,\text{g}$), script đã vô tình khuếch đại nhiễu sàn của Normal lên gấp $86,000$ lần! Khi đi qua bộ lọc FIR có độ lợi đỉnh $5.6$, tín hiệu vượt quá $32,767$ gây xén 49 mẫu.
    * **Thực tế vật lý:** Cảm biến ADXL345 thang đo $\pm 16\,\text{g}$ có tỉ lệ $2,048\,\text{LSB/g}$. Tín hiệu Normal thật chỉ dao động $\pm 600\,\text{LSB}$, khi qua FIR đỉnh chỉ đạt $3,360\,\text{LSB}$, **hoàn toàn nằm trong dải an toàn và không bao giờ bị tràn số**.
 
-3. **Về Bộ Lọc FIR 32 Hệ Số (Mảng `0x0824` Đỉnh $715\,\text{Hz}$):**  
-   * **Trả lời:** Mảng `0x0824` được thiết kế có chủ đích dựa trên đặc tính cộng hưởng cơ học bệ đỡ vòng bi (Bearing Housing Resonance Carrier) của máy CWRU. Toàn bộ trọng số NPU HIL đã được huấn luyện trên mảng này. **Giữ nguyên 100% mảng `0x0824` trên phần cứng FPGA**.
+3. **Về Bộ Lọc FIR 32 Hệ Số (Mảng Pha Tối Thiểu Thực `0xD0B8` Đỉnh $715\,\text{Hz}$):**  
+   * **Phát hiện & Hiệu chỉnh cốt tử (Toàn & Tài):** Trước đây mảng hệ số trong RTL bị đảo ngược thứ tự (bắt đầu bằng `0x0824`), khiến bộ lọc mang bản chất Maximum Phase với độ trễ xung va đập kéo dài tới 29 mẫu ($2.42\,\text{ms}$).
+   * **Đã chuẩn hóa về True Minimum-Phase:** Đã đảo ngược mảng hệ số về đúng chuẩn pha tối thiểu (bắt đầu từ `0xD0B8` đến `0x0824`), đưa toàn bộ 29 điểm không vào trong vòng tròn đơn vị. Đỉnh xung va đập phản ứng ngay tại Tap 2 ($0.167\,\text{ms}$, nhanh gấp **14.5 lần** cho bảo vệ ngắt SIL-2) mà vẫn bảo toàn $100\%$ đáp tuyến biên độ $|H(f)|$. Cả Python và Verilog RTL đều đã đồng bộ mảng `0xD0B8` này.
 
 4. **Về Tần Số Cắt Envelope Demodulator ($1,200\,\text{Hz}$):**  
    * **Trả lời:** ĐÚNG! Con số $1000\,\text{Hz}$ là di tích ghi chú cũ từ profile cảm biến IIS3DWB ($13.333\,\text{kHz}$). Hệ số thực tế trong Verilog là chuẩn **$1,200.0\,\text{Hz}$** ($W_n = 0.20$ tại $12\,\text{kHz}$). Mã nguồn Python [`src/dsp/pipeline.py`](file:///d:/Gitrepo/VIbraDistill/src/dsp/pipeline.py) đã được khóa chặt sang $1,200\,\text{Hz}$.
