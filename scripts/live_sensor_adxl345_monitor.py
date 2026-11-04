@@ -27,6 +27,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+REPO_DIR = r'D:\Gitrepo\VIbraDistill'
+if not os.path.exists(os.path.join(BASE_DIR, 'src', 'dsp')) and os.path.exists(os.path.join(REPO_DIR, 'src', 'dsp')):
+    BASE_DIR = REPO_DIR
 sys.path.insert(0, BASE_DIR)
 
 from src.dsp.pipeline import StreamingDSPPipeline
