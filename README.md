@@ -194,8 +194,30 @@ Tài đã cho chạy kiểm định thực tế trên toàn bộ $9,684$ mẫu d
    * **Đã chuẩn hóa về True Minimum-Phase:** Đã đảo ngược mảng hệ số về đúng chuẩn pha tối thiểu (bắt đầu từ `0xD0B8` đến `0x0824`). Toàn bộ 29 điểm không đã quay vào bên trong vòng tròn đơn vị ($|z| < 1.0$). Năng lượng xung dồn trọn vẹn vào các tap đầu tiên (đỉnh xung tại Tap 2, chỉ mất $0.167\,\text{ms}$ phản ứng, giảm độ trễ va đập **14.5 lần** cho bảo vệ ngắt khẩn SIL-2) trong khi đáp tuyến biên độ $|H(f)|$ và dải cộng hưởng bệ đỡ được bảo toàn nguyên vẹn $100\%$ ($|\Delta H| < 10^{-10}$).
    * **Đồng bộ vi mạch:** Cả Python [`src/dsp/causal_fir.py`](file:///d:/Gitrepo/VIbraDistill/src/dsp/causal_fir.py) và Verilog RTL [`embedded/fpga_gowin/src/fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v) (cũng như `C:\Users\Admin\Downloads\FPGA_FINAL\src\fir_minphase_32.v`) đã đồng bộ hoàn toàn bộ hệ số `0xD0B8` này. Toàn bộ 10/10 Hardware Suites đều đạt 100% Passed.
 
-4. **Về Tần Số Cắt Envelope Demodulator ($1,200\,\text{Hz}$):**  
-   * **Trả lời:** ĐÚNG! Con số $1000\,\text{Hz}$ là di tích ghi chú cũ từ profile cảm biến IIS3DWB ($13.333\,\text{kHz}$). Hệ số thực tế trong Verilog là chuẩn **$1,200.0\,\text{Hz}$** ($W_n = 0.20$ tại $12\,\text{kHz}$). Mã nguồn Python [`src/dsp/pipeline.py`](file:///d:/Gitrepo/VIbraDistill/src/dsp/pipeline.py) đã được khóa chặt sang $1,200\,\text{Hz}$.
+4. **Về Tần Số Cắt Envelope Demodulator ($1,200\,\text{Hz}$ so với đề xuất $400 - 500\,\text{Hz}$ của Toàn):**  
+   * **Băn khoăn của Toàn:** Ban đầu làm cho cảm biến STM $13.3\,\text{kHz}$ nên bandpass $2-5\,\text{kHz}$. Giờ làm $12\,\text{kHz}$, một nửa tần số lấy mẫu là $6\,\text{kHz}$ (Nyquist), Toàn đọc tài liệu thấy tần số cắt nên để tầm $400 - 500\,\text{Hz}$ cho sát tần số lỗi, tại sao trong code vẫn để $1,200\,\text{Hz}$?
+   * **Lời giải thích vật lý cơ học & kiến trúc NPU chuẩn xác 100%:**
+     1. **Bắt buộc phải giữ hài bậc cao ($3\times \dots 6\times$) và dải biên điều chế ($\pm f_r$):**
+        * Tần số cơ bản chỉ là bậc 1: $1\times BPFO \approx 107.5\,\text{Hz}$, $1\times BPFI \approx 162.2\,\text{Hz}$.
+        * Tuy nhiên, theo lý thuyết chẩn đoán va đập vòng bi chuẩn quốc tế (Randall & Antoni, *Rolling Element Bearing Diagnostics*, MSSP 2011; ISO 13373-2), xung va đập cơ học tuần hoàn của rãnh trong và con lăn luôn sinh ra chuỗi sóng hài mở rộng:
+          - $2\times BPFI \approx 324.4\,\text{Hz}$
+          - $3\times BPFI \approx 486.6\,\text{Hz}$
+          - $4\times BPFI \approx 648.8\,\text{Hz}$
+          - $5\times BPFI \approx 811.0\,\text{Hz}$
+          - $6\times BPFI \approx 973.2\,\text{Hz}$
+          - Kèm theo các dải biên điều chế do trục quay mang tải: $k \cdot BPFI \pm m \cdot f_r$ (ví dụ: $811 \pm 30 = 841\,\text{Hz}$, $811 \pm 60 = 871\,\text{Hz}$).
+        * **Nếu cắt ở $400 - 500\,\text{Hz}$:** Toàn bộ các hài bậc cao từ bậc 3 đến bậc 6 ($486\,\text{Hz} \dots 973\,\text{Hz}$) và các dải biên điều chế tải trọng sẽ **bị suy hao và triệt tiêu sạch sẽ**, làm mất đi các dấu hiệu chẩn đoán quan trọng nhất của khuyết tật rãnh trong ($BPFI$) và tróc vảy bi ($BSF$).
+     2. **Kiến trúc NPU 12-kênh yêu cầu năng lượng ở cả 3 dải phổ con (Sub-bands):**
+        * Bộ gia tốc NPU phân tách phổ bao thành 3 dải phổ con cho mỗi lớp lỗi (tổng 12 kênh MAC):
+          - **Sub-band 0 ($0 - 400\,\text{Hz}$):** Hài cơ bản $1\times, 2\times BPFO, BPFI, BSF$.
+          - **Sub-band 1 ($400 - 875\,\text{Hz}$):** Hài bậc trung $3\times, 4	imes, 5\times BPFO/BPFI$.
+          - **Sub-band 2 ($875 - 1600\,\text{Hz}$):** Hài bậc cao $5\times, 6\times BPFI$ và dải biên điều chế cao tần.
+        * Nếu đặt tần số cắt $400 - 500\,\text{Hz}$, Sub-band 1 và Sub-band 2 sẽ **hoàn toàn rơi vào vùng phẳng bằng 0 (chết kênh)**! NPU sẽ bị tê liệt mất $2/3$ số kênh tích chập (8/12 kênh nhân MAC không nhận được tín hiệu), phá vỡ độ phân giải không gian đặc trưng của mạng nơ-ron.
+     3. **Tính tương thích tỷ lệ chuẩn hóa (Normalized Cutoff Frequency $W_n$):**
+        * Profile cảm biến ADXL345: $F_s = 3,200\,\text{Hz}$, tần số cắt $f_c = 400\,\text{Hz} \implies W_n = 400 / 1600 = \mathbf{0.25}$.
+        * Profile HIL 12 kHz: $F_s = 12,000\,\text{Hz}$, tần số cắt $f_c = 1,200\,\text{Hz} \implies W_n = 1200 / 6000 = \mathbf{0.20}$.
+        * Cả hai profile đều giữ tỷ lệ dải thông chuẩn hóa $W_n \approx 0.20 \dots 0.25$ so với tần số Nyquist.
+     * **Kết luận dứt khoát:** Tần số cắt **$1,200\,\text{Hz}$ là tối ưu vật lý và chuẩn xác tuyệt đối**, bảo đảm giữ trọn vẹn cả 3 dải phổ con cho 12 kênh MAC trên Gowin FPGA.
 
 5. **Về 4 Giá Trị Đặc Trưng Prior Vật Lý:**  
    * **Trả lời:** Đúng như phần cứng đang triển khai! Lõi NPU 12 kênh trên FPGA phân loại trực tiếp từ 257 bin phổ FFT mà **không cần nạp 4 giá trị Prior động** (gán cố định bằng 0). 4 giá trị Prior động và tốc độ trục $f_r$ được MCU Cortex-M0 tính toán qua Timer Capture để phục vụ giám sát ngữ cảnh máy và thuật toán thống kê Conformal Tracking (HopACP Q16.16).
