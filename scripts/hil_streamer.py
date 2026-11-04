@@ -26,6 +26,9 @@ import argparse
 import numpy as np
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+REPO_DIR = r"D:\Gitrepo\VIbraDistill"
+if not os.path.exists(os.path.join(BASE_DIR, 'src', 'dsp')) and os.path.exists(os.path.join(REPO_DIR, 'src', 'dsp')):
+    BASE_DIR = REPO_DIR
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
@@ -93,7 +96,7 @@ def main():
         print("    -> Packet Serialization & CRC-16 Verified bit-true (1,036 Bytes/frame).")
 
     # 2. Dataset Preparation
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    base_dir = BASE_DIR
     if args.dataset == "pronostia":
         pronostia_dir = os.path.join(base_dir, "data", "PRONOSTIA_FEMTO_Dataset")
         csv_files = load_pronostia_bearing_files(pronostia_dir)
