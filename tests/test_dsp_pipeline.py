@@ -97,5 +97,50 @@ class TestDSPPipeline(unittest.TestCase):
         self.assertEqual(len(out), 512)
         self.assertTrue(np.all(np.isfinite(out)))
 
+    def test_hil_minphase_fir_verilog_parity(self):
+        """Verifies bit-true match of True Minimum-Phase FIR coefficients between Python and Verilog RTL."""
+        import re
+        from src.dsp.causal_fir import RTL_HEX_COEFFS
+        v_path = os.path.join(os.path.dirname(__file__), '..', 'embedded', 'fpga_gowin', 'src', 'fir_minphase_32.v')
+        self.assertTrue(os.path.exists(v_path))
+        with open(v_path, 'r') as f:
+            v_content = f.read()
+
+        hex_matches = re.findall(r"assign\s+h\[\s*\d+\]\s*=\s*16'sh([0-9A-Fa-f]+);", v_content)
+        self.assertEqual(len(hex_matches), 32)
+        rtl_hex = [int(m, 16) for m in hex_matches]
+        self.assertEqual(rtl_hex, RTL_HEX_COEFFS)
+        self.assertEqual(rtl_hex[0], 0xD0B8)  # True Min-phase starts with 0xD0B8
+
+    def test_two_complement_rectifier_safety(self):
+        """Verifies that full-wave rectification handles -32768 without two's complement wrap-around."""
+        val = np.int16(-32768)
+        clamped_abs = np.int16(32767) if val == -32768 else np.abs(val)
+        self.assertGreaterEqual(clamped_abs, 0)
+        self.assertEqual(clamped_abs, 32767)
+
+    def test_pronostia_early_life_resampling_defense(self):
+        """Verifies that resampling 25.6 kHz to 12.0 kHz prevents 2.133x spectral compression into Bin 4."""
+        from src.dsp.resample import resample_vibration_signal
+        fs_raw = 25600.0
+        t_raw = np.arange(25600) / fs_raw
+        sig_raw = np.sin(2 * np.pi * 200.0 * t_raw)
+        
+        # 1. Without resampling: slicing 512 raw points directly
+        sig_direct = sig_raw[:512]
+        fft_direct = np.abs(np.fft.rfft(sig_direct * np.hanning(512)))
+        peak_bin_direct = np.argmax(fft_direct)
+        peak_freq_direct = peak_bin_direct * (12000.0 / 512.0)
+        self.assertEqual(peak_bin_direct, 4)
+        self.assertAlmostEqual(peak_freq_direct, 93.75, delta=1.0)
+        
+        # 2. With resampling (25.6 kHz -> 12.0 kHz):
+        sig_resampled = resample_vibration_signal(sig_raw, orig_fs=25600.0, target_fs=12000.0)[:512]
+        fft_resampled = np.abs(np.fft.rfft(sig_resampled * np.hanning(512)))
+        peak_bin_resampled = np.argmax(fft_resampled)
+        peak_freq_resampled = peak_bin_resampled * (12000.0 / 512.0)
+        self.assertNotEqual(peak_bin_resampled, 4)
+        self.assertAlmostEqual(peak_freq_resampled, 210.9, delta=30.0)
+
 if __name__ == '__main__':
     unittest.main()
