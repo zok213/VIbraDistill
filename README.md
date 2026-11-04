@@ -21,7 +21,7 @@
 **Người gửi:** Tài (Porygon Team - Tech Lead & AI/DSP Silicon Architect)  
 **Người nhận:** Đội ngũ Kỹ thuật Phần cứng FPGA / MCU (Toàn, Thiện, Quang, Kiệt)  
 **Thời gian cập nhật:** 04/11/2026 (Đã kiểm chứng bit-true trên Silicon Gowin, ARM Cortex-M0 và 10 ROM suites)  
-**Trạng thái kiểm định:** Pass 100% 10/10 Hardware ROM Suites, Pass 37/37 Pytest, Bit-True RTL Co-Simulation ModelSim
+**Trạng thái kiểm định:** Pass 100% 10/10 Hardware ROM Suites, Pass 40/40 Pytest, Bit-True RTL Co-Simulation ModelSim
 
 ---
 
@@ -68,7 +68,7 @@ Khi cắm cảm biến ADXL345 vào mô hình động cơ DC mini đồ chơi, h
    * *Đã xử lý:* **Đã chuyển sang Snapshot #1760** (điểm uốn khởi phát nứt vi mô - Incipient Knee-Point, RMS = $111.9\,\text{LSB}$). NPU tính toán điểm số: Normal = $1062$, Inner = $729$, Outer = $151$, Ball = $1493$ (Logits: $[+33, +22, +4, +46]$) $\implies$ **Class 3: Ball Fault Incipient**, **RUL = 42.0%**.
 5. **Đồng bộ toàn diện vào workspace của Toàn:**  
    * Đã sao chép trực tiếp vào `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\` và `test_vectors\`.  
-   * Đạt **10/10 Hardware ROM Suites Passed** và **37/37 Pytest Tests Passed**.
+   * Đạt **10/10 Hardware ROM Suites Passed** và **40/40 Pytest Tests Passed**.
 
 ---
 
