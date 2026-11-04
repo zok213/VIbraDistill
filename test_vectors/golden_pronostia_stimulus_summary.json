@@ -7,25 +7,25 @@
     "scaled_peak_lsb": 196,
     "npu_pred_class": 0,
     "npu_scores": [
-      1875,
-      710,
-      350,
-      881
+      1223,
+      582,
+      322,
+      656
     ],
-    "vacuity_u": 0.0645,
+    "vacuity_u": 0.0851,
     "rul_pct_ui": 100.0,
     "sil2_status": "NORMAL_OK",
     "spectrum_top10": [
       127,
-      62,
-      19,
+      58,
+      22,
       27,
-      19,
+      14,
+      15,
+      21,
+      16,
       9,
-      9,
-      13,
-      11,
-      6
+      10
     ],
     "stimulus_hex_file": "roms/stimulus_pronostia_early_life.hex",
     "cosim_golden_file": "test_vectors/golden_pronostia_early_life_spectrum_int8.hex"
@@ -38,24 +38,24 @@
     "scaled_peak_lsb": 366,
     "npu_pred_class": 3,
     "npu_scores": [
-      1062,
-      729,
-      151,
-      1493
+      1185,
+      443,
+      242,
+      1482
     ],
-    "vacuity_u": 0.0714,
+    "vacuity_u": 0.0741,
     "rul_pct_ui": 42.0,
     "sil2_status": "WARNING_ADVISORY",
     "spectrum_top10": [
       127,
-      71,
+      72,
       23,
-      10,
-      10,
-      18,
+      12,
+      9,
+      14,
       20,
-      11,
-      5,
+      15,
+      8,
       0
     ],
     "stimulus_hex_file": "roms/stimulus_pronostia_mid_life.hex",
@@ -69,25 +69,25 @@
     "scaled_peak_lsb": 4500,
     "npu_pred_class": 3,
     "npu_scores": [
-      325,
-      905,
-      816,
-      1700
+      430,
+      516,
+      1054,
+      1561
     ],
-    "vacuity_u": 0.0656,
+    "vacuity_u": 0.0689,
     "rul_pct_ui": 1.0,
     "sil2_status": "EMERGENCY_TRIP",
     "spectrum_top10": [
       127,
-      69,
-      9,
+      70,
+      11,
       8,
       12,
-      25,
-      31,
-      35,
-      21,
-      4
+      22,
+      27,
+      34,
+      22,
+      8
     ],
     "stimulus_hex_file": "roms/stimulus_pronostia_end_of_life.hex",
     "cosim_golden_file": "test_vectors/golden_pronostia_end_of_life_spectrum_int8.hex"

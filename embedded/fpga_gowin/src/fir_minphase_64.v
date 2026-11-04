@@ -23,41 +23,41 @@ module fir_minphase_64 #(
     reg signed [DATA_WIDTH-1:0] shift_reg [0:TAPS-1];
     
     // Minimum-Phase Filter Coefficients (Q1.15 Fixed-Point Format)
-    // Factored via complex cepstrum to force all zeros inside unit circle
+    // Energy concentrated at earliest taps (coeff[0..3] large) for minimal latency and zero pre-cursor ringing
     wire signed [COEFF_WIDTH-1:0] coeff [0:TAPS-1];
     
-    assign coeff[ 0] = 16'sh0824; assign coeff[ 1] = 16'sh0AB1;
-    assign coeff[ 2] = 16'sh0F3A; assign coeff[ 3] = 16'sh14C2;
-    assign coeff[ 4] = 16'sh198D; assign coeff[ 5] = 16'sh1C76;
-    assign coeff[ 6] = 16'sh1C2A; assign coeff[ 7] = 16'sh17B3;
-    assign coeff[ 8] = 16'sh0EE4; assign coeff[ 9] = 16'sh02EE;
-    assign coeff[10] = 16'shF4BE; assign coeff[11] = 16'shE689;
-    assign coeff[12] = 16'shDA62; assign coeff[13] = 16'shD21E;
-    assign coeff[14] = 16'shCEEE; assign coeff[15] = 16'shD2DE;
-    assign coeff[16] = 16'shDDDE; assign coeff[17] = 16'shEE1C;
-    assign coeff[18] = 16'sh015E; assign coeff[19] = 16'sh1476;
-    assign coeff[20] = 16'sh2431; assign coeff[21] = 16'sh2DCA;
-    assign coeff[22] = 16'sh2EEA; assign coeff[23] = 16'sh27B8;
-    assign coeff[24] = 16'sh18CE; assign coeff[25] = 16'sh04DE;
-    assign coeff[26] = 16'shEF2A; assign coeff[27] = 16'shDBA2;
-    assign coeff[28] = 16'shCCC2; assign coeff[29] = 16'shC514;
-    assign coeff[30] = 16'shC6AE; assign coeff[31] = 16'shD0B8;
-    assign coeff[32] = 16'shE12C; assign coeff[33] = 16'shF5A2;
-    assign coeff[34] = 16'sh0A46; assign coeff[35] = 16'sh1B74;
-    assign coeff[36] = 16'sh26AE; assign coeff[37] = 16'sh2A3E;
-    assign coeff[38] = 16'sh251C; assign coeff[39] = 16'sh184A;
-    assign coeff[40] = 16'sh06CE; assign coeff[41] = 16'shF412;
-    assign coeff[42] = 16'shE3CA; assign coeff[43] = 16'shD8AE;
-    assign coeff[44] = 16'shD498; assign coeff[45] = 16'shD812;
-    assign coeff[46] = 16'shE254; assign coeff[47] = 16'shF1AE;
-    assign coeff[48] = 16'sh02CE; assign coeff[49] = 16'sh12B0;
-    assign coeff[50] = 16'sh1DD8; assign coeff[51] = 16'sh2210;
-    assign coeff[52] = 16'sh1EC4; assign coeff[53] = 16'sh13A2;
-    assign coeff[54] = 16'sh034E; assign coeff[55] = 16'shF28A;
-    assign coeff[56] = 16'shE548; assign coeff[57] = 16'shDDF2;
-    assign coeff[58] = 16'shDC74; assign coeff[59] = 16'shE0AE;
-    assign coeff[60] = 16'shEB92; assign coeff[61] = 16'shF9E0;
-    assign coeff[62] = 16'sh0942; assign coeff[63] = 16'sh15F8;
+    assign coeff[ 0] = 16'shD0B8; assign coeff[ 1] = 16'shC6AE;
+    assign coeff[ 2] = 16'shC514; assign coeff[ 3] = 16'shCCC2;
+    assign coeff[ 4] = 16'shDBA2; assign coeff[ 5] = 16'shEF2A;
+    assign coeff[ 6] = 16'sh04DE; assign coeff[ 7] = 16'sh18CE;
+    assign coeff[ 8] = 16'sh27B8; assign coeff[ 9] = 16'sh2EEA;
+    assign coeff[10] = 16'sh2DCA; assign coeff[11] = 16'sh2431;
+    assign coeff[12] = 16'sh1476; assign coeff[13] = 16'sh015E;
+    assign coeff[14] = 16'shEE1C; assign coeff[15] = 16'shDDDE;
+    assign coeff[16] = 16'shD2DE; assign coeff[17] = 16'shCEEE;
+    assign coeff[18] = 16'shD21E; assign coeff[19] = 16'shDA62;
+    assign coeff[20] = 16'shE689; assign coeff[21] = 16'shF4BE;
+    assign coeff[22] = 16'sh02EE; assign coeff[23] = 16'sh0EE4;
+    assign coeff[24] = 16'sh17B3; assign coeff[25] = 16'sh1C2A;
+    assign coeff[26] = 16'sh1C76; assign coeff[27] = 16'sh198D;
+    assign coeff[28] = 16'sh14C2; assign coeff[29] = 16'sh0F3A;
+    assign coeff[30] = 16'sh0AB1; assign coeff[31] = 16'sh0824;
+    assign coeff[32] = 16'sh15F8; assign coeff[33] = 16'sh0942;
+    assign coeff[34] = 16'shF9E0; assign coeff[35] = 16'shEB92;
+    assign coeff[36] = 16'shE0AE; assign coeff[37] = 16'shDC74;
+    assign coeff[38] = 16'shDDF2; assign coeff[39] = 16'shE548;
+    assign coeff[40] = 16'shF28A; assign coeff[41] = 16'sh034E;
+    assign coeff[42] = 16'sh13A2; assign coeff[43] = 16'sh1EC4;
+    assign coeff[44] = 16'sh2210; assign coeff[45] = 16'sh1DD8;
+    assign coeff[46] = 16'sh12B0; assign coeff[47] = 16'sh02CE;
+    assign coeff[48] = 16'shF1AE; assign coeff[49] = 16'shE254;
+    assign coeff[50] = 16'shD812; assign coeff[51] = 16'shD498;
+    assign coeff[52] = 16'shD8AE; assign coeff[53] = 16'shE3CA;
+    assign coeff[54] = 16'shF412; assign coeff[55] = 16'sh06CE;
+    assign coeff[56] = 16'sh184A; assign coeff[57] = 16'sh251C;
+    assign coeff[58] = 16'sh2A3E; assign coeff[59] = 16'sh26AE;
+    assign coeff[60] = 16'sh1B74; assign coeff[61] = 16'sh0A46;
+    assign coeff[62] = 16'shF5A2; assign coeff[63] = 16'shE12C;
 
     integer i;
     reg signed [35:0] accumulator;
