@@ -21,8 +21,9 @@ module envelope_demodulator #(
     output reg                           valid_out   // Output Valid Strobe
 );
 
-    // Step 1: Full-Wave Absolute Value Rectification
-    wire signed [WIDTH-1:0] v_rect = (y_filtered < 0) ? -y_filtered : y_filtered;
+    // Step 1: Full-Wave Absolute Value Rectification with Two's Complement -32768 Clamp
+    wire signed [WIDTH-1:0] v_rect = (y_filtered == 16'sh8000) ? 16'sh7FFF :
+                                     (y_filtered < 0) ? -y_filtered : y_filtered;
 
     // Fixed-Point Butterworth 2nd-Order LPF Coefficients Scaled in Q1.15 Format
     // Dual-Mode Selection:
