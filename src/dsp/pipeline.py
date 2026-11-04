@@ -17,7 +17,7 @@ class StreamingDSPPipeline:
     """
     End-to-End DSP Preprocessing Pipeline bit-faithful to Gowin FPGA RTL.
     Supports two dedicated hardware profiles:
-      - Profile 1: HIL CWRU / PRONOSTIA (Fs=12.0 kHz, Bandpass=2000-5000 Hz, Fc=1200 Hz)
+      - Profile 1: HIL CWRU / PRONOSTIA (Fs=12.0 kHz, FIR Peaking ~720 Hz [400-1100 Hz], Fc=1200 Hz)
       - Profile 2: Native ADXL345       (Fs=3.2 kHz,  Bandpass=500-1400 Hz,  Fc=400 Hz)
     """
     def __init__(self, fs=12000.0, window_size=512, fir_taps=32, 

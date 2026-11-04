@@ -43,7 +43,7 @@ graph TD
 ### 1. `embedded/fpga_gowin/` — Verilog RTL Core
 * **`src/fir_minphase_32.v`**: 
   - 32-tap causal minimum-phase bandpass FIR filter:
-    - Profile 1 (HIL CWRU / PRONOSTIA): $2000 - 5000$ Hz @ $f_s = 12.0$ kHz. Group delay: 2 samples ($0.167$ ms).
+    - Profile 1 (HIL CWRU / PRONOSTIA): $400 - 1100$ Hz (Peaking band $\sim 720$ Hz, $+15.0$ dB gain) @ $f_s = 12.0$ kHz. Group delay: 2 samples ($0.167$ ms).
     - Profile 2 (Native ADXL345): $500 - 1400$ Hz @ $f_s = 3.2$ kHz. Group delay: 2.76 samples ($0.86$ ms).
   - 4-multiplier time-multiplexed folded MAC architecture: executes 32 taps in exactly 8 clock cycles (80 ns @ 100 MHz).
   - Synchronous reset (`rst_n`) preventing LUT explosion in Gowin DSP18E slices.

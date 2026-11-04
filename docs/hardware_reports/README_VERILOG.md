@@ -9,7 +9,7 @@ Hệ thống **VibraDistill-Edge** trên FPGA Gowin thực hiện pipeline xử 
 
 ```mermaid
 flowchart TD
-    A["Raw Vibration Data<br>(12 kHz / 16-bit HIL Stimulus)"] --> B["fir_minphase_32.v<br>(Bandpass FIR 2-5 kHz)"]
+    A["Raw Vibration Data<br>(12 kHz / 16-bit HIL Stimulus)"] --> B["fir_minphase_32.v<br>(Min-Phase FIR ~720 Hz)"]
     B --> C["envelope_demodulator.v<br>(|x| + 2nd IIR LPF 1.2 kHz)"]
     C --> D["hann_window.v<br>(512-pt Hann Window ROM)"]
     D --> E["fft_wrapper.v & fft.v<br>(Gowin 512-pt Radix-2 Complex FFT)"]

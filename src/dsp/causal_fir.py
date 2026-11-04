@@ -8,7 +8,7 @@ import numpy as np
 import scipy.signal as signal
 from scipy.fft import fft, ifft
 
-# Exact 32 Q1.15 coefficients from Gowin RTL `fir_minphase_32.v` (Profile 1: HIL CWRU / PRONOSTIA 12.0 kHz)
+# Exact 32 Q1.15 coefficients from Gowin RTL `fir_minphase_32.v` (Profile 1: HIL CWRU / PRONOSTIA 12.0 kHz, Peak ~720 Hz [400-1100 Hz])
 # Minimum-phase ordering: energy concentrated at earliest taps (0..3), roots strictly inside unit circle (|z| < 1)
 RTL_HEX_COEFFS = [
     0xD0B8, 0xC6AE, 0xC514, 0xCCC2, 0xDBA2, 0xEF2A, 0x04DE, 0x18CE,

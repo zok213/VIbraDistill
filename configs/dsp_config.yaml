@@ -7,14 +7,14 @@ sampling:
 
 fir_filter:
   num_taps: 32                 # Gowin 4-MAC folded architecture (8 clock cycles @ 100 MHz)
-  passband: [2000.0, 5000.0]   # Resonance excitation band (Hz)
+  passband: [400.0, 1100.0]    # Actual RTL peaking band centered at ~720 Hz (+15.0 dB gain @ 12 kHz)
   use_rtl_coeffs: true         # Use exact Q1.15 coefficients from fir_minphase_32.v
 
 envelope_demodulator:
   rectifier: "full_wave_abs"   # |x[n]|
   filter_type: "iir_butterworth"
   order: 2
-  cutoff_fc: 1000.0            # Baseband demodulation cutoff (Hz)
+  cutoff_fc: 1200.0            # Baseband demodulation cutoff (Hz) matching 18-bit Gowin RTL
 
 fft:
   points: 512

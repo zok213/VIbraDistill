@@ -49,7 +49,7 @@ Hệ thống **VibraDistill-Edge** giải quyết bài toán giám sát rung đ�
 ```mermaid
 flowchart TD
     subgraph SENSOR["1. Tầng Thu Thập & DSP Vật Lý"]
-        A["Vibration Accelerometer (12 kHz)"] --> B["Causal Bandpass FIR (2-5 kHz)"]
+        A["Vibration Accelerometer (12 kHz)"] --> B["Causal Min-Phase FIR (~720 Hz)"]
         B --> C["Full-Wave Rectifier + 1200 Hz Envelope"]
         C --> D["Symmetric Hann 512 Window"]
         D --> E["512-point Real FFT"]

@@ -4,7 +4,8 @@
 // Target:      Gowin GW2A-LV18PG256 (Primer 20K) DSP Multiplier/MAC Slices
 // Architecture: 4-Multiplier Time-Multiplexed Folded MAC Architecture
 //              (Executes 32 taps in 8 clock cycles @ 100 MHz, taking 80 ns)
-// Passband:    2000 Hz - 5000 Hz @ Fs = 12.0 kHz (Profile 1: HIL CWRU / PRONOSTIA)
+// Passband:    Actual Peaking Band ~720 Hz (400 - 1100 Hz, +15.0 dB Peak Gain @ Fs = 12.0 kHz HIL CWRU / PRONOSTIA)
+// Note:        Coefficients are matched bit-true to AI model training (use_rtl_coeffs=True).
 // Features:    Synchronous Reset (prevents LUT explosion in Gowin DSP18E primitives),
 //              Minimum-Phase causal impulse response, zero pre-cursor ringing.
 // ============================================================================
