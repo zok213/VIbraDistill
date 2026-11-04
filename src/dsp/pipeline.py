@@ -16,7 +16,9 @@ from .kinematics import extract_kinematic_energy_prior, SKF6205Geometry
 class StreamingDSPPipeline:
     """
     End-to-End DSP Preprocessing Pipeline bit-faithful to Gowin FPGA RTL.
-    Supports both IIS3DWB (Fs=12k/13.33k) and ADXL345 (Fs=3.2k) hardware profiles.
+    Supports two dedicated hardware profiles:
+      - Profile 1: HIL CWRU / PRONOSTIA (Fs=12.0 kHz, Bandpass=2000-5000 Hz, Fc=1200 Hz)
+      - Profile 2: Native ADXL345       (Fs=3.2 kHz,  Bandpass=500-1400 Hz,  Fc=400 Hz)
     """
     def __init__(self, fs=12000.0, window_size=512, fir_taps=32, 
                  envelope_cutoff=None, use_rtl_coeffs=True,
@@ -35,9 +37,12 @@ class StreamingDSPPipeline:
         self.fir = CausalFIRFilter(use_rtl_coeffs=use_rtl_coeffs, num_taps=fir_taps, fs=self.fs, sensor_type=sensor_type)
         
         # Hardware Stage 2: Causal Envelope Demodulator
-        # Mode 2 RTL coefficients (0x08A4, 0x1148, 0x96E8, 0x34B2) have an exact mathematical cutoff of 1201.2 Hz @ Fs=12000 Hz
-        use_envelope_rtl = use_rtl_coeffs if abs(self.fs - 12000.0) < 100.0 else False
-        self.envelope = CausalEnvelopeDemodulator(fc=envelope_cutoff, fs=self.fs, use_rtl_coeffs=use_envelope_rtl)
+        # Profile 1 RTL coefficients (B0=2210, B1=4421, B2=2210, A1=-37453, A2=13527) give exact 1200 Hz cutoff @ Fs=12000 Hz
+        # Profile 2 RTL coefficients (B0=3199, B1=6398, B2=3199, A1=-30894, A2=10923) give exact 400 Hz cutoff @ Fs=3200 Hz
+        is_adxl = (sensor_type == 'adxl345' or abs(self.fs - 3200.0) < 100.0)
+        is_hil = (sensor_type == 'hil_12k' or abs(self.fs - 12000.0) < 500.0)
+        profile_name = 'adxl345' if is_adxl else ('hil_12k' if is_hil else None)
+        self.envelope = CausalEnvelopeDemodulator(fc=envelope_cutoff, fs=self.fs, use_rtl_coeffs=use_rtl_coeffs, profile=profile_name)
         
         # Hardware Stage 3: Hann Window (512-point fixed ROM in FPGA)
         self.hann_window = 0.5 * (1.0 - np.cos(2.0 * np.pi * np.arange(self.window_size) / (self.window_size - 1)))

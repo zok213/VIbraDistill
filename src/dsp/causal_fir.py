@@ -8,7 +8,7 @@ import numpy as np
 import scipy.signal as signal
 from scipy.fft import fft, ifft
 
-# Exact 32 Q1.15 coefficients from Gowin RTL `fir_minphase_32.v` (IIS3DWB / CWRU 12.0 kHz / 13.333 kHz)
+# Exact 32 Q1.15 coefficients from Gowin RTL `fir_minphase_32.v` (Profile 1: HIL CWRU / PRONOSTIA 12.0 kHz)
 # Minimum-phase ordering: energy concentrated at earliest taps (0..3), roots strictly inside unit circle (|z| < 1)
 RTL_HEX_COEFFS = [
     0xD0B8, 0xC6AE, 0xC514, 0xCCC2, 0xDBA2, 0xEF2A, 0x04DE, 0x18CE,
@@ -86,7 +86,7 @@ class CausalFIRFilter:
     """
     Streaming Causal FIR Filter with persistent internal delay line state.
     Matches Gowin FPGA 4-MAC folded architecture delay line bit-for-bit.
-    Supports both IIS3DWB (Fs=12k/13.33k) and ADXL345 (Fs=3.2k) hardware profiles.
+    Supports both Profile 1: HIL 12 kHz and Profile 2: Native ADXL345 3.2 kHz hardware profiles.
     """
     def __init__(self, coeffs=None, use_rtl_coeffs=True, num_taps=32, fs=12000, sensor_type='auto'):
         if coeffs is not None:

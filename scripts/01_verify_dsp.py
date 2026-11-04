@@ -40,7 +40,7 @@ def run_dsp_verification():
     
     # 2. Envelope Demodulator Verification
     print("\n[2] Verifying Causal Envelope Demodulator (|x| + 2nd-order IIR LPF)...")
-    env = CausalEnvelopeDemodulator(fc=1000.0, fs=12000.0)
+    env = CausalEnvelopeDemodulator(fc=1200.0, fs=12000.0, use_rtl_coeffs=True)
     # Generate modulated AM carrier: (1 + 0.5*cos(2*pi*50*t)) * sin(2*pi*3000*t)
     t = np.linspace(0, 512/12000, 512, endpoint=False, dtype=np.float32)
     carrier = np.sin(2 * np.pi * 3000 * t)

@@ -4,7 +4,7 @@
 // Target:      Gowin GW2A-LV18PG256 (Primer 20K) DSP Multiplier/MAC Slices
 // Architecture: 4-Multiplier Time-Multiplexed Folded MAC Architecture
 //              (Executes 32 taps in 8 clock cycles @ 100 MHz, taking 80 ns)
-// Passband:    2000 Hz - 5000 Hz @ Fs = 13.333 kHz
+// Passband:    2000 Hz - 5000 Hz @ Fs = 12.0 kHz (Profile 1: HIL CWRU / PRONOSTIA)
 // Features:    Synchronous Reset (prevents LUT explosion in Gowin DSP18E primitives),
 //              Minimum-Phase causal impulse response, zero pre-cursor ringing.
 // ============================================================================
@@ -18,7 +18,7 @@ module fir_minphase_32 #(
 )(
     input  wire                          clk,        // 100 MHz System Clock
     input  wire                          rst_n,      // Synchronous Active-Low Reset
-    input  wire                          sample_en,  // 13.333 kHz Sample Enable Strobe
+    input  wire                          sample_en,  // Sample Enable Strobe (12.0 kHz for HIL or 3.2 kHz for ADXL345)
     input  wire signed [DATA_WIDTH-1:0]  x_in,       // Raw Input Acceleration Sample
     output reg  signed [DATA_WIDTH-1:0]  y_out,      // Filtered Minimum-Phase Sample
     output reg                           valid_out   // Output Valid Strobe

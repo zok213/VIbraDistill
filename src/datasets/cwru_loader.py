@@ -303,7 +303,7 @@ def get_cwru_dataloaders(data_dir: str, batch_size: int = 64, num_workers: int =
       - 'cross_load': Canonical Industrial Benchmark (Train Loads 0, 1, 2 HP -> Test Load 3 HP).
     
     Hardware Profiles:
-      - sensor_type='auto' / 'iis3dwb': Fs = 12.0 kHz / 13.333 kHz
+      - sensor_type='auto' / 'hil_12k': Fs = 12.0 kHz (CWRU Native / PRONOSTIA Resampled)
       - sensor_type='adxl345': Fs = 3,200 Hz with polyphase decimation & 32-tap ADXL345 FIR
     """
     train_transform = None
