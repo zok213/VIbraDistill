@@ -241,7 +241,18 @@ def main():
     s_ball = (cwru_ball[1024:1024+512] * (4500.0 / np.max(np.abs(cwru_ball[1024:1024+512])))).astype(np.int16)
     render_dashboard('case4_ball_fault', 'Hỏng Viên Bi (BSF)', 151, s_ball, w12, biases, dsp, true_rul=12.5)
 
-    # 5. Run-to-Failure Degradation Tracking (PRONOSTIA Bearing 1_3 Terminal Phase)
+    # 5a. PRONOSTIA Early-Life Healthy Baseline (Snapshot #12 - Resampled 25.6k -> 12k)
+    pro_early_path = os.path.join(BASE_DIR, 'data', 'PRONOSTIA_FEMTO_Dataset', 'ieee-phm-2012-data-challenge-dataset-master', 'Full_Test_Set', 'Bearing1_3', 'acc_00012.csv')
+    pro_early_raw = []
+    with open(pro_early_path, 'r') as f:
+        for l in f:
+            pts = l.strip().split(',')
+            if len(pts) >= 5: pro_early_raw.append(float(pts[4]))
+    pro_early_12k = resample_vibration_signal(np.array(pro_early_raw), 25600.0, 12000.0)[:512]
+    s_pro_early = (pro_early_12k * (4500.0 / 28.59)).astype(np.int16) # Unified physical scaling
+    render_dashboard('case5a_pronostia_early_life', 'PRONOSTIA Đầu Vòng Đời Lành Lặn (Snapshot #12)', 12, s_pro_early, w12, biases, dsp, true_rul=100.0)
+
+    # 5b. Run-to-Failure Degradation Tracking (PRONOSTIA Bearing 1_3 Terminal Phase)
     pro_path = os.path.join(BASE_DIR, 'data', 'PRONOSTIA_FEMTO_Dataset', 'ieee-phm-2012-data-challenge-dataset-master', 'Full_Test_Set', 'Bearing1_3', 'acc_02375.csv')
     pro_raw = []
     with open(pro_path, 'r') as f:
@@ -265,7 +276,7 @@ def main():
     render_dashboard('case6_mechanical_ood_gearbox', 'Rung Động Hộp Số Bánh Răng OOD (SEU)', 500, s_seu, w12, biases, dsp, true_rul=0.0, force_ood=True)
 
     print("=" * 80)
-    print(" ALL 6 MASTER DIAGNOSTIC & PROGNOSTIC CASES GENERATED SUCCESSFULLY!")
+    print(" ALL 7 MASTER DIAGNOSTIC & PROGNOSTIC CASES GENERATED SUCCESSFULLY!")
     print("=" * 80)
 
 
