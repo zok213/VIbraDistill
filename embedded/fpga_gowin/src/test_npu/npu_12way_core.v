@@ -13,12 +13,16 @@
 `timescale 1ns / 1ps
 
 module npu_12way_core #(
-    parameter WEIGHT_FILE_BANK0 = "roms/adxl345/npu_weights_bank0.hex",
-    parameter WEIGHT_FILE_BANK1 = "roms/adxl345/npu_weights_bank1.hex",
-    parameter WEIGHT_FILE_BANK2 = "roms/adxl345/npu_weights_bank2.hex",
-    parameter WEIGHT_FILE_BANK3 = "roms/adxl345/npu_weights_bank3.hex",
-    parameter WEIGHT_FILE_BANK4 = "roms/adxl345/npu_weights_bank4.hex",
-    parameter WEIGHT_FILE_BANK5 = "roms/adxl345/npu_weights_bank5.hex"
+    parameter WEIGHT_FILE_BANK0 = "src/roms/hil/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = "src/roms/hil/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = "src/roms/hil/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = "src/roms/hil/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = "src/roms/hil/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = "src/roms/hil/npu_weights_bank5.hex",
+    parameter signed [31:0] BIAS_0 = 32'sd0,
+    parameter signed [31:0] BIAS_1 = -32'sd3,
+    parameter signed [31:0] BIAS_2 = 32'sd8,
+    parameter signed [31:0] BIAS_3 = -32'sd4
 )(
     input  wire                 clk,            // 100 MHz Core Clock
     input  wire                 rst_n,          // Synchronous Active-Low Reset
@@ -51,7 +55,7 @@ module npu_12way_core #(
         if (in_valid) begin
             if (in_addr < 9'd257) begin
                 spectrum_mem[in_addr] <= in_data;
-            end else if (in_addr < 9'd261) begin
+            end else if (in_addr < 9'd261) begin 
                 prior_mem[in_addr - 9'd257] <= in_data;
             end
         end
@@ -126,11 +130,14 @@ module npu_12way_core #(
     // =========================================================================
     localparam S_IDLE      = 3'd0;
     localparam S_COMPUTE   = 3'd1;
-    localparam S_SUM       = 3'd2;
-    localparam S_DECIDE    = 3'd3;
-    localparam S_DONE      = 3'd4;
-
-    reg [2:0]   state;
+    localparam S_DRAIN_1   = 3'd2;
+    localparam S_DRAIN_2   = 3'd3;
+    localparam S_SUM       = 3'd4;
+    localparam S_DECIDE    = 3'd5;
+    localparam S_WAIT_DIV  = 3'd6;
+    localparam S_DONE      = 3'd7;
+    localparam S_CHECK     = 4'd8;
+    reg [3:0]   state;
     reg [8:0]   step_cnt;
 
     // Registers for 4-class scores and evidential Dirichlet uncertainty
@@ -161,7 +168,21 @@ module npu_12way_core #(
         end
     endfunction
 
-    reg [17:0] sum_evidence;
+    reg [17:0]  sum_evidence;
+    reg         div_start;
+    wire [17:0] div_quotient;
+    wire        div_done;
+
+    // 18-bit sequential restoring divider for Dirichlet vacuity (removes combinational /)
+    div_18bit u_div (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .start    (div_start),
+        .dividend (18'd131072),
+        .divisor  (sum_evidence),
+        .quotient (div_quotient),
+        .done     (div_done)
+    );
 
     always @(posedge clk) begin
         if (!rst_n) begin
@@ -182,6 +203,7 @@ module npu_12way_core #(
             score_2         <= 32'sd0;
             score_3         <= 32'sd0;
             sum_evidence    <= 18'd0;
+            div_start       <= 1'b0;
         end else begin
             case (state)
                 S_IDLE: begin
@@ -207,20 +229,27 @@ module npu_12way_core #(
                         mac_en        <= 1'b1;
                     end else begin
                         mac_en <= 1'b0;
-                        state  <= S_SUM;
+                        state  <= S_DRAIN_1;
                     end
                 end
 
+                S_DRAIN_1: begin
+                    // Pipeline drain cycle 1: pipe1 registers capture bin 256
+                    state <= S_DRAIN_2;
+                end
+
+                S_DRAIN_2: begin
+                    // Pipeline drain cycle 2: pipe2 registers capture products of bin 256
+                    state <= S_SUM;
+                end
+
                 S_SUM: begin
-                    // Aggregate 3 sub-bands per class + bit-true trained biases
-                    // Class 0 (Normal):     Channels 0, 1, 2  (Bias = 0)
-                    // Class 1 (Inner BPFI): Channels 3, 4, 5  (Bias = -3)
-                    // Class 2 (Outer BPFO): Channels 6, 7, 8  (Bias = +8)
-                    // Class 3 (Ball BSF):   Channels 9, 10, 11 (Bias = -4)
-                    score_0 <= acc[0] + acc[1] + acc[2] + 32'sd0;
-                    score_1 <= acc[3] + acc[4] + acc[5] - 32'sd3;
-                    score_2 <= acc[6] + acc[7] + acc[8] + 32'sd8;
-                    score_3 <= acc[9] + acc[10] + acc[11] - 32'sd4;
+                    // Final products of bin 256 have accumulated into accum[0..11]
+                    // Aggregate 3 sub-bands per class + bit-true trained parameter biases
+                    score_0 <= acc[0] + acc[1] + acc[2] + BIAS_0;
+                    score_1 <= acc[3] + acc[4] + acc[5] + BIAS_1;
+                    score_2 <= acc[6] + acc[7] + acc[8] + BIAS_2;
+                    score_3 <= acc[9] + acc[10] + acc[11] + BIAS_3;
                     state   <= S_DECIDE;
                 end
 
@@ -249,19 +278,30 @@ module npu_12way_core #(
                     };
 
                     // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
-                    sum_evidence = get_evidence(score_0) + get_evidence(score_1) +
-                                   get_evidence(score_2) + get_evidence(score_3) + 18'd4;
-                    
+                                        // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
+                    sum_evidence <= get_evidence(score_0) + get_evidence(score_1) +
+                                    get_evidence(score_2) + get_evidence(score_3) + 18'd4;
+                    state        <= S_CHECK;
+                end
+
+                S_CHECK: begin
                     if (sum_evidence > 18'd131072) begin
                         vacuity_q15 <= 16'd1;
+                        ood_alert   <= 1'b0;
+                        state       <= S_DONE;
                     end else begin
-                        vacuity_q15 <= (18'd131072 / sum_evidence); // 4 * 32768 = 131072
+                        div_start   <= 1'b1;
+                        state       <= S_WAIT_DIV;
                     end
+                end
 
-                    // 4. Out-of-Distribution Alert (Vacuity > 0.45 -> 14745 in Q15)
-                    ood_alert <= (vacuity_q15 > 16'd14745);
-
-                    state <= S_DONE;
+                S_WAIT_DIV: begin
+                    div_start <= 1'b0;
+                    if (div_done) begin
+                        vacuity_q15 <= div_quotient[15:0];
+                        ood_alert   <= (div_quotient[15:0] > 16'd14745);
+                        state       <= S_DONE;
+                    end
                 end
 
                 S_DONE: begin

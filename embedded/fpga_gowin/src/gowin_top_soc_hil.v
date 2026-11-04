@@ -3,15 +3,15 @@
 
 module gowin_top_soc #(
     // File song rung tho 16-bit (stimulus_cwru_normal, inner, outer, ball)
-    parameter STIMULUS_FILE     = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/stimulus_pronostia_early_life.hex",
+    parameter STIMULUS_FILE     = "src/test_npu/roms/hil/stimulus_pronostia_early_life.hex",
     parameter SAMPLE_DIV        = 8357,   // 100 MHz / 12 kHz
     // 6 Bank trong so NPU cho che do HIL 12 kHz
-    parameter WEIGHT_FILE_BANK0 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank0.hex",
-    parameter WEIGHT_FILE_BANK1 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank1.hex",
-    parameter WEIGHT_FILE_BANK2 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank2.hex",
-    parameter WEIGHT_FILE_BANK3 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank3.hex",
-    parameter WEIGHT_FILE_BANK4 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank4.hex",
-    parameter WEIGHT_FILE_BANK5 = "T:/MCU_FPGA/FPGA_FINAL (2)/src/test_npu/roms/hil/npu_weights_bank5.hex",
+    parameter WEIGHT_FILE_BANK0 = "src/test_npu/roms/hil/npu_weights_bank0.hex",
+    parameter WEIGHT_FILE_BANK1 = "src/test_npu/roms/hil/npu_weights_bank1.hex",
+    parameter WEIGHT_FILE_BANK2 = "src/test_npu/roms/hil/npu_weights_bank2.hex",
+    parameter WEIGHT_FILE_BANK3 = "src/test_npu/roms/hil/npu_weights_bank3.hex",
+    parameter WEIGHT_FILE_BANK4 = "src/test_npu/roms/hil/npu_weights_bank4.hex",
+    parameter WEIGHT_FILE_BANK5 = "src/test_npu/roms/hil/npu_weights_bank5.hex",
     // 4 Bias chuan cua mang NPU o che do HIL
     parameter signed [31:0] BIAS_0 = -32'sd5,
     parameter signed [31:0] BIAS_1 = -32'sd3,
@@ -290,8 +290,8 @@ module gowin_top_soc #(
     reg         spi_start_tx;
     wire        spi_tx_busy;
 
-    // Thu thap co loi phan cung dua vao byte trang thai goi tin SPI
-    wire [15:0] status_flags = {5'd0, err_sync, err_timeout, err_overrun, 5'd0, 1'b1, 2'b00};
+    // Thu thap co loi phan cung dua vao byte trang thai goi tin SPI (bit 11: npu_ood_alert)
+    wire [15:0] status_flags = {4'd0, npu_ood_alert, err_sync, err_timeout, err_overrun, 5'd0, 1'b1, 2'b00};
 
     spi_master_packet #(
         .TOTAL_BYTES (524),
@@ -301,7 +301,6 @@ module gowin_top_soc #(
         .rst_n                  (sys_rst_n),
         .start_tx               (spi_start_tx),
         .npu_pred_class         (npu_pred_class),
-        .npu_ood_alert          (npu_ood_alert),
         .dirichlet_max_evidence (npu_vacuity_q15[15:8]),
         .hardware_status_flags  (status_flags),
         .bram_addr              (spi_bram_addr),
