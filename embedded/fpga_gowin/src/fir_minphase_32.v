@@ -28,24 +28,25 @@ module fir_minphase_32 #(
     reg signed [DATA_WIDTH-1:0] delay_line [0:TAPS-1];
     integer k;
 
-    // Minimum-Phase Filter Coefficients in Q1.15 Format (Reflected roots inside unit circle)
+    // Minimum-Phase Filter Coefficients in Q1.15 Format (Roots strictly inside unit circle, |z| < 1)
+    // Energy concentrated at earliest taps (h[0..3] large) for minimal latency and fastest shock response
     wire signed [COEFF_WIDTH-1:0] h [0:TAPS-1];
-    assign h[ 0] = 16'sh0824; assign h[ 1] = 16'sh0AB1;
-    assign h[ 2] = 16'sh0F3A; assign h[ 3] = 16'sh14C2;
-    assign h[ 4] = 16'sh198D; assign h[ 5] = 16'sh1C76;
-    assign h[ 6] = 16'sh1C2A; assign h[ 7] = 16'sh17B3;
-    assign h[ 8] = 16'sh0EE4; assign h[ 9] = 16'sh02EE;
-    assign h[10] = 16'shF4BE; assign h[11] = 16'shE689;
-    assign h[12] = 16'shDA62; assign h[13] = 16'shD21E;
-    assign h[14] = 16'shCEEE; assign h[15] = 16'shD2DE;
-    assign h[16] = 16'shDDDE; assign h[17] = 16'shEE1C;
-    assign h[18] = 16'sh015E; assign h[19] = 16'sh1476;
-    assign h[20] = 16'sh2431; assign h[21] = 16'sh2DCA;
-    assign h[22] = 16'sh2EEA; assign h[23] = 16'sh27B8;
-    assign h[24] = 16'sh18CE; assign h[25] = 16'sh04DE;
-    assign h[26] = 16'shEF2A; assign h[27] = 16'shDBA2;
-    assign h[28] = 16'shCCC2; assign h[29] = 16'shC514;
-    assign h[30] = 16'shC6AE; assign h[31] = 16'shD0B8;
+    assign h[ 0] = 16'shD0B8; assign h[ 1] = 16'shC6AE;
+    assign h[ 2] = 16'shC514; assign h[ 3] = 16'shCCC2;
+    assign h[ 4] = 16'shDBA2; assign h[ 5] = 16'shEF2A;
+    assign h[ 6] = 16'sh04DE; assign h[ 7] = 16'sh18CE;
+    assign h[ 8] = 16'sh27B8; assign h[ 9] = 16'sh2EEA;
+    assign h[10] = 16'sh2DCA; assign h[11] = 16'sh2431;
+    assign h[12] = 16'sh1476; assign h[13] = 16'sh015E;
+    assign h[14] = 16'shEE1C; assign h[15] = 16'shDDDE;
+    assign h[16] = 16'shD2DE; assign h[17] = 16'shCEEE;
+    assign h[18] = 16'shD21E; assign h[19] = 16'shDA62;
+    assign h[20] = 16'shE689; assign h[21] = 16'shF4BE;
+    assign h[22] = 16'sh02EE; assign h[23] = 16'sh0EE4;
+    assign h[24] = 16'sh17B3; assign h[25] = 16'sh1C2A;
+    assign h[26] = 16'sh1C76; assign h[27] = 16'sh198D;
+    assign h[28] = 16'sh14C2; assign h[29] = 16'sh0F3A;
+    assign h[30] = 16'sh0AB1; assign h[31] = 16'sh0824;
 
     // FSM States for 3-Stage Pipelined 4-Multiplier Folded Engine (Timing Closure > 100 MHz)
     localparam S_IDLE    = 3'd0;

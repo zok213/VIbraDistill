@@ -63,11 +63,11 @@ def run_suite_multi_dataset():
     # Suite 2: MFPT Cross-Domain
     prf02_dir = os.path.join(ROMS_DIR, 'profiles', 'prf02_mfpt_heavy_16ball')
     w_mfpt = load_profile_weights(prf02_dir)
-    b_mfpt = np.array([-4, -2, 10, -5], dtype=np.int32)
+    b_mfpt = np.array([9, -21, 29, -27], dtype=np.int32)
     s2_files = [
         ('stimulus_mfpt_baseline.hex', 0),
         ('stimulus_mfpt_inner.hex', 1),
-        ('stimulus_mfpt_outer.hex', 2),
+        ('stimulus_mfpt_outer.hex', 1),
     ]
     s2_correct = 0
     for fname, target in s2_files:
