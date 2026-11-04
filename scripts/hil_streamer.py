@@ -25,6 +25,12 @@ import struct
 import argparse
 import numpy as np
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from src.dsp.resample import resample_vibration_signal
+
 def compute_crc16_ccitt(data: bytes, poly: int = 0x1021, init: int = 0xFFFF) -> int:
     crc = init
     for b in data:
@@ -126,11 +132,21 @@ def main():
                 file_to_read = csv_files[min(frame_idx, len(csv_files) - 1)]
                 try:
                     # Column 4 is horizontal acc, column 5 is vertical acc
-                    raw = np.loadtxt(file_to_read, delimiter=';', usecols=4)
-                    sig = raw[:512] if len(raw) >= 512 else np.pad(raw, (0, 512 - len(raw)))
-                    max_abs = np.max(np.abs(sig)) + 1e-6
-                    sig_int16 = np.clip(np.round((sig / max_abs) * 24000), -32768, 32767).astype(np.int16)
-                except Exception:
+                    try:
+                        raw = np.loadtxt(file_to_read, delimiter=',', usecols=4)
+                    except Exception:
+                        raw = np.loadtxt(file_to_read, delimiter=';', usecols=4)
+                    
+                    # CRITICAL: Resample from PRONOSTIA native 25.6 kHz to FPGA pipeline 12.0 kHz!
+                    # Without resampling, spectral compression (2.133x) maps shaft harmonics to BPFO (Bin 4/93.8Hz).
+                    raw_12k = resample_vibration_signal(raw, orig_fs=25600.0, target_fs=12000.0)
+                    sig = raw_12k[:512] if len(raw_12k) >= 512 else np.pad(raw_12k, (0, 512 - len(raw_12k)))
+                    sig -= np.mean(sig)
+
+                    # Unified physical scaling: 1200 LSB/g (24000 LSB @ 20g terminal fault)
+                    scale_factor = 1200.0
+                    sig_int16 = np.clip(np.round(sig * scale_factor), -32768, 32767).astype(np.int16)
+                except Exception as e:
                     sig_int16 = (np.sin(np.linspace(0, 10 * np.pi, 512)) * 10000).astype(np.int16)
             elif args.dataset == "synthetic":
                 # Simulated degradation growth
