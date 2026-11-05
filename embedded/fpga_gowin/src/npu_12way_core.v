@@ -19,10 +19,10 @@ module npu_12way_core #(
     parameter WEIGHT_FILE_BANK3 = "src/roms/hil/npu_weights_bank3.hex",
     parameter WEIGHT_FILE_BANK4 = "src/roms/hil/npu_weights_bank4.hex",
     parameter WEIGHT_FILE_BANK5 = "src/roms/hil/npu_weights_bank5.hex",
-    parameter signed [31:0] BIAS_0 = 32'sd0,
+    parameter signed [31:0] BIAS_0 = -32'sd5,
     parameter signed [31:0] BIAS_1 = -32'sd3,
-    parameter signed [31:0] BIAS_2 = 32'sd8,
-    parameter signed [31:0] BIAS_3 = -32'sd4
+    parameter signed [31:0] BIAS_2 =  32'sd14,
+    parameter signed [31:0] BIAS_3 = -32'sd6
 )(
     input  wire                 clk,            // 100 MHz Core Clock
     input  wire                 rst_n,          // Synchronous Active-Low Reset
