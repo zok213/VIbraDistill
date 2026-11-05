@@ -10,7 +10,8 @@ This directory contains the production hardware source code for the **VibraDisti
 
 ```mermaid
 graph TD
-    Sensor["ST IIS3DWB Accelerometer <br> (26.667 kHz SPI)"] -->|Polyphase /2| FPGA
+    Sensor_ADXL["ADXL345 MEMS Sensor <br> (3.2 kHz SPI / I2C)"] -->|Mode B: Physical Edge| FPGA
+    HIL_Stream["CWRU / PRONOSTIA Streamer <br> (12.0 kHz Serial HIL UART)"] -->|Mode A: Hardware-in-the-Loop| FPGA
     
     subgraph FPGA["Gowin Primer 20K FPGA (GW2A-LV18) @ 100 MHz"]
         DSP1["fir_minphase_32.v <br> (4 Folded MACs, 8 cycles)"]

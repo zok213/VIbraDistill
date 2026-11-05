@@ -70,7 +70,7 @@ typedef enum {
 typedef struct __attribute__((packed)) {
     uint16_t sync_word;               /* Fixed 0xAA55 frame alignment token */
     uint16_t frame_seq_id;            /* Monotonically increasing sequence ID */
-    uint16_t envelope_spectrum[257];  /* 257 positive frequency bins (0 - 6.66 kHz) */
+    uint16_t envelope_spectrum[257];  /* 257 positive frequency bins (0 - 6.0 kHz @ 12 kHz HIL, or 0 - 1.6 kHz @ 3.2 kHz ADXL) */
     uint8_t  npu_pred_class;          /* 0: Normal, 1: Inner, 2: Outer, 3: Ball */
     uint8_t  dirichlet_max_evidence;  /* Maximum evidence (e_max) from NPU */
     uint16_t hardware_status_flags;   /* Bit 0: Sensor OK, Bit 1: FIR Clip, Bit 2: CRC OK */

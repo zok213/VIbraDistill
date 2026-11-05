@@ -62,7 +62,7 @@ class CWRUBearingDataset(Dataset):
         # Check cache
         if cache_dir is not None:
             os.makedirs(cache_dir, exist_ok=True)
-            sensor_tag = f"_{sensor_type}" if sensor_type in ['adxl345', 'iis3dwb'] else ("_adxl345" if abs(self.fs - 3200.0) < 100.0 else "")
+            sensor_tag = f"_{sensor_type}" if sensor_type in ['adxl345', 'hil_12k'] else ("_adxl345" if abs(self.fs - 3200.0) < 100.0 else "")
             cache_file = os.path.join(cache_dir, f"cwru_{self.split}{sensor_tag}_w{window_size}.pt")
         else:
             cache_file = None

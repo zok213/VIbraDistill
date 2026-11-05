@@ -163,7 +163,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Verify MCU C-Engine bit-true parity vs NPU emulator")
     parser.add_argument('--checkpoint', type=str, default='checkpoints/student_qat_adxl345/best_qat.pt', help="Path to QAT checkpoint")
-    parser.add_argument('--sensor_type', type=str, default='auto', choices=['auto', 'adxl345', 'iis3dwb'], help="Sensor profile")
+    parser.add_argument('--sensor_type', type=str, default='auto', choices=['auto', 'adxl345', 'hil_12k'], help="Sensor profile")
     parser.add_argument('--max_samples', type=int, default=256, help="Max samples to verify (0 for full set)")
     args = parser.parse_args()
 
@@ -174,7 +174,7 @@ def main():
             ckpt_path = fallback
 
     is_adxl = (args.sensor_type == 'adxl345') or ('adxl345' in ckpt_path.lower())
-    sensor_name = 'adxl345' if is_adxl else 'iis3dwb'
+    sensor_name = 'adxl345' if is_adxl else 'hil_12k'
     fs_val = 3200.0 if is_adxl else 12000.0
 
     print("=" * 70)
