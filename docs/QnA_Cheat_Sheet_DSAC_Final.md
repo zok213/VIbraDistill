@@ -17,7 +17,7 @@
 > 1. Toàn bộ lớp BatchNorm được gập trực tiếp vào trọng số Conv1D (`fold_batchnorm`) trước khi lượng tử hóa, triệt tiêu hoàn toàn sai số trôi bias.
 > 2. Chúng tôi áp dụng lượng tử hóa đối xứng (Symmetric INT8) với dải giá trị $[-128, 127]$, zero-point $Z = 0$.
 > 3. Tỷ lệ Scale factor đầu ra được tính toán theo công thức chuẩn: $S_\text{bias} = S_\text{in} \times S_\text{weight}$.
-> 4. Bộ tích lũy (Accumulator) trong NPU 24-way MAC trên FPGA được thiết kế độ rộng **32-bit có dấu**, trong khi phép nhân là $8\text{-bit} \times 8\text{-bit} = 16\text{-bit}$. Vì cửa sổ tính toán là 512 điểm, giá trị tích lũy tối đa không bao giờ vượt quá $512 \times 127 \times 127 \approx 8.25 \times 10^6$, hoàn toàn nằm gọn trong dải của thanh ghi 32-bit ($[-2.14 \times 10^9, 2.14 \times 10^9]$). Do đó về mặt toán học, **xác suất tràn số là đúng bằng 0**."
+> 4. Bộ tích lũy (Accumulator) trong NPU 12-way MAC trên FPGA được thiết kế độ rộng **32-bit có dấu**, trong khi phép nhân là $8\text{-bit} \times 8\text{-bit} = 16\text{-bit}$. Vì cửa sổ tính toán là 512 điểm, giá trị tích lũy tối đa không bao giờ vượt quá $512 \times 127 \times 127 \approx 8.25 \times 10^6$, hoàn toàn nằm gọn trong dải của thanh ghi 32-bit ($[-2.14 \times 10^9, 2.14 \times 10^9]$). Do đó về mặt toán học, **xác suất tràn số là đúng bằng 0**."
 
 ### Q3 (Giám khảo AI): "Tại sao độ chính xác trên tập 14-mil và 21-mil của CWRU chỉ đạt 43.96% và 50.32%? Có phải mô hình bị overfitting?"
 **Trả lời của Tài**:
@@ -54,11 +54,10 @@
 
 ### Q8 (Giám khảo DSP): "Giải thuật tách bao sóng (Envelope Demodulator) được thiết kế như thế nào trên FPGA?"
 **Trả lời của Toàn**:
-> "Thưa Thầy, giải thuật giải điều chế bao sóng gồm 2 tầng thực thi hoàn toàn trong 1 chu kỳ xung nhịp 100 MHz:
-> 1. Bộ chỉnh lưu toàn sóng: Thực hiện phép lấy trị tuyệt đối $|x[n]|$ bằng toán tử bù hai đảo bit khi bit dấu là 1.
-> 2. Bộ lọc thông thấp rò rỉ nhân quả (Causal Leaky Peak Envelope):
->    $$y[n] = \max\left(|x[n]|,\, \alpha \cdot y[n-1]\right)$$
->    Với $\alpha = 1 - 2^{-6} = 0.984375$. Phép nhân $\alpha \cdot y[n-1]$ được thực hiện bằng toán tử dịch bit: $y[n-1] - (y[n-1] \gg 6)$, **hoàn toàn không tiêu tốn bộ nhân DSP**, đạt thông lượng cực đại 100 triệu mẫu/giây."
+> "Thưa Thầy, giải thuật giải điều chế bao sóng gồm 2 tầng thực thi:
+> 1. **Bộ chỉnh lưu toàn sóng**: Thực hiện phép lấy trị tuyệt đối $|x[n]|$ bằng toán tử bù hai kẹp dải an toàn (clamp -32768 về +32767).
+> 2. **Bộ lọc thông thấp IIR Butterworth bậc 2 (2nd-Order Direct-Form I IIR LPF)**:
+>    Hệ số phản hồi $A_1 = -1.1429805 \times 32768 = -37453$. Do $|A_1| > 1.0$ vượt dải 16-bit signed, chúng tôi khai thác khối nhân phần cứng DSP18E 18-bit của Gowin GW2A-18, mở rộng hệ số sang `signed [17:0]`, tích lũy 36-bit. Nhờ đó triệt tiêu hoàn toàn lỗi tràn số, đạt tần số cắt thực tế $1,198.97\,\text{Hz}$ (sai số $< 0.09\%$ so với $1,200\,\text{Hz}$ lý thuyết ở HIL 12 kHz, hoặc $400\,\text{Hz}$ ở ADXL345), bảo toàn trọn vẹn cả 3 dải phổ con cho 12 kênh NPU MAC."
 
 ### Q9 (Giám khảo DSP): "Độ phân giải tần số FFT 512-point là bao nhiêu? Có bị hiện tượng rò rỉ phổ không?"
 **Trả lời của Toàn**:
@@ -82,9 +81,9 @@
 > - **DSPs**: 41% (20 / 48 DSP slices)
 > - **Công suất tiêu thụ**: Đo đạc bằng ampe kế và Gowin Power Analyzer chỉ đạt **142 mW** tại xung nhịp 100 MHz. Chúng tôi hoàn toàn không sử dụng chip nhớ ngoài DDR3, loại bỏ hoàn toàn điện năng tiêu thụ và độ trễ chờ nạp DRAM."
 
-### Q12 (Giám khảo Bán dẫn): "NPU 24-way MAC Engine hoạt động theo kiến trúc gì?"
+### Q12 (Giám khảo Bán dẫn): "NPU 12-way MAC Engine hoạt động theo kiến trúc gì?"
 **Trả lời của Toàn**:
-> "Thưa Thầy, NPU được thiết kế theo kiến trúc mảng tâm thu (Systolic Array) 1 chiều gồm 24 đơn vị MAC chạy song song. Mỗi chu kỳ xung nhịp 100 MHz, NPU thực hiện đồng thời 24 phép tính nhân-cộng 8-bit $\times$ 8-bit. Nhờ kiến trúc nạp trọng số song song từ 6 BSRAM độc lập (Dual-Port), NPU đạt thông lượng tính toán **2.4 GOP/s**, hoàn thành toàn bộ phép suy luận 8,677 tham số của mô hình trong đúng **0.58 ms**."
+> "Thưa Thầy, NPU được thiết kế theo kiến trúc mảng tâm thu (Systolic Array) gồm 12 đơn vị MAC chạy song song (4 lớp lỗi $\times$ 3 dải phổ con). Mỗi chu kỳ xung nhịp 100 MHz, NPU thực hiện đồng thời 12 phép tính nhân-cộng 8-bit $\times$ 8-bit. Nhờ kiến trúc nạp trọng số song song từ 6 BSRAM độc lập (Dual-Port, băng thông 96-bit), NPU hoàn thành toàn bộ phép suy luận 257 bin phổ trong đúng **260 chu kỳ xung nhịp (2.60 µs)**."
 
 ### Q13 (Giám khảo Bán dẫn): "Tuyến bus giao tiếp giữa FPGA và MCU hoạt động như thế nào? Có bị lỗi Clock Domain Crossing (CDC) không?"
 **Trả lời của Toàn & Thiện**:
