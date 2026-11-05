@@ -126,7 +126,7 @@ module gowin_top_soc #(
     );
 
     // =========================================================================
-    // 4. Stage 2 DSP: Causal Envelope Demodulator (USE_HIL = 1 cho Fc = 1000 Hz)
+    // 4. Stage 2 DSP: Causal Envelope Demodulator (USE_HIL = 1 cho Fc = 1200 Hz)
     // =========================================================================
     wire signed [15:0] env_out;
     wire               env_valid;

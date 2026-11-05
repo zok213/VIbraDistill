@@ -11,7 +11,7 @@ flowchart LR
     subgraph DSP["1. Causal Streaming DSP (src/dsp)"]
         Raw["x[n] (512 samples)"] --> FIR["32-Tap Causal FIR (fir_minphase_32.v)"]
         FIR --> Rect["Full-Wave Rectifier |x|"]
-        Rect --> IIR["2nd-Order IIR LPF (1000 Hz)"]
+        Rect --> IIR["2nd-Order IIR LPF (1200 Hz)"]
         IIR --> FFT["512-pt Real FFT"]
         FFT --> Spec["Envelope Spectrum (257 bins)"]
         FFT --> Prior["Kinematic Energy Prior [p_BPFO, p_BPFI, p_BSF, p_FTF]"]
@@ -48,7 +48,7 @@ flowchart LR
 ### 1. `src/dsp/` — Bit-True Causal Preprocessing
 Hardware-faithful DSP engines strictly matching Gowin Verilog RTL:
 * **`causal_fir.py`**: 32-tap minimum-phase causal FIR filter using the exact Q1.15 fixed-point coefficients from `fir_minphase_32.v`. Eliminates pre-cursor Gibbs ringing.
-* **`envelope.py`**: Causal envelope demodulator ($|x[n]|$ + 2nd-order Direct-Form I IIR Butterworth LPF at $1000$ Hz) matching `envelope_demodulator.v`.
+* **`envelope.py`**: Causal envelope demodulator ($|x[n]|$ + 2nd-order Direct-Form I IIR Butterworth LPF at $1200$ Hz) matching `envelope_demodulator.v`.
 * **`kinematics.py`**: Analytically computes characteristic fault multipliers for the CWRU SKF 6205 bearing ($C_\text{BPFO}=3.5848$, $C_\text{BPFI}=5.4152$, $C_\text{BSF}=2.3567$, $C_\text{FTF}=0.3983$) and extracts the 4-dim normalized energy prior vector $\mathbf{p}$.
 * **`pipeline.py`**: Chains FIR $\to$ Rectifier $\to$ IIR $\to$ Hann Window $\to$ 512-pt FFT $\to$ 257-bin spectrum.
 

@@ -34,7 +34,7 @@ Hệ thống hỗ trợ 2 chế độ vận hành (chuyển đổi bằng tham s
 │                                                                             │
 │  ┌────────────────────────┐    ┌─────────────────────┐    ┌──────────────┐  │
 │  │ 32-Tap Min-Phase FIR   │───▶│ Causal Envelope     │───▶│ Gowin FFT IP │  │
-│  │ (280-1400Hz / 2-5kHz)  │    │ Demodulator (LPF)   │    │ (512-Point)  │  │
+│  │ (ADXL 400Hz / ~720Hz)  │    │ Demodulator (LPF)   │    │ (512-Point)  │  │
 │  └────────────────────────┘    └─────────────────────┘    └──────┬───────┘  │
 │                                                                  │          │
 │                                                                  ▼          │
