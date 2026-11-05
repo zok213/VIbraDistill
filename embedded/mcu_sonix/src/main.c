@@ -606,6 +606,11 @@ static void Process_FPGA_Frame(void) {
         uint32_t point_rul;
         if (g_npu_class == BEARING_NORMAL) {
             point_rul = 1200U;
+        } else if (g_fpga_hw_status <= 32768U && g_fpga_hw_status > 0U) {
+            /* Su dung truc tiep RUL phan cung lien tuc tinh tu NPU 12-way FPGA (Byte 520..521) */
+            point_rul = (uint32_t)(((uint32_t)g_fpga_hw_status * 1200U + 16384U) >> 15);
+            if (point_rul < 2U)    point_rul = 2U;
+            if (point_rul > 1200U) point_rul = 1200U;
         } else {
             uint32_t fault_energy = 0;
             for (k = 4; k <= 16; k++) {

@@ -314,12 +314,12 @@ void vibradistill_predict(const int8_t *spectrum_int8, const uint8_t *prior_4, v
 
     /* Remaining Useful Life (RUL) fraction in Q0.15 */
     if (best_class == 0) {
-        out_result->rul_q15 = 31130; /* ~0.95 (healthy baseline) */
+        out_result->rul_q15 = 32768; /* 1.0 (healthy baseline) */
     } else {
         /* Fault severity estimation scaled by fault logit intensity */
         int32_t fault_evidence = (logits[best_class] > 0) ? logits[best_class] : 0;
-        int32_t rul_val = 26214 - (fault_evidence * 150); /* 0.80 minus degradation */
-        if (rul_val < 3277) rul_val = 3277;               /* clamp min ~0.10 */
+        int32_t rul_val = 32768 - (fault_evidence * 250);
+        if (rul_val < 0) rul_val = 0;               /* Can drop to 0.0% at catastrophic breakdown */
         out_result->rul_q15 = (uint16_t)rul_val;
     }
 #endif

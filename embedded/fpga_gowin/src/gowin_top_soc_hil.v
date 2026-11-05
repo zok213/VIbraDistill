@@ -302,7 +302,7 @@ module gowin_top_soc #(
         .start_tx               (spi_start_tx),
         .npu_pred_class         (npu_pred_class),
         .dirichlet_max_evidence (npu_vacuity_q15[15:8]),
-        .hardware_status_flags  (status_flags),
+        .hardware_status_flags  (npu_rul_q15),
         .bram_addr              (spi_bram_addr),
         .bram_data              (spi_bram_data),
         .spi_sck                (mcu_spi_sck),
