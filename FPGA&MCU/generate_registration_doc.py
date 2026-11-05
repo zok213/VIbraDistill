@@ -421,7 +421,7 @@ def build_proposal_doc(out_path):
 
     abl_data = [
         ("Ablation 1\n(Lọc Causal Phase)", "Linear-Phase FIR (Symmetric)\nvs. Causal Minimum-Phase FIR Direct-Form I", "Triệt tiêu 100% sóng dội nhân tạo (pre-cursor ringing); đỉnh xung va đập nét hơn 8.6 dB."),
-        ("Ablation 2\n(Tách Sóng Bao Hình)", "Biến đổi Hilbert mảng lớn (FFT)\nvs. Chỉnh lưu toàn kỳ + IIR LPF (1000 Hz)", "Tiết kiệm 16 DSP slices và 12 BSRAM trên FPGA; trễ thực thi giảm xuống đúng 1 chu kỳ clock."),
+        ("Ablation 2\n(Tách Sóng Bao Hình)", "Biến đổi Hilbert mảng lớn (FFT)\nvs. Chỉnh lưu toàn kỳ + IIR LPF (1200 Hz)", "Tiết kiệm 16 DSP slices và 12 BSRAM trên FPGA; trễ thực thi giảm xuống đúng 1 chu kỳ clock."),
         ("Ablation 3\n(Chưng Cất Tri Thức)", "Mạng học sinh gốc (No KD), Hinton KD,\nDKD không nhân τ² vs. DKD nhân τ² = 25", "DKD nhân τ² phục hồi hoàn toàn gradient lớp phi mục tiêu; F1 tăng từ 86.2% lên 97.45%."),
         ("Ablation 4\n(Đa Thang Đo Tần Số)", "Conv1D đơn nhân (k=5)\nvs. FAL Inception đa nhân (k=3, 7, 15)", "Độ chính xác trên bộ dữ liệu Ottawa Rig tăng từ 31.5% lên 44.8% (+13.27%) dưới dải tốc biến thiên."),
         ("Ablation 5\n(Tiên Nghiệm Vật Lý)", "Mạng AI thuần hộp đen (Pure data-driven)\nvs. Ghép vector năng lượng [BPFO, BPFI, BSF]", "Triệt tiêu 100% báo động giả khi bị nhiễu xung băm PWM biến tần và nhiễu sóng hài điện lưới 50 Hz."),
