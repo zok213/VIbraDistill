@@ -69,7 +69,7 @@ def load_profile_weights(profile_dir: str):
     return np.array(channels, dtype=np.int32) # [12, 257]
 
 
-def simulate_fpga_inference(samples_int16: np.ndarray, weights_12ch: np.ndarray, biases: np.ndarray, dsp: StreamingDSPPipeline):
+def simulate_fpga_inference(samples_int16: np.ndarray, weights_12ch: np.ndarray, biases: np.ndarray, dsp: StreamingDSPPipeline, rul_weights=None):
     """
     Simulates the exact Gowin Primer 20K FPGA hardware datapath:
       1. FIR Filter + Envelope Demodulator + Hann Window + 512 FFT (StreamingDSPPipeline)
@@ -101,15 +101,15 @@ def simulate_fpga_inference(samples_int16: np.ndarray, weights_12ch: np.ndarray,
     vacuity_q15 = int(131072 // sum_e) if sum_e <= 131072 else 1
     vacuity_float = float(vacuity_q15) / 32768.0
 
-    # Continuous Dynamic RUL Q15 formulation (Bit-true to npu_12way_core.v)
-    max_fault_s = max(score_1, score_2, score_3)
-    deg_delta_s = max_fault_s - score_0
-    if deg_delta_s <= 0:
-        rul_q15 = 32768
+    # Real Machine-Learned PRONOSTIA Hardware RUL (Bit-true to npu_12way_core.v)
+    in_261 = np.zeros(261, dtype=np.int32)
+    in_261[:min(len(spec_int8), 257)] = spec_int8[:min(len(spec_int8), 257)]
+    if rul_weights is not None and len(rul_weights) >= 261:
+        rul_mac_accum = int(np.dot(in_261, rul_weights))
     else:
-        rul_penalty = (deg_delta_s * 75) >> 4
-        rul_raw = 32768 - rul_penalty
-        rul_q15 = max(0, min(32768, rul_raw))
+        rul_mac_accum = 0
+    rul_scaled = ((rul_mac_accum * -220) >> 10) + 30504
+    rul_q15 = max(0, min(32768, rul_scaled))
     rul_pct = round(float(rul_q15) * 100.0 / 32768.0, 2)
 
     ood_alert = 1 if vacuity_q15 > 14745 else 0

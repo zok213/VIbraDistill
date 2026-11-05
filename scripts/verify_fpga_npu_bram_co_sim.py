@@ -47,6 +47,21 @@ def simulate_npu_12way_rtl_cycle_by_cycle():
 
     # 12 parallel weight channels, shape: [12, 257]
     weights_12ch = np.array(banks, dtype=np.int32)
+
+    # Load 261 PRONOSTIA RUL weights
+    rul_candidates = [
+        os.path.join(rom_dir, "pronostia_rul_weights.hex"),
+        os.path.join(rom_dir, "..", "pronostia_rul_weights.hex"),
+        os.path.join(rom_dir, "..", "hil", "pronostia_rul_weights.hex"),
+        "embedded/fpga_gowin/roms/pronostia_rul_weights.hex"
+    ]
+    rul_hex_path = next((p for p in rul_candidates if os.path.exists(p)), None)
+    if rul_hex_path and os.path.exists(rul_hex_path):
+        with open(rul_hex_path, "r") as f:
+            rw_lines = [int(l.strip(), 16) for l in f if l.strip()]
+        rul_w = np.array([(x - 256 if x >= 128 else x) for x in rw_lines[:261]], dtype=np.int32)
+    else:
+        rul_w = np.zeros(261, dtype=np.int32)
     print(f"[ROM Audit] Successfully loaded 12 channels x 257 bins from 6 BSRAM banks.")
     print(f"            Memory utilization: 6 / 46 BSRAMs (13.04%).")
 
@@ -101,19 +116,15 @@ def simulate_npu_12way_rtl_cycle_by_cycle():
         scores = [score_0, score_1, score_2, score_3]
 
         # --- RTL S_DECIDE State (1 cycle) ---
-        # 1. Argmax
-        # 1. Classification & Continuous Hardware Dynamic RUL (Bit-true to npu_12way_core.v)
+        # 1. Classification & Real Machine-Learned PRONOSTIA Hardware RUL
         scores = [score_0, score_1, score_2, score_3]
         pred_class = int(np.argmax(scores))
 
-        max_fault_s = max(score_1, score_2, score_3)
-        deg_delta_s = max_fault_s - score_0
-        if deg_delta_s <= 0:
-            rul_q15 = 32768
-        else:
-            rul_penalty = (deg_delta_s * 75) >> 4
-            rul_raw = 32768 - rul_penalty
-            rul_q15 = max(0, min(32768, rul_raw))
+        in_261 = np.zeros(261, dtype=np.int32)
+        in_261[:257] = spectrum_mem
+        rul_mac_accum = int(np.dot(in_261, rul_w))
+        rul_scaled = ((rul_mac_accum * -220) >> 10) + 30504
+        rul_q15 = max(0, min(32768, rul_scaled))
 
         # 2. 8-bit Clamped Packed Logits (shift right by 5)
         def clamp8(v):
