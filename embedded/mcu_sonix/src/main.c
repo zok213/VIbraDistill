@@ -570,9 +570,9 @@ static void Process_FPGA_Frame(void) {
      *   b[519] = Dirichlet Vacuity (u_Q15[15:8])
      *   b[520..521] = Hardware Status Flags (Little-Endian)
      */
-    g_is_ood_alert      = (b[518] & 0x80U) ? true : false;
-    g_npu_class         = b[518] & 0x03U; /* 0: Normal, 1: BPFI, 2: BPFO, 3: BSF */
     g_epistemic_vacuity = (uint16_t)b[519] << 8; /* Scale sang Q15 */
+    g_is_ood_alert      = ((b[518] & 0x80U) != 0U) || (g_epistemic_vacuity > 14745U);
+    g_npu_class         = b[518] & 0x03U; /* 0: Normal, 1: BPFI, 2: BPFO, 3: BSF */
     g_fpga_hw_status    = ((uint16_t)b[521] << 8) | b[520];
 
     /* 5. Đọc đủ 257 Bins FFT (Bắt đầu từ Byte 4 đến Byte 517, Little-Endian mỗi bin)

@@ -82,7 +82,7 @@ module spi_master_packet #(
         (byte_idx == 10'd2)   ? frame_count[7:0] :         // frame_seq_id low byte
         (byte_idx == 10'd3)   ? frame_count[15:8] :        // frame_seq_id high byte
         (byte_idx <= 10'd517) ? (byte_idx[0] ? bram_data[15:8] : bram_data[7:0]) : // 257 bins (Low, High)
-        (byte_idx == 10'd518) ? {6'b000000, npu_pred_class} : // npu_pred_class (0, 1, 2, 3)
+        (byte_idx == 10'd518) ? {(dirichlet_max_evidence > 8'd57), 5'b00000, npu_pred_class} : // Bit 7: OOD Alert, Bits 1..0: Class
         (byte_idx == 10'd519) ? dirichlet_max_evidence :   // dirichlet_max_evidence
         (byte_idx == 10'd520) ? hardware_status_flags[7:0] : // hardware_status_flags low byte
         (byte_idx == 10'd521) ? hardware_status_flags[15:8] : // hardware_status_flags high byte

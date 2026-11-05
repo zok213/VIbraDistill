@@ -102,18 +102,18 @@ def simulate_npu_12way_rtl_cycle_by_cycle():
 
         # --- RTL S_DECIDE State (1 cycle) ---
         # 1. Argmax
-        if (score_1 > score_0 and score_1 >= score_2 and score_1 >= score_3):
-            pred_class = 1
-            rul_q15 = 14745 # 45%
-        elif (score_2 > score_0 and score_2 > score_1 and score_2 >= score_3):
-            pred_class = 2
-            rul_q15 = 8192  # 25%
-        elif (score_3 > score_0 and score_3 > score_1 and score_3 > score_2):
-            pred_class = 3
-            rul_q15 = 4096  # 12.5%
+        # 1. Classification & Continuous Hardware Dynamic RUL (Bit-true to npu_12way_core.v)
+        scores = [score_0, score_1, score_2, score_3]
+        pred_class = int(np.argmax(scores))
+
+        max_fault_s = max(score_1, score_2, score_3)
+        deg_delta_s = max_fault_s - score_0
+        if deg_delta_s <= 0:
+            rul_q15 = 32768
         else:
-            pred_class = 0
-            rul_q15 = 32768 # 100%
+            rul_penalty = (deg_delta_s * 75) >> 4
+            rul_raw = 32768 - rul_penalty
+            rul_q15 = max(0, min(32768, rul_raw))
 
         # 2. 8-bit Clamped Packed Logits (shift right by 5)
         def clamp8(v):
