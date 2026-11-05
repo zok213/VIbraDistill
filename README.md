@@ -21,7 +21,7 @@
 **Người gửi:** Tài (Porygon Team - Tech Lead & AI/DSP Silicon Architect)  
 **Người nhận:** Đội ngũ Kỹ thuật Phần cứng FPGA / MCU (Toàn, Thiện, Quang, Kiệt)  
 **Thời gian cập nhật:** 04/11/2026 (Đã kiểm chứng bit-true trên Silicon Gowin, ARM Cortex-M0 và 10 ROM suites)  
-**Trạng thái kiểm định:** Pass 100% 10/10 Hardware ROM Suites, Pass 40/40 Pytest, Bit-True RTL Co-Simulation ModelSim
+**Trạng thái kiểm định:** Pass 100% 10/10 Hardware ROM Suites, Pass 41/41 Pytest, Bit-True RTL Co-Simulation ModelSim
 
 ---
 
@@ -78,7 +78,7 @@ Khi cắm cảm biến ADXL345 vào mô hình động cơ DC mini đồ chơi, h
    * *Đã giải quyết triệt để:* Đã đưa **Bộ tính RUL liên tục thời gian thực (Continuous Dynamic Hardware RUL)** vào trực tiếp RTL Verilog [`npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v#L256-L272) (chu kỳ $10\,\text{ns}$, dải $32768 \to 0$ tương ứng $100.0\% \to 0.0\%$), ngắt KD sai lệch, áp dụng hàm loss bất đối xứng phạt $12\times$ khi dự đoán quá mức ở cuối đời. Truyền thẳng `rul_q15` qua SPI Byte 520..521 sang MCU Sonix SN32F407. HopACP trên MCU bao phủ khoảng tin cậy $90\%$ hữu hạn mẫu.
 8. **Đồng bộ toàn diện vào workspace của Toàn:**  
    * Đã sao chép trực tiếp các file kích thích chuẩn vào `C:\Users\Admin\Downloads\FPGA_FINAL\src\test_npu\roms\` và `test_vectors\`.  
-   * Đạt **10/10 Hardware ROM Suites Passed** và **40/40 Pytest Tests Passed**.
+   * Đạt **10/10 Hardware ROM Suites Passed** và **41/41 Pytest Tests Passed**.
 
 ---
 
@@ -800,9 +800,9 @@ git checkout tai
 # 2. Cài đặt môi trường Python
 pip install -r requirements.txt
 
-# 3. Chạy bộ 40 bài kiểm thử toàn diện hệ thống (PyTest Unit Tests)
+# 3. Chạy bộ 41 bài kiểm thử toàn diện hệ thống (PyTest Unit Tests)
 pytest tests/ -v
-# ===> KẾT QUẢ MONG ĐỢI: 40 passed in ~72s (100% Passed)
+# ===> KẾT QUẢ MONG ĐỢI: 41 passed in ~19s (100% Passed)
 
 # 4. Chạy kiểm chứng số học bit-true RTL NPU (553 mẫu validation ADXL345)
 python scripts/verify_fpga_npu_bram_co_sim.py
@@ -843,6 +843,10 @@ python scripts/verify_mat_rul_prognostics.py
 # 13. Chạy kiểm tra TOÀN BỘ 10 bộ ROM vi mạch và tập dữ liệu chỉ với 1 click (All-In-One Master Test)
 python scripts/test_all_roms_suites.py
 # ===> KẾT QUẢ MONG ĐỢI: 10/10 bộ kiểm thử PASSED 100%, tổng thời gian ~7.6 giây
+
+# 14. Chạy phân cấp mức độ hư hại CWRU & RUL phần cứng (28 vector công nghiệp)
+python scripts/verify_cwru_rul_severity_staging.py
+# ===> KẾT QUẢ MONG ĐỢI: 28/28 vector đạt chuẩn Bit-True Parity, SIL-2 Emergency Trip < 1.0ms
 ```
 
 ---
