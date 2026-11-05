@@ -73,9 +73,9 @@ flowchart TD
 #### 3. `fir_minphase_32.v`
 - **Chức năng:** Bộ lọc số dải thông FIR 32-tap pha cực tiểu (Causal Minimum-Phase Bandpass Filter).
 - **Đặc tính kỹ thuật:**
-  - Dải thông: $2000\,\text{Hz} - 5000\,\text{Hz}$ tại tần số lấy mẫu $f_s = 12\,\text{kHz} / 13.333\,\text{kHz}$. Đây là dải cộng hưởng tự nhiên của vòng bi, nơi mang năng lượng xung va đập cơ khí lớn nhất.
+  - Dải thông: Dải đỉnh cộng hưởng thực tế $\sim 720\,\text{Hz}$ ($400 - 1100\,\text{Hz}$, độ lợi đỉnh $+15.0\,\text{dB}$) tại tần số lấy mẫu $f_s = 12.0\,\text{kHz}$ (chuẩn HIL CWRU / PRONOSTIA). Khớp chính xác $100\%$ với mô hình AI (`use_rtl_coeffs=True`).
   - Kiến trúc Folded MAC: Sử dụng kỹ thuật gấp thời gian (time-multiplexed) với 4 bộ nhân thực thi 32 hệ số trong đúng 8 chu kỳ xung nhịp 100 MHz.
-  - Pha cực tiểu (Minimum-Phase): Toàn bộ các không điểm nằm bên trong vòng tròn đơn vị $z$, giúp tín hiệu đầu ra triệt tiêu hiện tượng tiền rung (zero pre-cursor ringing), bảo toàn đúng dạng sóng sốc vật lý.
+  - Xử lý năng lượng sớm: Các hệ số đầu tập trung năng lượng cao, giúp tín hiệu đầu ra triệt tiêu hiện tượng trễ không cần thiết, bảo toàn dạng sóng sốc vật lý.
   - Tích hợp bộ bão hòa chống tràn số bù hai (`Industrial Standard Saturation Clamp`).
 
 #### 4. `envelope_demodulator.v`

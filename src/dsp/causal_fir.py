@@ -36,7 +36,7 @@ RTL_FIR_COEFFS_Q15 = RTL_FIR_COEFFS_INT16.astype(np.float32) / 32768.0
 RTL_ADXL345_FIR_COEFFS_INT16 = np.array([_hex_to_signed16(h) for h in RTL_ADXL345_HEX_COEFFS], dtype=np.int16)
 RTL_ADXL345_FIR_COEFFS_Q15 = RTL_ADXL345_FIR_COEFFS_INT16.astype(np.float32) / 32768.0
 
-def design_minimum_phase_fir(num_taps=32, passband=(2000, 5000), fs=12000):
+def design_minimum_phase_fir(num_taps=32, passband=(400, 1100), fs=12000):
     """
     Designs a causal Minimum-Phase Bandpass FIR filter using homomorphic cepstral folding.
     Roots outside the unit circle are reflected inside, minimizing group delay.
@@ -100,7 +100,7 @@ class CausalFIRFilter:
             if sensor_type == 'adxl345' or abs(fs - 3200.0) < 100.0:
                 self.coeffs = design_minimum_phase_fir(num_taps=num_taps, passband=(300, 1350), fs=fs)
             else:
-                self.coeffs = design_minimum_phase_fir(num_taps=num_taps, passband=(2000, 5000), fs=fs)
+                self.coeffs = design_minimum_phase_fir(num_taps=num_taps, passband=(400, 1100), fs=fs)
             
         self.num_taps = len(self.coeffs)
         self.reset()

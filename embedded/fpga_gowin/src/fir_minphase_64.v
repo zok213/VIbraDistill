@@ -3,7 +3,7 @@
 // Description: 64-Tap Minimum-Phase Causal Bandpass FIR Filter
 // Target:      Gowin GW2A-LV18PG256 (Primer 20K) DSP Multiplier/MAC Slices
 // Features:    Zero pre-cursor ringing, strictly causal, single-cycle throughput
-// Passband:    2000 Hz - 5000 Hz @ Fs = 12000 Hz
+// Passband:    Peaking Band ~720 Hz (400 - 1100 Hz) @ Fs = 12000 Hz
 // ============================================================================
 
 module fir_minphase_64 #(

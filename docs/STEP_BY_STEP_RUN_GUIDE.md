@@ -21,7 +21,7 @@ Hệ thống hoạt động theo kiến trúc **Heterogeneous Edge Co-Design**:
 
 Hệ thống hỗ trợ 2 chế độ vận hành (chuyển đổi bằng tham số `USE_ADXL345` trong [`gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v)):
 * **Mode 1 (`USE_ADXL345 = 1`):** Chạy thực tế tại bàn demo với cảm biến GY-291 ADXL345 gắn trên mô hình động cơ (3.2 kHz, dải lọc 280 - 1400 Hz, ROM `roms/adxl345/`).
-* **Mode 2 (`USE_ADXL345 = 0`):** Chạy kiểm nghiệm chuẩn công nghiệp HIL (Hardware-in-the-Loop) với tập dữ liệu CWRU 12 kHz (dải lọc 2000 - 5000 Hz, ROM `roms/hil/`).
+* **Mode 2 (`USE_ADXL345 = 0`):** Chạy kiểm nghiệm chuẩn công nghiệp HIL (Hardware-in-the-Loop) với tập dữ liệu CWRU 12 kHz (bộ lọc FIR cộng hưởng đỉnh ~720 Hz [400 - 1100 Hz], Envelope LPF 1200 Hz, ROM `roms/hil/`).
 
 ```
        [CHẾ ĐỘ 1: CẢM BIẾN THẬT]                     [CHẾ ĐỘ 2: HIL STREAMER]
@@ -245,8 +245,8 @@ Chế độ HIL (Hardware-in-the-Loop) dùng để chứng minh với Ban giám 
    parameter USE_ADXL345 = 0; // 0: HIL / 12kHz Mode
    ```
 2. Gowin EDA sẽ tự động liên kết:
-   - Bộ lọc số: [`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v) (Dải thông 2000 - 5000 Hz).
-   - Bộ giải điều chế bao: Tần số cắt $F_c = 1000\,\text{Hz}$.
+   - Bộ lọc số: [`fir_minphase_32.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/fir_minphase_32.v) (Dải đỉnh cộng hưởng ~720 Hz [400 - 1100 Hz, gain +15.0 dB]).
+   - Bộ giải điều chế bao: Tần số cắt $F_c = 1200.0\,\text{Hz}$ (IIR Butterworth bậc 2, 18-bit Q3.15 khớp mô phỏng bit-true).
    - Trọng số NPU: [`roms/hil/npu_weights_bank0..5.hex`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/roms/hil/) (Độ chính xác **98.71%**).
    - Biases NPU: `[-5, -3, 14, -6]`.
    - Dữ liệu kích thích sóng rung 12 kHz: Nạp sẵn từ các file:
