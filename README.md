@@ -922,8 +922,20 @@ Tất cả các tài liệu thực chiến chuyên sâu được lưu trữ tạ
   *(Sơ đồ nối dây Tang Primer 20K - ADXL345 - Sonix MCU - OLED - Rơ-le, bảng gán chân PMOD, hướng dẫn nạp Gowin Programmer, Keil MDK và bảng tra cứu lỗi).*
 * 📄 **Báo Cáo Thực Nghiệm AI & Đối Chuẩn SOTA**: [`docs/AI_Experimental_Synthesis_Report.md`](file:///d:/Gitrepo/VIbraDistill/docs/AI_Experimental_Synthesis_Report.md)  
   *(Chi tiết ma trận nhầm lẫn 6 bộ dataset, phân tích PPA và đối chuẩn IEEE).*
-* 🎯 **20 Câu Hỏi Phản Biện Kỹ Thuật Hội Đồng Giám Khảo**: [`docs/QnA_Cheat_Sheet_DSAC_Final.md`](file:///d:/Gitrepo/VIbraDistill/docs/QnA_Cheat_Sheet_DSAC_Final.md)  
-  *(Trang bị câu trả lời đanh thép kèm số liệu dẫn chứng về Nyquist, Dirichlet, Conformal RUL, Timing Closure và SIL-2).*
+* 🎯 **21 Câu Hỏi Phản Biện Kỹ Thuật Hội Đồng Giám Khảo**: [docs/QnA_Cheat_Sheet_DSAC_Final.md](file:///d:/Gitrepo/VIbraDistill/docs/QnA_Cheat_Sheet_DSAC_Final.md)  
+  *(Trang bị câu trả lời đanh thép kèm số liệu dẫn chứng về Nyquist, Dirichlet, Conformal RUL, Timing Closure, SIL-2 và Q21 giải mã bẫy sập RUL).* 
+* 🖥️ **Bộ Slide Thuyết Trình Tương Tác 10 Phút (Interactive HTML Deck)**: [docs/FINAL_DEFENSE_PRESENTATION_SLIDES.html](file:///d:/Gitrepo/VIbraDistill/docs/FINAL_DEFENSE_PRESENTATION_SLIDES.html)  
+  *(10 slide giao diện bán dẫn Dark Theme, tích hợp đồng hồ đếm ngược 10:00 và ngăn ghi chú lời thoại thuyết minh cho Quang).* 
+* 🗣️ **Dàn Ý 10 Slide & Kịch Bản Thuyết Minh Chi Tiết (Speaker Notes)**: [docs/FINAL_DEFENSE_SLIDE_OUTLINE_AND_SPEAKER_NOTES.md](file:///d:/Gitrepo/VIbraDistill/docs/FINAL_DEFENSE_SLIDE_OUTLINE_AND_SPEAKER_NOTES.md)  
+  *(Lời thoại tiếng Việt từng phút của Quang, kịch bản phối hợp demo 3 phút của Toàn & Thiện, bảng phân vai phản biện).* 
+* 📋 **Cheat Sheet 1 Trang A4 Bàn Demo (Demo Booth Cheat Sheet)**: [docs/DEMO_BOOTH_ONE_PAGE_CHEAT_SHEET.md](file:///d:/Gitrepo/VIbraDistill/docs/DEMO_BOOTH_ONE_PAGE_CHEAT_SHEET.md)  
+  *(Bản tóm tắt A4 in sẵn đặt bàn demo: Bảng PPA vi mạch, sơ đồ nối dây pinout, và menu 10 kịch bản cho giám khảo tự chọn).* 
+* 🎮 **Bảng Điều Khiển Live Demo 1-Click (Batch Controller Menu)**: [scripts/demo_menu.bat](file:///d:/Gitrepo/VIbraDistill/scripts/demo_menu.bat)  
+  *(Menu tương tác 1 phím bấm cho Toàn để nạp nhanh các vector thử nghiệm ModelSim / BRAM và kích hoạt rơ-le SIL-2).* 
+* 📚 **Bản Thảo Bài Báo Khoa Học Quốc Tế (IEEE Transactions Paper Draft)**: [docs/IEEE_PAPER_DRAFT_VIBRADISTILL_EDGE.md](file:///d:/Gitrepo/VIbraDistill/docs/IEEE_PAPER_DRAFT_VIBRADISTILL_EDGE.md)  
+  *(Bản thảo bài báo khoa học định dạng chuẩn IEEE Transactions on Industrial Informatics / VLSI Systems).* 
+* 🏛️ **Bản Mô Tả Đăng Ký Sáng Chế / Giải Pháp Hữu Ích (NOIP Patent Specification)**: [docs/BAN_MO_TA_SANG_CHE_VIBRADISTILL_EDGE.md](file:///d:/Gitrepo/VIbraDistill/docs/BAN_MO_TA_SANG_CHE_VIBRADISTILL_EDGE.md)  
+  *(Hồ sơ mô tả sáng chế chuẩn Cục Sở hữu Trí tuệ Việt Nam, 6 điểm yêu cầu bảo hộ khẳng định tính mới và quyền SHTT).* 
 * 📐 **Thuyết Minh Động Lực Học Máy & Nyquist Cảm Biến**: [`docs/Dataset_Kinematic_Frequency_Mapping_Justification.md`](file:///d:/Gitrepo/VIbraDistill/docs/Dataset_Kinematic_Frequency_Mapping_Justification.md)  
   *(Chứng minh cơ học vì sao ADXL345 3.2 kHz bắt trọn 100% động học lỗi vòng bi động cơ 130).*
 
