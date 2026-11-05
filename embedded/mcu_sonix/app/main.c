@@ -72,8 +72,8 @@ typedef struct __attribute__((packed)) {
     uint16_t frame_seq_id;            /* Monotonically increasing sequence ID */
     uint16_t envelope_spectrum[257];  /* 257 positive frequency bins (0 - 6.0 kHz @ 12 kHz HIL, or 0 - 1.6 kHz @ 3.2 kHz ADXL) */
     uint8_t  npu_pred_class;          /* 0: Normal, 1: Inner, 2: Outer, 3: Ball */
-    uint8_t  dirichlet_max_evidence;  /* Maximum evidence (e_max) from NPU */
-    uint16_t hardware_status_flags;   /* Bit 0: Sensor OK, Bit 1: FIR Clip, Bit 2: CRC OK */
+    uint8_t  dirichlet_max_evidence;  /* Maximum evidence (e_max) from NPU (Bit 7: OOD Alert flag) */
+    uint16_t hardware_status_flags;   /* Bytes 520..521: Direct continuous FPGA hardware RUL (Q0.15: 0 to 32768) */
     uint16_t crc16_checksum;          /* Hardware CRC-16-CCITT across bytes 0..521 */
 } fpga_telemetry_frame_t;
 
@@ -189,18 +189,27 @@ void update_asset_context_fusion(uint16_t shaft_rpm) {
  * ---------------------------------------------------------------------------- */
 int32_t estimate_continuous_rul_q16(const fpga_telemetry_frame_t *frame) {
     if (!frame) return (1200L << 16);
+
+    /* Priority 1: Direct Continuous Hardware RUL from Gowin FPGA NPU (Bytes 520..521)
+     * Transmitted in Q0.15 format (32768 = 100.0% healthy -> 0 = 0.0% terminal spall) */
+    if (frame->hardware_status_flags > 0 && frame->hardware_status_flags <= 32768) {
+        int32_t hours = ((int32_t)frame->hardware_status_flags * 1200L) >> 15;
+        if (frame->npu_pred_class != 0 && hours > 500L) hours = 500L;
+        if (hours < 2L) hours = 2L;
+        return (hours << 16);
+    }
+
     if (frame->npu_pred_class == 0) {
         return (1200L << 16); /* Nominal healthy lifespan baseline (hours) */
     }
 
-    /* Integrate spectral harmonic defect energy across bins 4 to 16 */
+    /* Priority 2 Fallback: Continuous degradation regression from Dirichlet evidence & spectral harmonic energy */
     uint32_t fault_energy = 0;
     for (uint16_t k = 4; k <= 16; k++) {
         fault_energy += frame->envelope_spectrum[k];
     }
 
-    /* Continuous degradation regression: base 350h scaled by evidence & energy */
-    int32_t hours = 350L - ((int32_t)frame->dirichlet_max_evidence * 2L) - ((int32_t)fault_energy / 16L);
+    int32_t hours = 350L - ((int32_t)(frame->dirichlet_max_evidence & 0x7F) * 2L) - ((int32_t)fault_energy / 16L);
     if (hours < 2L)   hours = 2L;    /* Clamped minimum 2.0 hours */
     if (hours > 500L) hours = 500L;  /* Clamped maximum 500.0 hours */
 
