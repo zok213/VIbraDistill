@@ -101,15 +101,16 @@ def simulate_fpga_inference(samples_int16: np.ndarray, weights_12ch: np.ndarray,
     vacuity_q15 = int(131072 // sum_e) if sum_e <= 131072 else 1
     vacuity_float = float(vacuity_q15) / 32768.0
 
-    # RUL Q15 Mapping
-    if pred_class == 0:
-        rul_pct = 100.0
-    elif pred_class == 1:
-        rul_pct = 45.0
-    elif pred_class == 2:
-        rul_pct = 25.0
+    # Continuous Dynamic RUL Q15 formulation (Bit-true to npu_12way_core.v)
+    max_fault_s = max(score_1, score_2, score_3)
+    deg_delta_s = max_fault_s - score_0
+    if deg_delta_s <= 0:
+        rul_q15 = 32768
     else:
-        rul_pct = 12.5
+        rul_penalty = (deg_delta_s * 75) >> 4
+        rul_raw = 32768 - rul_penalty
+        rul_q15 = max(0, min(32768, rul_raw))
+    rul_pct = round(float(rul_q15) * 100.0 / 32768.0, 2)
 
     ood_alert = 1 if vacuity_q15 > 14745 else 0
 

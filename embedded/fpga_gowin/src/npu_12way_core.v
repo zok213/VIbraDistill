@@ -146,6 +146,17 @@ module npu_12way_core #(
     reg signed [31:0] score_2;
     reg signed [31:0] score_3;
 
+    // Continuous Dynamic RUL Formulation on Gowin Primer 20K FPGA
+    // Evaluates in 1 clock cycle: evaluates fault degradation delta against healthy baseline
+    wire signed [31:0] max_fault_s = (score_1 >= score_2 && score_1 >= score_3) ? score_1 :
+                                     ((score_2 >= score_3) ? score_2 : score_3);
+    wire signed [31:0] deg_delta_s = max_fault_s - score_0;
+    wire signed [31:0] rul_penalty = (deg_delta_s > 32'sd0) ? ((deg_delta_s * 32'sd75) >>> 4) : 32'sd0;
+    wire signed [31:0] rul_diff    = 32'sd32768 - rul_penalty;
+    wire [15:0] continuous_rul_val = (deg_delta_s <= 32'sd0) ? 16'd32768 :
+                                     ((rul_diff <= 32'sd0) ? 16'd0 :
+                                     ((rul_diff > 32'sd32768) ? 16'd32768 : rul_diff[15:0]));
+
     // INT8 Clamping Helper Function
     function signed [7:0] clamp8(input signed [31:0] val);
         begin
@@ -257,17 +268,16 @@ module npu_12way_core #(
                     // 1. Argmax Classification
                     if (score_1 > score_0 && score_1 >= score_2 && score_1 >= score_3) begin
                         predicted_class <= 2'b01; // Inner Race Fault (BPFI)
-                        rul_q15         <= 16'd14745; // ~45% RUL remaining
                     end else if (score_2 > score_0 && score_2 > score_1 && score_2 >= score_3) begin
                         predicted_class <= 2'b10; // Outer Race Fault (BPFO)
-                        rul_q15         <= 16'd8192;  // ~25% RUL remaining
                     end else if (score_3 > score_0 && score_3 > score_1 && score_3 > score_2) begin
                         predicted_class <= 2'b11; // Ball Fault (BSF)
-                        rul_q15         <= 16'd4096;  // ~12.5% RUL remaining
                     end else begin
                         predicted_class <= 2'b00; // Normal Baseline
-                        rul_q15         <= 16'd32768; // 100% RUL remaining
                     end
+
+                    // 2. Continuous Dynamic RUL (0 to 32768 in Q0.15 = 0.0% to 100.0%)
+                    rul_q15 <= continuous_rul_val;
 
                     // 2. Pack 8-bit Logits: {score3, score2, score1, score0} shifted by 5
                     logits_packed <= {

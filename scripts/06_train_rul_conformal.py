@@ -60,10 +60,10 @@ def main():
     parser.add_argument("--lr", type=float, default=2e-3, help="Learning rate")
     parser.add_argument("--condition", type=str, default="35Hz12kN", help="Operating condition")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--piecewise-knee", type=float, default=1.0, help="Piecewise RUL knee fraction (1.0 = linear, <1.0 = SOTA piecewise)")
-    parser.add_argument("--use-distill", action="store_true", default=True, help="Use Teacher-Student Knowledge Distillation for RUL")
-    parser.add_argument("--teacher-ckpt", type=str, default="checkpoints/teacher/best_teacher.pt", help="Teacher checkpoint path")
-    parser.add_argument("--kd-weight", type=float, default=0.4, help="Knowledge Distillation loss weight")
+    parser.add_argument("--piecewise-knee", type=float, default=0.5, help="Piecewise RUL knee fraction (1.0 = linear, <1.0 = SOTA piecewise)")
+    parser.add_argument("--use-distill", action="store_true", default=False, help="Use Teacher-Student Knowledge Distillation for RUL")
+    parser.add_argument("--teacher-ckpt", type=str, default="", help="Teacher checkpoint path")
+    parser.add_argument("--kd-weight", type=float, default=0.0, help="Knowledge Distillation loss weight")
     parser.add_argument("--device", type=str, default=None, help="Device (e.g. cuda, cuda:0, cpu)")
     args = parser.parse_args()
     
@@ -139,7 +139,13 @@ def main():
         
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-5)
-    criterion_rul = nn.SmoothL1Loss()
+    
+    # Industrial Safety-Critical Asymmetric Loss (penalizes overestimation near end of life)
+    def criterion_rul(pred, target):
+        diff = pred - target
+        penalty = torch.where((target < 0.15) & (diff > 0), 12.0,
+                  torch.where((target < 0.35) & (diff > 0), 6.0, 1.0))
+        return torch.mean(penalty * torch.nn.functional.smooth_l1_loss(pred, target, reduction='none'))
     
     # 3. Train Prognostic Head with Knowledge Distillation
     print(f"\n[2] Training Prognostic Head on Train Lifecycles ({args.epochs} epochs, KD={teacher is not None})...")

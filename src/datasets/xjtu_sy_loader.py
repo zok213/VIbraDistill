@@ -81,7 +81,9 @@ class XJTUSYBearingDataset(Dataset):
                 continue
                 
             step = max(1, total_lifespan // max_samples_per_bearing)
-            sub_files = csv_files[::step]
+            sub_files = list(csv_files[::step])
+            if csv_files[-1] not in sub_files:
+                sub_files.append(csv_files[-1])
             
             for file_idx, f_path in enumerate(sub_files):
                 actual_step_idx = int(os.path.splitext(os.path.basename(f_path))[0])
@@ -98,22 +100,28 @@ class XJTUSYBearingDataset(Dataset):
                 
                 try:
                     import pandas as pd
-                    df = pd.read_csv(f_path, nrows=self.window_size * 2)
-                    col = df.columns[0] # Horizontal vibration channel
-                    sig = df[col].values.astype(np.float32)
+                    from src.dsp.resample import resample_vibration_signal
                     
-                    if len(sig) >= self.window_size:
-                        win = sig[:self.window_size]
-                        dsp_out = self.dsp.process_window(win, rpm=self.meta['rpm'])
-                        
-                        self.samples.append({
-                            'spectrum': torch.from_numpy(dsp_out['spectrum']).unsqueeze(0), # [1, 257]
-                            'prior': torch.from_numpy(dsp_out['prior']),                    # [4]
-                            'rul': torch.tensor([rul_fraction], dtype=torch.float32),      # [1]
-                            'bearing': b_name,
-                            'step': actual_step_idx,
-                            'lifespan': total_lifespan
-                        })
+                    # Read 2048 samples at 25.6 kHz (~80ms, >2.8 complete shaft revolutions)
+                    df = pd.read_csv(f_path, nrows=2048)
+                    col = df.columns[0] # Horizontal vibration channel
+                    sig_25k = df[col].values.astype(np.float32)
+                    
+                    if len(sig_25k) >= 1024:
+                        # Antialias polyphase resample to 12.0 kHz hardware rate
+                        sig_12k = resample_vibration_signal(sig_25k, orig_fs=25600.0, target_fs=12000.0)
+                        if len(sig_12k) >= self.window_size:
+                            win = sig_12k[:self.window_size]
+                            dsp_out = self.dsp.process_window(win, rpm=self.meta['rpm'])
+                            
+                            self.samples.append({
+                                'spectrum': torch.from_numpy(dsp_out['spectrum']).unsqueeze(0), # [1, 257]
+                                'prior': torch.from_numpy(dsp_out['prior']),                    # [4]
+                                'rul': torch.tensor([rul_fraction], dtype=torch.float32),      # [1]
+                                'bearing': b_name,
+                                'step': actual_step_idx,
+                                'lifespan': total_lifespan
+                            })
                 except Exception as e:
                     pass
                     
