@@ -248,7 +248,7 @@ module gowin_top_soc #(
         .rst_n                  (sys_rst_n),
         .start_tx               (spi_start_tx),
         .npu_pred_class         (npu_pred_class),
-        .dirichlet_max_evidence (npu_vacuity_q15[15:8]),
+        .dirichlet_vacuity_u8   (npu_vacuity_q15[15:8]),
         .hardware_status_flags  (npu_rul_q15), // Direct continuous hardware RUL (Q0.15: 0 to 32768)
         .bram_addr              (spi_bram_addr),
         .bram_data              (spi_bram_data),

@@ -25,7 +25,7 @@ module spi_master_packet #(
     
     // NPU Inference Results & Status
     input  wire [1:0]  npu_pred_class,          // 0: Normal, 1: Inner, 2: Outer, 3: Ball
-    input  wire [7:0]  dirichlet_max_evidence,  // Max evidence / uncertainty metric
+    input  wire [7:0]  dirichlet_vacuity_u8,    // Direct Dirichlet Epistemic Vacuity u* (0..128)
     input  wire [15:0] hardware_status_flags,   // Status flags (bit 0: Sensor, bit 1: FIR, bit 2: CRC)
     
     // Interface to Dual-Port Block RAM storing 257 FFT bins
@@ -82,8 +82,8 @@ module spi_master_packet #(
         (byte_idx == 10'd2)   ? frame_count[7:0] :         // frame_seq_id low byte
         (byte_idx == 10'd3)   ? frame_count[15:8] :        // frame_seq_id high byte
         (byte_idx <= 10'd517) ? (byte_idx[0] ? bram_data[15:8] : bram_data[7:0]) : // 257 bins (Low, High)
-        (byte_idx == 10'd518) ? {(dirichlet_max_evidence > 8'd57), 5'b00000, npu_pred_class} : // Bit 7: OOD Alert, Bits 1..0: Class
-        (byte_idx == 10'd519) ? dirichlet_max_evidence :   // dirichlet_max_evidence
+        (byte_idx == 10'd518) ? {(dirichlet_vacuity_u8 > 8'd57), 5'b00000, npu_pred_class} : // Bit 7: OOD Alert, Bits 1..0: Class
+        (byte_idx == 10'd519) ? dirichlet_vacuity_u8 :     // dirichlet_vacuity_u8
         (byte_idx == 10'd520) ? hardware_status_flags[7:0] : // hardware_status_flags low byte
         (byte_idx == 10'd521) ? hardware_status_flags[15:8] : // hardware_status_flags high byte
         (byte_idx == 10'd522) ? crc16_reg[7:0] :           // crc16 low byte (Little-Endian in C)
