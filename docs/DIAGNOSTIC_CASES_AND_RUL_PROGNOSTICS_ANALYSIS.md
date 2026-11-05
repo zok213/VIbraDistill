@@ -137,17 +137,17 @@ Toàn bộ 6 trường hợp đã được kiểm chứng số học bit-true v�
 ## V. ĐỐI CHIẾU TRỰC QUAN HÓA CÁC TRƯỜNG HỢP KIỂM CHUẨN
 
 ```carousel
-![Case 1: Normal Baseline](/d:/Gitrepo/VIbraDistill/docs/figures/diagnostic_cases/case1_normal_baseline.png)
+![Case 1: Normal Baseline](figures/diagnostic_cases/case1_normal_baseline.png)
 <!-- slide -->
-![Case 2: Inner Race Fault](/d:/Gitrepo/VIbraDistill/docs/figures/diagnostic_cases/case2_inner_race_fault.png)
+![Case 2: Inner Race Fault](figures/diagnostic_cases/case2_inner_race_fault.png)
 <!-- slide -->
-![Case 3: Outer Race Fault](/d:/Gitrepo/VIbraDistill/docs/figures/diagnostic_cases/case3_outer_race_fault.png)
+![Case 3: Outer Race Fault](figures/diagnostic_cases/case3_outer_race_fault.png)
 <!-- slide -->
-![Case 4: Ball Fault](/d:/Gitrepo/VIbraDistill/docs/figures/diagnostic_cases/case4_ball_fault.png)
+![Case 4: Ball Fault](figures/diagnostic_cases/case4_ball_fault.png)
 <!-- slide -->
-![Case 5: PRONOSTIA Terminal RUL](/d:/Gitrepo/VIbraDistill/docs/figures/diagnostic_cases/case5_pronostia_terminal_rul.png)
+![Case 5: PRONOSTIA Terminal RUL](figures/diagnostic_cases/case5_pronostia_terminal_rul.png)
 <!-- slide -->
-![Case 6: Mechanical OOD Gearbox](/d:/Gitrepo/VIbraDistill/docs/figures/diagnostic_cases/case6_mechanical_ood_gearbox.png)
+![Case 6: Mechanical OOD Gearbox](figures/diagnostic_cases/case6_mechanical_ood_gearbox.png)
 ```
 
 ---

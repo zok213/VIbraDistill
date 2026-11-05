@@ -1,7 +1,7 @@
 # BÁO CÁO KỸ THUẬT: ĐỐI SOÁT GÓI TIN SPI 524-BYTE VÀ TRÍCH XUẤT TÍN HIỆU NPU
 
 - **Dự án:** VibraDistill-Edge (Gowin Tang Primer 20K FPGA $\leftrightarrow$ Sonix SN32F407 MCU)
-- **Top Module:** `gowin_top_soc` ([`src/gowin_top_soc_hil.v`](file:///t:/MCU_FPGA/FPGA_FINAL/src/gowin_top_soc_hil.v))
+- **Top Module:** `gowin_top_soc` ([`embedded/fpga_gowin/src/gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v))
 - **Mục tiêu:** Thẩm định việc khối NPU ghi kết quả vào gói tin SPI 524-byte, giải mã nguồn tín hiệu Byte 518 và cơ chế báo trạng thái "NPU xong" trên phần cứng RTL.
 - **Thời gian lập:** 02/11/2026.
 
@@ -9,10 +9,10 @@
 
 ## 1. Kết Quả Chụp Thô Gói 524-Byte (Raw Dump)
 
-Khối mô phỏng phần cứng testbench [`sim/tb_capture_spi_packet.v`](file:///t:/MCU_FPGA/FPGA_FINAL/sim/tb_capture_spi_packet.v) đã chạy tích hợp giữa **`npu_12way_core.v`** và **`spi_master_packet.v`** bằng trình mô phỏng **ModelSim SE-64 10.6d**, lấy mẫu chuẩn xác từng bit trên đường truyền SPI vật lý (`spi_sck`, `spi_mosi`, `spi_cs_n`).
+Khối mô phỏng phần cứng testbench [`embedded/fpga_gowin/src/tb_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/tb_top_soc.v) đã chạy tích hợp giữa **`npu_12way_core.v`** và **`spi_master_packet.v`** bằng trình mô phỏng **ModelSim SE-64 10.6d**, lấy mẫu chuẩn xác từng bit trên đường truyền SPI vật lý (`spi_sck`, `spi_mosi`, `spi_cs_n`).
 
 Toàn bộ 524 byte thô đã được ghi nhận tại file:
-👉 [`sim/captured_spi_524_packet.hex`](file:///t:/MCU_FPGA/FPGA_FINAL/sim/captured_spi_524_packet.hex)
+👉 `captured_spi_524_packet.hex`
 
 ### 1.1. Trích xuất Byte 518 đến Byte 523 (Vùng Chẩn Đoán NPU)
 
@@ -41,23 +41,23 @@ Toàn bộ 524 byte thô đã được ghi nhận tại file:
 
 ### 2.1. Byte 518 lấy từ tín hiệu nào?
 
-1. **Khối phát sinh:** Lõi NPU 12 kênh ([`src/npu_12way_core.v`](file:///t:/MCU_FPGA/FPGA_FINAL/src/npu_12way_core.v)).
-   - Tại tầng Top [`src/gowin_top_soc_hil.v`](file:///t:/MCU_FPGA/FPGA_FINAL/src/gowin_top_soc_hil.v#L229-L260):
+1. **Khối phát sinh:** Lõi NPU 12 kênh ([`embedded/fpga_gowin/src/npu_12way_core.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/npu_12way_core.v)).
+   - Tại tầng Top [`embedded/fpga_gowin/src/gowin_top_soc.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/gowin_top_soc.v):
      ```verilog
-     wire [1:0] npu_pred_class; // Dòng 229
+     wire [1:0] npu_pred_class;
 
      npu_12way_core u_npu (
          ...
-         .predicted_class (npu_pred_class), // Dòng 255
+         .predicted_class (npu_pred_class),
          ...
      );
      ```
-2. **Khối nhận và đóng gói:** Module phát SPI DMA ([`src/spi_master_packet.v`](file:///t:/MCU_FPGA/FPGA_FINAL/src/spi_master_packet.v)).
-   - Tại dòng 278 của `gowin_top_soc_hil.v`:
+2. **Khối nhận và đóng gói:** Module phát SPI DMA ([`embedded/fpga_gowin/src/spi_master_packet.v`](file:///d:/Gitrepo/VIbraDistill/embedded/fpga_gowin/src/spi_master_packet.v)).
+   - Tại module `gowin_top_soc.v`:
      ```verilog
      spi_master_packet u_spi_tx (
          ...
-         .npu_pred_class (npu_pred_class), // Dòng 278
+         .npu_pred_class (npu_pred_class),
          ...
      );
      ```
