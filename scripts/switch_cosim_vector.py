@@ -198,6 +198,30 @@ def main():
             print(f"[!] Lỗi: Chưa tìm thấy tệp phổ {spec_filename} trong {TEST_VEC_DIR}.")
             return
 
+    # Locate raw vibration file (512 samples INT16)
+    raw_src = None
+    possible_raw_dirs = [
+        os.path.join(ROMS_DIR, 'stimulus_suite'),
+        ROMS_DIR,
+        os.path.join(CUR_DIR, 'roms', 'stimulus_suite'),
+        os.path.join(CUR_DIR, 'roms')
+    ]
+    possible_raw_names = [
+        f"{stem}.hex",
+        f"stimulus_{stem}.hex",
+        f"stimulus_{stem}_life.hex" if stem.startswith('pronostia') and 'life' not in stem else ""
+    ]
+    for rdir in possible_raw_dirs:
+        if os.path.isdir(rdir):
+            for rname in possible_raw_names:
+                if rname:
+                    cand = os.path.join(rdir, rname)
+                    if os.path.exists(cand):
+                        raw_src = cand
+                        break
+            if raw_src:
+                break
+
     # Load spectrum input
     spec_data = []
     with open(src_spec, 'r') as f:
@@ -239,6 +263,11 @@ def main():
             f.write(f"{rul_q15:08X}\n")
             f.write(f"{ood_alert:08X}\n")
 
+        if raw_src:
+            r_dir = os.path.join(t_dir, 'roms')
+            if os.path.exists(r_dir):
+                shutil.copyfile(raw_src, os.path.join(r_dir, 'cosim_raw_vibration.hex'))
+
         tag = "Toàn Workspace" if t_dir == TOAN_DIR else "Repo"
         print(f"[+] [{tag}] Đã cập nhật test_vectors/cosim_input.hex & cosim_golden.hex")
 
@@ -249,13 +278,16 @@ def main():
     print(f" CẤU HÌNH THÀNH CÔNG VECTOR [{key}]: {name.upper()}")
     print("=" * 78)
     print(f"  * Mô tả tình trạng cơ khí:       {desc}")
+    print(f"  * Sóng Rung Thô (Pre-DSP INT16):  {os.path.basename(raw_src) if raw_src else 'N/A'} (512 mẫu -> roms/cosim_raw_vibration.hex)")
+    print(f"  * Phổ Tần Số NPU (Post-DSP INT8): {spec_filename} (257 bins -> test_vectors/cosim_input.hex)")
     print(f"  * Nhận Dạng Lỗi Phần Cứng (FPGA): Lớp {pred} -> {class_names[pred]}")
     print(f"  * Điểm Số Tích Lũy 12 Kênh MAC:  Scores = {scores}")
     print(f"  * RUL Động Liên Tục Phần Cứng:   {rul_pct:5.1f}% (Q15 = {rul_q15})")
     print(f"  * Độ Bất Định Dirichlet (u*):     {vac_float:.4f} (Q15 = {vac_q15})")
     print(f"  * Trạng Thái Rơ-le SIL-2:        {trip_str}")
     print("=" * 78)
-    print("👉 Toàn chỉ cần mở ModelSim chạy 'do run.do.txt' là sẽ thấy 100% BIT-TRUE MATCHED!")
+    print("👉 Toàn mở ModelSim gõ 'do run.do.txt' để test Lõi NPU với phổ INT8 này!")
+    print("👉 Muốn test toàn chuỗi DSP từ sóng thô: nạp roms/cosim_raw_vibration.hex vào Top SoC!")
     print("=" * 78)
 
 if __name__ == '__main__':
