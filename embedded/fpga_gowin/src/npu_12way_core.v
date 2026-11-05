@@ -1,13 +1,14 @@
 // ============================================================================
 // Module Name: npu_12way_core
 // Description: Gowin Primer 20K 12-Way Systolic Spectral Inference Core
-//              Executes Direct Hardware-Accelerated Classification on 257 Bins.
+//              Executes Direct Hardware-Accelerated Classification on 257 Bins
+//              and Real Machine-Learned PRONOSTIA RUL Regression on 261 Inputs.
 // Target:      Gowin GW2A-LV18PG256 (20K LUTs, 48 DSP18E, 46 BSRAMs)
-// Latency:     260 Clock Cycles @ 100 MHz = 2.60 µs (Bit-True INT8: 96.38% Acc)
-// Memory:      6 BSRAM Banks (13% Utilization, ZERO DFF Buffer Overflow)
-// Features:    - 12-Way Parallel INT8 MAC Datapath
-//              - 4 Fault Classes x 3 Sub-Band Channels
-//              - Integrated Evidential Dirichlet Uncertainty & RUL Logic
+// Latency:     264 Clock Cycles @ 100 MHz = 2.64 µs (Bit-True INT8: 96.38% Acc)
+// Memory:      6 BSRAM Banks + 1 RUL ROM Bank (Zero DFF Buffer Overflow)
+// Features:    - 12-Way Parallel INT8 MAC Datapath (Classification)
+//              - Dedicated 261-Tap PRONOSTIA Hardware RUL MAC Accumulator
+//              - Dirichlet Evidential Uncertainty Quantification (Vacuity u*)
 // ============================================================================
 
 `timescale 1ns / 1ps
@@ -22,7 +23,11 @@ module npu_12way_core #(
     parameter signed [31:0] BIAS_0 = -32'sd5,
     parameter signed [31:0] BIAS_1 = -32'sd3,
     parameter signed [31:0] BIAS_2 =  32'sd14,
-    parameter signed [31:0] BIAS_3 = -32'sd6
+    parameter signed [31:0] BIAS_3 = -32'sd6,
+    parameter RUL_WEIGHT_FILE      = "roms/pronostia_rul_weights.hex",
+    parameter signed [31:0] RUL_HW_MULT  = -32'sd220,
+    parameter [4:0]         RUL_HW_SHIFT = 5'd10,
+    parameter signed [31:0] RUL_HW_BIAS  = 32'sd30504
 )(
     input  wire                 clk,            // 100 MHz Core Clock
     input  wire                 rst_n,          // Synchronous Active-Low Reset
@@ -41,7 +46,7 @@ module npu_12way_core #(
     output reg  [1:0]           predicted_class,// 0: Normal, 1: Inner, 2: Outer, 3: Ball
     output reg  signed [31:0]   logits_packed,  // {logit[3], logit[2], logit[1], logit[0]}
     output reg  [15:0]          vacuity_q15,    // Dirichlet Epistemic Uncertainty Q0.15
-    output reg  [15:0]          rul_q15,        // Remaining Useful Life Fraction Q0.15
+    output reg  [15:0]          rul_q15,        // PRONOSTIA Real Hardware RUL Q0.15 (0 to 32768)
     output reg                  ood_alert       // 1 if vacuity_q15 > 14745 (u* = 0.45)
 );
 
@@ -62,7 +67,7 @@ module npu_12way_core #(
     end
 
     // =========================================================================
-    // 2. 6 Dual-Port BSRAM Banks (16-bit words -> 2 x INT8 weights each)
+    // 2a. 6 Dual-Port BSRAM Banks for Classification (16-bit words -> 2 x INT8 weights each)
     // =========================================================================
     reg [15:0] bank0_mem [0:1023];
     reg [15:0] bank1_mem [0:1023];
@@ -91,7 +96,15 @@ module npu_12way_core #(
     };
 
     // =========================================================================
-    // 3. 12-Way MAC Array
+    // 2b. PRONOSTIA FEMTO-ST Real RUL Weight ROM (261 INT8 parameters)
+    // =========================================================================
+    reg signed [7:0] rul_weights_mem [0:1023];
+    initial begin
+        $readmemh(RUL_WEIGHT_FILE, rul_weights_mem);
+    end
+
+    // =========================================================================
+    // 3. 12-Way MAC Array (Classification Backbone)
     // =========================================================================
     reg                 mac_en;
     reg                 acc_clear;
@@ -126,7 +139,25 @@ module npu_12way_core #(
     endgenerate
 
     // =========================================================================
-    // 4. Main FSM Execution Controller
+    // 4. PRONOSTIA Hardware RUL Pipelined Accumulator Datapath
+    // =========================================================================
+    reg signed [7:0]  rul_pipe1_act;
+    reg signed [7:0]  rul_pipe1_w;
+    reg               rul_pipe1_en;
+    reg signed [15:0] rul_pipe2_prod;
+    reg               rul_pipe2_en;
+    reg signed [31:0] rul_mac_accum;
+
+    wire signed [7:0] current_feat = (step_cnt < 9'd257) ? spectrum_mem[step_cnt] : prior_mem[step_cnt - 9'd257];
+
+    // Fixed-Point Arithmetic for PRONOSTIA RUL Requantization
+    wire signed [63:0] rul_scaled_prod = (rul_mac_accum * RUL_HW_MULT);
+    wire signed [31:0] rul_scaled_val  = (rul_scaled_prod >>> RUL_HW_SHIFT) + RUL_HW_BIAS;
+    wire [15:0] pronostia_model_rul_q15 = (rul_scaled_val <= 32'sd0) ? 16'd0 :
+                                          ((rul_scaled_val >= 32'sd32768) ? 16'd32768 : rul_scaled_val[15:0]);
+
+    // =========================================================================
+    // 5. Main FSM Execution Controller
     // =========================================================================
     localparam S_IDLE      = 3'd0;
     localparam S_COMPUTE   = 3'd1;
@@ -145,17 +176,6 @@ module npu_12way_core #(
     reg signed [31:0] score_1;
     reg signed [31:0] score_2;
     reg signed [31:0] score_3;
-
-    // Continuous Dynamic RUL Formulation on Gowin Primer 20K FPGA
-    // Evaluates in 1 clock cycle: evaluates fault degradation delta against healthy baseline
-    wire signed [31:0] max_fault_s = (score_1 >= score_2 && score_1 >= score_3) ? score_1 :
-                                     ((score_2 >= score_3) ? score_2 : score_3);
-    wire signed [31:0] deg_delta_s = max_fault_s - score_0;
-    wire signed [31:0] rul_penalty = (deg_delta_s > 32'sd0) ? ((deg_delta_s * 32'sd75) >>> 4) : 32'sd0;
-    wire signed [31:0] rul_diff    = 32'sd32768 - rul_penalty;
-    wire [15:0] continuous_rul_val = (deg_delta_s <= 32'sd0) ? 16'd32768 :
-                                     ((rul_diff <= 32'sd0) ? 16'd0 :
-                                     ((rul_diff > 32'sd32768) ? 16'd32768 : rul_diff[15:0]));
 
     // INT8 Clamping Helper Function
     function signed [7:0] clamp8(input signed [31:0] val);
@@ -215,6 +235,12 @@ module npu_12way_core #(
             score_3         <= 32'sd0;
             sum_evidence    <= 18'd0;
             div_start       <= 1'b0;
+            rul_mac_accum   <= 32'sd0;
+            rul_pipe1_act   <= 8'sd0;
+            rul_pipe1_w     <= 8'sd0;
+            rul_pipe1_en    <= 1'b0;
+            rul_pipe2_prod  <= 16'sd0;
+            rul_pipe2_en    <= 1'b0;
         end else begin
             case (state)
                 S_IDLE: begin
@@ -228,16 +254,41 @@ module npu_12way_core #(
                         mac_en        <= 1'b1;
                         acc_clear     <= 1'b1;
                         act_broadcast <= spectrum_mem[0];
+                        rul_mac_accum <= 32'sd0;
+                        rul_pipe1_act <= 8'sd0;
+                        rul_pipe1_w   <= 8'sd0;
+                        rul_pipe1_en  <= 1'b0;
+                        rul_pipe2_prod<= 16'sd0;
+                        rul_pipe2_en  <= 1'b0;
                     end
                 end
 
                 S_COMPUTE: begin
                     acc_clear <= 1'b0;
+
+                    // PRONOSTIA Hardware RUL Datapath: Stage 1 Pipeline Capture
+                    rul_pipe1_act <= current_feat;
+                    rul_pipe1_w   <= rul_weights_mem[step_cnt];
+                    rul_pipe1_en  <= 1'b1;
+
+                    // PRONOSTIA Hardware RUL Datapath: Stage 2 Multiplier
+                    rul_pipe2_prod <= rul_pipe1_act * rul_pipe1_w;
+                    rul_pipe2_en   <= rul_pipe1_en;
+
+                    // PRONOSTIA Hardware RUL Datapath: Stage 3 Accumulator
+                    if (rul_pipe2_en) begin
+                        rul_mac_accum <= rul_mac_accum + {{16{rul_pipe2_prod[15]}}, rul_pipe2_prod};
+                    end
+
+                    // Classification systolic feeding (stops after bin 256)
                     if (step_cnt < 9'd256) begin
                         step_cnt      <= step_cnt + 1'b1;
                         bsram_addr    <= step_cnt + 1'b1;
                         act_broadcast <= spectrum_mem[step_cnt + 1'b1];
                         mac_en        <= 1'b1;
+                    end else if (step_cnt < 9'd260) begin
+                        step_cnt      <= step_cnt + 1'b1;
+                        mac_en        <= 1'b0; // Deassert classification mac_en for priors
                     end else begin
                         mac_en <= 1'b0;
                         state  <= S_DRAIN_1;
@@ -245,18 +296,27 @@ module npu_12way_core #(
                 end
 
                 S_DRAIN_1: begin
-                    // Pipeline drain cycle 1: pipe1 registers capture bin 256
+                    // Pipeline drain cycle 1: capture tap 260 product
+                    rul_pipe1_en   <= 1'b0;
+                    rul_pipe2_prod <= rul_pipe1_act * rul_pipe1_w;
+                    rul_pipe2_en   <= rul_pipe1_en;
+                    if (rul_pipe2_en) begin
+                        rul_mac_accum <= rul_mac_accum + {{16{rul_pipe2_prod[15]}}, rul_pipe2_prod};
+                    end
                     state <= S_DRAIN_2;
                 end
 
                 S_DRAIN_2: begin
-                    // Pipeline drain cycle 2: pipe2 registers capture products of bin 256
+                    // Pipeline drain cycle 2: accumulate tap 260 product
+                    rul_pipe2_en <= 1'b0;
+                    if (rul_pipe2_en) begin
+                        rul_mac_accum <= rul_mac_accum + {{16{rul_pipe2_prod[15]}}, rul_pipe2_prod};
+                    end
                     state <= S_SUM;
                 end
 
                 S_SUM: begin
-                    // Final products of bin 256 have accumulated into accum[0..11]
-                    // Aggregate 3 sub-bands per class + bit-true trained parameter biases
+                    // Final products have fully accumulated into accum[0..11] and rul_mac_accum
                     score_0 <= acc[0] + acc[1] + acc[2] + BIAS_0;
                     score_1 <= acc[3] + acc[4] + acc[5] + BIAS_1;
                     score_2 <= acc[6] + acc[7] + acc[8] + BIAS_2;
@@ -276,10 +336,12 @@ module npu_12way_core #(
                         predicted_class <= 2'b00; // Normal Baseline
                     end
 
-                    // 2. Continuous Dynamic RUL (0 to 32768 in Q0.15 = 0.0% to 100.0%)
-                    rul_q15 <= continuous_rul_val;
+                    // 2. Real Machine-Learned PRONOSTIA Hardware RUL Engine
+                    // Requantizes the 261-tap accumulated dot-product:
+                    // rul_q15 = clamp((rul_mac_accum * MULT >>> SHIFT) + BIAS, 0, 32768)
+                    rul_q15 <= pronostia_model_rul_q15;
 
-                    // 2. Pack 8-bit Logits: {score3, score2, score1, score0} shifted by 5
+                    // 3. Pack 8-bit Logits: {score3, score2, score1, score0} shifted by 5
                     logits_packed <= {
                         clamp8(score_3 >>> 5),
                         clamp8(score_2 >>> 5),
@@ -287,8 +349,7 @@ module npu_12way_core #(
                         clamp8(score_0 >>> 5)
                     };
 
-                    // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
-                                        // 3. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
+                    // 4. Dirichlet Evidential Vacuity (Uncertainty u* = 4 / S)
                     sum_evidence <= get_evidence(score_0) + get_evidence(score_1) +
                                     get_evidence(score_2) + get_evidence(score_3) + 18'd4;
                     state        <= S_CHECK;

@@ -1,0 +1,17 @@
+{
+  "model_name": "PRONOSTIA_FPGA_RUL_REGRESSOR",
+  "architecture": "Single-Cycle Streaming INT8 MAC (261 taps)",
+  "dataset": "PRONOSTIA FEMTO-ST Run-to-Failure (NSK 6804RS @ 1800 RPM)",
+  "training_bearings": [
+    "Bearing1_1",
+    "Bearing1_2"
+  ],
+  "test_bearing": "Bearing1_3",
+  "num_weights": 261,
+  "quantization": "INT8 weights, INT32 accumulator, Q0.15 output",
+  "hardware_mult": -220,
+  "hardware_shift": 10,
+  "hardware_bias": 30504,
+  "test_mae_hours": 1.4970416278824807,
+  "target_mae_hours": 1.85
+}

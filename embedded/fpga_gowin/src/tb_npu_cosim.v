@@ -46,7 +46,8 @@ module tb_npu_cosim;
         .BIAS_0            (-32'sd5),
         .BIAS_1            (-32'sd3),
         .BIAS_2            (32'sd14),
-        .BIAS_3            (-32'sd6)
+        .BIAS_3            (-32'sd6),
+        .RUL_WEIGHT_FILE   ("roms/pronostia_rul_weights.hex")
     ) dut (
         .clk             (clk),
         .rst_n           (rst_n),

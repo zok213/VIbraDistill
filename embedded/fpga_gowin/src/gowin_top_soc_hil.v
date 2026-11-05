@@ -16,7 +16,8 @@ module gowin_top_soc #(
     parameter signed [31:0] BIAS_0 = -32'sd5,
     parameter signed [31:0] BIAS_1 = -32'sd3,
     parameter signed [31:0] BIAS_2 =  32'sd14,
-    parameter signed [31:0] BIAS_3 = -32'sd6
+    parameter signed [31:0] BIAS_3 = -32'sd6,
+    parameter RUL_WEIGHT_FILE = "roms/hil/pronostia_rul_weights.hex"
 )(
     input  wire                 clk_27m,          
     input  wire                 rst_n_pin,        
@@ -267,7 +268,8 @@ module gowin_top_soc #(
         .BIAS_0            (BIAS_0),
         .BIAS_1            (BIAS_1),
         .BIAS_2            (BIAS_2),
-        .BIAS_3            (BIAS_3)
+        .BIAS_3            (BIAS_3),
+        .RUL_WEIGHT_FILE   (RUL_WEIGHT_FILE)
     ) u_npu (
         .clk             (clk_100m),
         .rst_n           (sys_rst_n),

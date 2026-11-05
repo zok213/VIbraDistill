@@ -23,7 +23,8 @@ module gowin_top_soc #(
     parameter signed [31:0] BIAS_0 = USE_ADXL345 ? 32'sd0  : -32'sd5,
     parameter signed [31:0] BIAS_1 = USE_ADXL345 ? -32'sd3 : -32'sd3,
     parameter signed [31:0] BIAS_2 = USE_ADXL345 ? 32'sd8  : 32'sd14,
-    parameter signed [31:0] BIAS_3 = USE_ADXL345 ? -32'sd4 : -32'sd6
+    parameter signed [31:0] BIAS_3 = USE_ADXL345 ? -32'sd4 : -32'sd6,
+    parameter RUL_WEIGHT_FILE = "roms/hil/pronostia_rul_weights.hex"
 )(
     input  wire                 clk_27m,          // 27 MHz On-Board Crystal Oscillator (Pin H11)
     input  wire                 rst_n_pin,        // Active-Low Reset Pushbutton (Pin T10)
@@ -205,7 +206,8 @@ module gowin_top_soc #(
         .BIAS_0            (BIAS_0),
         .BIAS_1            (BIAS_1),
         .BIAS_2            (BIAS_2),
-        .BIAS_3            (BIAS_3)
+        .BIAS_3            (BIAS_3),
+        .RUL_WEIGHT_FILE   (RUL_WEIGHT_FILE)
     ) u_npu (
         .clk             (clk_100m),
         .rst_n           (sys_rst_n),

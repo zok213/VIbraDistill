@@ -117,7 +117,26 @@ def load_hil_weights():
         channels.extend([ch_low, ch_high])
     return np.array(channels, dtype=np.int32)
 
-def compute_golden_continuous(spec_int8, weights, biases):
+def load_pronostia_rul_weights():
+    rul_candidates = [
+        os.path.join(ROMS_DIR, 'pronostia_rul_weights.hex'),
+        os.path.join(ROMS_DIR, 'hil', 'pronostia_rul_weights.hex'),
+        os.path.join(REPO_ROOT, 'embedded', 'fpga_gowin', 'roms', 'pronostia_rul_weights.hex'),
+        os.path.join(TOAN_DIR, 'roms', 'pronostia_rul_weights.hex')
+    ]
+    for p in rul_candidates:
+        if os.path.exists(p):
+            with open(p, 'r') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            weights = []
+            for l in lines[:261]:
+                w = int(l, 16)
+                if w >= 128: w -= 256
+                weights.append(w)
+            return np.array(weights, dtype=np.int32)
+    return np.zeros(261, dtype=np.int32)
+
+def compute_golden_continuous(spec_int8, weights, biases, rul_weights=None):
     accum = np.dot(weights, spec_int8[:257])
     s0 = int(accum[0] + accum[1] + accum[2] + biases[0])
     s1 = int(accum[3] + accum[4] + accum[5] + biases[1])
@@ -136,15 +155,19 @@ def compute_golden_continuous(spec_int8, weights, biases):
     vac_q15 = int(131072 // sum_e) if sum_e <= 131072 else 1
     vac_float = float(vac_q15) / 32768.0
 
-    # Continuous Hardware Dynamic RUL (Bit-true to npu_12way_core.v)
-    max_fault_s = max(s1, s2, s3)
-    deg_delta_s = max_fault_s - s0
-    if deg_delta_s <= 0:
-        rul_q15 = 32768
-    else:
-        rul_penalty = (deg_delta_s * 75) >> 4
-        rul_raw = 32768 - rul_penalty
-        rul_q15 = max(0, min(32768, rul_raw))
+    # Real PRONOSTIA Hardware RUL Model (Bit-true to npu_12way_core.v)
+    if rul_weights is None or len(rul_weights) < 261:
+        rul_weights = load_pronostia_rul_weights()
+    in_261 = np.zeros(261, dtype=np.int32)
+    in_261[:min(len(spec_int8), 261)] = spec_int8[:min(len(spec_int8), 261)]
+    
+    rul_mac_accum = int(np.dot(in_261, rul_weights))
+    RUL_HW_MULT  = -220
+    RUL_HW_SHIFT = 10
+    RUL_HW_BIAS  = 30504
+
+    rul_scaled = ((rul_mac_accum * RUL_HW_MULT) >> RUL_HW_SHIFT) + RUL_HW_BIAS
+    rul_q15 = max(0, min(32768, rul_scaled))
     rul_pct = float(rul_q15) * 100.0 / 32768.0
 
     ood_alert = 1 if vac_q15 > 14745 else 0
