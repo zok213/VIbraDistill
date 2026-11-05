@@ -41,12 +41,14 @@ class XJTUSYBearingDataset(Dataset):
                  train_bearings=('Bearing1_1', 'Bearing1_2', 'Bearing1_3'),
                  test_bearings=('Bearing1_4', 'Bearing1_5'),
                  split: str = 'train', window_size: int = 512,
-                 stride_per_csv: int = 4, max_samples_per_bearing: int = 150):
+                 stride_per_csv: int = 4, max_samples_per_bearing: int = 150,
+                 piecewise_knee: float = 1.0):
         super(XJTUSYBearingDataset, self).__init__()
         self.raw_dir = os.path.abspath(raw_dir)
         self.condition = condition
         self.split = split.lower()
         self.window_size = window_size
+        self.piecewise_knee = float(piecewise_knee)
         
         target_bearings = train_bearings if self.split == 'train' else test_bearings
         self.meta = CONDITION_META.get(condition, {'rpm': 2100.0})
@@ -83,7 +85,16 @@ class XJTUSYBearingDataset(Dataset):
             
             for file_idx, f_path in enumerate(sub_files):
                 actual_step_idx = int(os.path.splitext(os.path.basename(f_path))[0])
-                rul_fraction = max(0.0, min(1.0, (total_lifespan - actual_step_idx) / float(total_lifespan)))
+                if self.piecewise_knee < 1.0:
+                    # SOTA Piecewise-Linear RUL (NASA PHM / Tilman Krokotsch rul-datasets standard)
+                    degrade_start = int(total_lifespan * (1.0 - self.piecewise_knee))
+                    if actual_step_idx <= degrade_start:
+                        rul_fraction = 1.0
+                    else:
+                        rul_fraction = max(0.0, min(1.0, (total_lifespan - actual_step_idx) / float(max(1, total_lifespan - degrade_start))))
+                else:
+                    # Standard Linear RUL [1.0 -> 0.0]
+                    rul_fraction = max(0.0, min(1.0, (total_lifespan - actual_step_idx) / float(total_lifespan)))
                 
                 try:
                     import pandas as pd
@@ -114,10 +125,10 @@ class XJTUSYBearingDataset(Dataset):
     def __getitem__(self, idx):
         return self.samples[idx]
 
-def get_xjtu_sy_dataloaders(raw_dir: str, batch_size: int = 32):
+def get_xjtu_sy_dataloaders(raw_dir: str, batch_size: int = 32, piecewise_knee: float = 1.0):
     """Factory function for XJTU-SY RUL prognostics dataloaders."""
-    train_set = XJTUSYBearingDataset(raw_dir, split='train')
-    test_set = XJTUSYBearingDataset(raw_dir, split='test')
+    train_set = XJTUSYBearingDataset(raw_dir, split='train', piecewise_knee=piecewise_knee)
+    test_set = XJTUSYBearingDataset(raw_dir, split='test', piecewise_knee=piecewise_knee)
     
     return {
         'train': DataLoader(train_set, batch_size=batch_size, shuffle=True) if len(train_set) > 0 else None,

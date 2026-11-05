@@ -55,11 +55,15 @@ class BoundedAdaptiveConformalPredictor:
 
 def main():
     parser = argparse.ArgumentParser(description="XJTU-SY RUL Training and Adaptive Conformal Prediction")
-    parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=50, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
     parser.add_argument("--lr", type=float, default=2e-3, help="Learning rate")
     parser.add_argument("--condition", type=str, default="35Hz12kN", help="Operating condition")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--piecewise-knee", type=float, default=1.0, help="Piecewise RUL knee fraction (1.0 = linear, <1.0 = SOTA piecewise)")
+    parser.add_argument("--use-distill", action="store_true", default=True, help="Use Teacher-Student Knowledge Distillation for RUL")
+    parser.add_argument("--teacher-ckpt", type=str, default="checkpoints/teacher/best_teacher.pt", help="Teacher checkpoint path")
+    parser.add_argument("--kd-weight", type=float, default=0.4, help="Knowledge Distillation loss weight")
     parser.add_argument("--device", type=str, default=None, help="Device (e.g. cuda, cuda:0, cpu)")
     args = parser.parse_args()
     
@@ -80,7 +84,8 @@ def main():
     full_train_dataset = XJTUSYBearingDataset(
         raw_dir=raw_dir, condition=args.condition,
         train_bearings=('Bearing1_1', 'Bearing1_2', 'Bearing1_3'),
-        split='train', max_samples_per_bearing=120
+        split='train', max_samples_per_bearing=120,
+        piecewise_knee=args.piecewise_knee
     )
     
     # 80/20 Train / Calibration split
@@ -95,7 +100,8 @@ def main():
     test_dataset = XJTUSYBearingDataset(
         raw_dir=raw_dir, condition=args.condition,
         test_bearings=('Bearing1_4', 'Bearing1_5'),
-        split='test', max_samples_per_bearing=120
+        split='test', max_samples_per_bearing=120,
+        piecewise_knee=args.piecewise_knee
     )
     
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
@@ -113,14 +119,35 @@ def main():
         ckpt = torch.load(student_ckpt, map_location=device)
         model.load_state_dict(ckpt['model_state_dict'], strict=False)
         print(f"  - Loaded backbone representations from {student_ckpt}")
+
+    # Optional: Load Pretrained Teacher for Knowledge Distillation
+    teacher = None
+    if args.use_distill and os.path.exists(args.teacher_ckpt):
+        from src.models.teacher_resnet import Teacher1DResNet
+        teacher = Teacher1DResNet(in_channels=1, num_classes=4, physics_dim=4).to(device)
+        try:
+            t_ckpt = torch.load(args.teacher_ckpt, map_location=device)
+            t_dict = t_ckpt['model_state_dict'] if 'model_state_dict' in t_ckpt else t_ckpt
+            teacher.load_state_dict(t_dict, strict=False)
+            teacher.eval()
+            for p in teacher.parameters():
+                p.requires_grad = False
+            print(f"  - Teacher 1D-ResNet loaded for Knowledge Distillation from {args.teacher_ckpt}")
+        except Exception as e:
+            print(f"  Warning: Could not load teacher weights ({e}). Proceeding with standard training.")
+            teacher = None
         
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-5)
     criterion_rul = nn.SmoothL1Loss()
     
-    # 3. Train Prognostic Head
-    print("\n[2] Training Prognostic Head on Train Lifecycles...")
-    model.train()
+    # 3. Train Prognostic Head with Knowledge Distillation
+    print(f"\n[2] Training Prognostic Head on Train Lifecycles ({args.epochs} epochs, KD={teacher is not None})...")
+    best_calib_loss = float('inf')
+    best_state_dict = None
+    
     for epoch in range(1, args.epochs + 1):
+        model.train()
         total_loss = 0.0
         for batch in train_loader:
             x = batch['spectrum'].to(device)
@@ -130,14 +157,47 @@ def main():
             optimizer.zero_grad()
             _, pred_rul = model(x, prior)
             pred_rul = pred_rul.squeeze(-1)
-            loss = criterion_rul(pred_rul, y_rul)
+            
+            loss_true = criterion_rul(pred_rul, y_rul)
+            if teacher is not None:
+                with torch.no_grad():
+                    _, t_rul = teacher(x, prior)
+                    t_rul = t_rul.squeeze(-1)
+                loss_kd = criterion_rul(pred_rul, t_rul)
+                loss = (1.0 - args.kd_weight) * loss_true + args.kd_weight * loss_kd
+            else:
+                loss = loss_true
+                
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
             
+        scheduler.step()
         avg_loss = total_loss / max(1, len(train_loader))
-        if epoch % 5 == 0 or epoch == args.epochs:
-            print(f"  Epoch [{epoch:02d}/{args.epochs:02d}] | SmoothL1 Loss: {avg_loss:.5f}")
+        
+        # Validation on calib set for model checkpointing
+        model.eval()
+        calib_loss = 0.0
+        with torch.no_grad():
+            for batch in calib_loader:
+                x = batch['spectrum'].to(device)
+                prior = batch['prior'].to(device)
+                y_rul = batch['rul'].to(device).squeeze(-1)
+                _, p_rul = model(x, prior)
+                calib_loss += criterion_rul(p_rul.squeeze(-1), y_rul).item()
+        calib_loss /= max(1, len(calib_loader))
+        
+        if calib_loss < best_calib_loss:
+            best_calib_loss = calib_loss
+            best_state_dict = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+            
+        if epoch % 10 == 0 or epoch == args.epochs or epoch == 1:
+            print(f"  Epoch [{epoch:02d}/{args.epochs:02d}] | Train Loss: {avg_loss:.5f} | Calib Loss: {calib_loss:.5f} (Best: {best_calib_loss:.5f})")
+            
+    # Restore best weights
+    if best_state_dict is not None:
+        model.load_state_dict({k: v.to(device) for k, v in best_state_dict.items()})
+        print(f"  - Restored best model weights with Calib Loss: {best_calib_loss:.5f}")
             
     # 4. Calibrate Conformal Nonconformity Quantile on Calib Bearing
     print("\n[3] Computing Conformal Quantile on Calibration Bearing (Bearing1_3)...")
