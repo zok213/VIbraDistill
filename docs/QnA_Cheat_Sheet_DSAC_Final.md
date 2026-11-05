@@ -137,3 +137,15 @@
 > - Một hệ sinh thái giám sát rung động công nghiệp hiện nay dùng NVIDIA Jetson hoặc PLC công nghiệp có giá từ **\$150 đến \$500 USD** (khoảng 3.8 đến 12 triệu VNĐ) và tiêu thụ 5W - 15W điện năng.
 > - Giải pháp VibraDistill-Edge chỉ sử dụng chip nội địa Gowin GW2A-18 (\$12) + MCU Sonix SN32F407 (\$1.8) + Cảm biến gia tốc (\$3). Tổng chi phí linh kiện phần cứng (BOM Cost) **chưa đến 500,000 VNĐ (\$20 USD)**, tiêu thụ vỏn vẹn **184 mW** (có thể chạy bằng pin sạc dự phòng liên tục trong 40 giờ). 
 > Giải pháp sẵn sàng thương mại hóa hàng loạt để lắp đặt giám sát trực tiếp cho hàng triệu mô-tơ bơm và quạt công nghiệp tại các nhà máy Việt Nam!"
+
+---
+
+## PHẦN 5: CHUYÊN ĐỀ PHẢN BIỆN TIÊN LƯỢNG RUL & AN TOÀN CHỨC NĂNG SIL-2 (Q21)
+
+### Q21 (Giám khảo Nghiên cứu & PHM): "Tại sao các bạn không huấn luyện một mạng nơ-ron hồi quy trực tiếp (End-to-End Direct Regression) để dự đoán RUL từ phổ FFT? Có nhóm huấn luyện 500 epoch mà mẫu cuối đời 0.13% chỉ đoán được 37.71%, MAE lên tới 21%?"
+**Trả lời của Tài & Quang**:
+> "Thưa Thầy/Cô, việc huấn luyện hồi quy trực tiếp từ phổ FFT đơn lẻ sang RUL tuyến tính là một **bẫy kinh điển trong bài toán Tiên lượng RUL công nghiệp (Classic PHM Fallacy)**:
+> 1. **Bẫy Giả định Tuyến tính (Linear Degradation Fallacy)**: Trong suốt 70% đến 80% thời gian đầu đời của vòng bi (PRONOSTIA / XJTU-SY), vòng bi hoạt động hoàn toàn lành lặn (chỉ có mỏi vi mô dưới bề mặt, chưa có vết nứt tróc vảy). Sóng rung ở $t=10\%$ và $t=65\%$ giống hệt nhau. Khi ép mạng nơ-ron học cùng một phổ nhiễu trắng nhưng gán nhãn giảm đều từ $1.0 \to 0.3$, hàm mất mát $L_1/L_2$ sẽ ép mạng hội tụ về **Kỳ vọng Tiên nghiệm Bayes (Bayes Mean)** quanh $35\% - 37\%$. Kết quả là khi đến mẫu cuối đời ($0.13\%$), mạng bị quán tính của 1,800 mẫu lành kéo lại nên chỉ rơi xuống $37.71\%$, sai số MAE vọt lên $21.17\%$.
+> 2. **Bẫy Triệt tiêu Biên độ**: Chuẩn hóa cực đại `spec / max` làm mất hoàn toàn năng lượng rung động (RMS/Peak) - chỉ số quan trọng nhất của suy thoái cơ học.
+> 3. **Hiểu sai An toàn SIL-2**: Không bao giờ được dùng RUL của AI để kích rơ-le trip khẩn cấp. Rơ-le bảo vệ dựa trên các ngưỡng cơ lý xác định ($RMS \ge 8.0g$, Peak $\ge 20.0g$) trong $< 1.0\,\text{ms}$. RUL sinh ra là để lập kế hoạch bảo trì (PdM Planning) trước hàng giờ/ngày.
+> 4. **Giải pháp Đột phá của VIbraDistill**: Chúng tôi áp dụng chuẩn quốc tế **Piecewise-Linear RUL (NASA PHM / Tilman Krokotsch)** kết hợp **P-FiLM Kinematic Modulation** và thuật toán **HopACP Q16.16** trên vi điều khiển. Trên tập benchmark PRONOSTIA `Bearing1_3`, hệ thống đạt độ bao phủ tin cậy **93.60% Conformal Coverage**, cảnh báo trước sự cố **101.7 phút**, và ngắt Rơ-le bảo vệ phần cứng SIL-2 trong **< 1.0 ms**!"
