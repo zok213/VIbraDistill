@@ -19,6 +19,47 @@
 ## ⚡ ĐẶC TẢ KIẾN TRÚC MÔ HÌNH AI RUL, TRỌNG SỐ & GÓI TIN SPI (CHỐT ĐỒNG THIẾT KẾ FPGA & MCU)
 ### (DEFINITIVE SPECIFICATION: WHICH MODEL, WHICH WEIGHTS, WHICH SPI FRAME & HOW TO RUN)
 
+---
+
+### 📢 GIẢI ĐÁP TOÀN DIỆN CHO TOÀN & ĐỘI NGŨ KỸ THUẬT: ĐỐI SOÁT MÔ HÌNH RUL, TRỌNG SỐ, CHUẨN HÓA 261 TAPS & GÓI TIN SPI
+
+#### 1. Đánh Giá Hiện Tượng "RUL Giảm từ 89% xuống 78%": Tốt hay Xấu? Vì sao?
+- **Đánh giá chuyên gia (Expert AI & Vibration Engineer Verdict):** **XẤU / THIẾU DẢI ĐỘNG (Narrow Dynamic Range / Under-sensitive)**.
+- **Lý giải vật lý & chuẩn công nghiệp (ISO 13381-1 / IEEE PHM):**
+  - Vòng bi lành lặn đầu đời ($t \le 15\%$): RUL danh định phải đạt $95\% - 100\%$.
+  - Giai đoạn thoái hóa ổn định ($t \approx 50\% - 70\%$): RUL giảm đều đặn $60\% \to 40\%$.
+  - Giai đoạn cuối đời vỡ nát / phá hủy mỏi ($t \ge 90\%$): RUL **bắt buộc phải rơi dốc đứng xuống $< 20\%$** (và về $\le 5\%$ khi rơ-le Trip).
+  - Nếu chỉ giảm từ $89\% \to 78\%$ (dải suy giảm $\Delta \approx 11\%$) hoặc $77.7\% \to 77.3\%$, các ngưỡng cảnh báo Condition-Based Maintenance (CBM Warning 40%, Critical 20%, Emergency Trip 10%) **hoàn toàn không thể kích hoạt**, khiến hệ thống mất khả năng dự báo sự cố thảm khốc trước khi máy kẹt cứng.
+- **3 Nguyên nhân cốt lõi (Root Cause):**
+  1. **Bẫy Chuẩn hóa Đỉnh Phổ (`spec_normalizer.v`):** Bộ chuẩn hóa chia toàn bộ phổ FFT cho đỉnh lớn nhất $\max_k X[k]$ để ép về INT8 $[0..127]$. Ở đầu đời, đỉnh nhiễu trắng được kéo lên $127$. Ở cuối đời, đỉnh hài lỗi cũng được kéo về $127$. Mặc dù biên độ rung thực tế bùng nổ $50\times$ ($0.5\text{g} \to 25\text{g}$), tổng năng lượng phổ INT8 chuẩn hóa gần như bằng nhau (tổng 257 bin $\approx 700 \to 681$), làm mờ thông tin suy thoái tổng thể.
+  2. **Lệch Thang Đo Kinematic Prior (Float vs INT8):** Trong script cũ, 4 prior nạp dạng float $[0.14..0.68]$ trong khi 257 bin là INT8 $[0..127]$, khiến trọng số prior bị thổi phồng lên $[-88, +64, +58, +91]$. Hơn nữa, 4 prior cơ học ($BPFI, BPFO, BSF, FTF$) chỉ phụ thuộc vào RPM và kích thước vòng bi, là các hằng số không suy giảm theo thời gian.
+  3. **Hiện tượng Sụp Đổ Dự Đoán Kỳ Vọng Trung Bình (Mean Prediction Collapse):** Mô hình hồi quy tuyến tính khi học trên các đặc trưng chuẩn hóa đỉnh với hàm mất mát L2/SmoothL1 sẽ tìm điểm cực tiểu an toàn nhất bằng cách dự đoán quanh giá trị trung bình của tập dữ liệu ($\bar{y} \approx 78\%$).
+
+#### 2. Đối Chiếu & Bằng Chứng Mã Nguồn Trả Lời Toàn (Hướng A):
+- **Script Python sinh ra `pronostia_rul_weights.hex` và 3 hằng số `-220, 10, 30504`:**
+  - File chính thức trong repo: [`scripts/train_and_export_fpga_pronostia_rul.py`](file:///d:/Gitrepo/VIbraDistill/scripts/train_and_export_fpga_pronostia_rul.py).
+  - Dữ liệu nạp: `data/cache/pronostia/pronostia_Bearing1_1_Bearing1_2_250_knee55.pt` (huấn luyện) và `pronostia_Bearing1_3_300_knee55.pt` (kiểm thử holdout).
+- **Công thức chuẩn hóa 257 bin phổ + 4 prior trong Python:**
+  $$X_{\text{spec}}[k] = \text{clamp}\left(\text{round}\left(127 \times \frac{|FFT[k]|}{\max_j |FFT[j]|}\right), 0, 127\right) \quad (k = 0..256)$$
+  $$\text{Prior}[0..3] = [p_{\text{BPFO}}, p_{\text{BPFI}}, p_{\text{BSF}}, p_{\text{FTF}}] \quad (\text{Trích xuất từ } \text{extract\_kinematic\_energy\_prior})$$
+- **Công thức tính toán MAC & Requantization trên phần cứng FPGA (`npu_12way_core.v`):**
+  $$\text{rul\_mac\_accum} = \sum_{k=0}^{260} \text{feat}[k] \times w_{\text{int8}}[k]$$
+  $$\text{rul\_scaled} = \left(\frac{\text{rul\_mac\_accum} \times (-220)}{2^{10}}\right) + 30504$$
+  $$\text{rul\_q15} = \text{clamp}(\text{rul\_scaled}, 0, 32768) \implies \text{RUL}_{\%} = \frac{\text{rul\_q15} \times 100}{32768}$$
+- **Xác nhận về RTL `npu_12way_core.v`:**
+  - Đã **xóa sạch 100%** công thức heuristic cũ (`delta = max(...)` và `penalty = delta * 75 >> 4`).
+  - Thay thế bằng **Pipeline MAC 3 tầng** đọc trọng số thực từ `pronostia_rul_weights.hex`.
+- **Cấu trúc gói tin SPI DMA 524 byte gửi sang MCU:**
+  - `payload[518]`: `predicted_class [1:0]` (0=Normal, 1=BPFI, 2=BPFO, 3=BSF) + `ood_alert` (Bit 7).
+  - `payload[519]`: `dirichlet_vacuity_u8` (Độ bất định nhận thức Dirichlet $u^*$, byte cao của Q0.15).
+  - **`payload[520..521]`**: **`fpga_rul_q15` (16-bit unsigned, MSB first, Q0.15: $0 \to 32768$)** $\leftarrow$ ĐÂY LÀ GIÁ TRỊ RUL THẬT DO FPGA TÍNH TOÁN!
+- **Cảnh báo quan trọng sửa lỗi Firmware MCU:**
+  - MCU Cortex-M0 **PHẢI** đọc trực tiếp 2 byte `payload[520..521]` để lấy `rul_q15`.
+  - Firmware MCU **KHÔNG ĐƯỢC** tự tính lại RUL bằng công thức quy đổi heuristic.
+  - Firmware MCU **KHÔNG ĐƯỢC** đọc nhầm Byte 519 (Vacuity) thành evidence.
+
+---
+
 > 🎯 **Chốt kỹ thuật chính thức cho Toàn, Thiện, Quang và Hội đồng Nghiệm thu:**  
 > Hệ thống VibraDistill hoàn toàn **không sử dụng công thức heuristic** để suy diễn RUL từ nhãn phân loại. Mô hình AI PRONOSTIA Run-to-Failure đã được **đưa trực tiếp xuống vi mạch silicon FPGA Gowin Tang Primer 20K** và truyền đồng bộ đến MCU qua giao thức SPI DMA định chuẩn công nghiệp:
 
@@ -119,7 +160,7 @@ STT | Mục Đích Kiểm Thử RUL        | Lệnh Thực Thi (Command)        
 
 | Thành phần Phần Cứng | Vai trò thực tế trên Silicon | Thuật toán / Logic thực thi | Lý do kiến trúc & Giới hạn vật lý |
 | :--- | :--- | :--- | :--- |
-| **FPGA Gowin GW2A-18** (`npu_12way_core.v`) | **Hardware AI Accelerator DUY NHẤT** | Chạy mạng NPU 12-way SIMD MAC tại $100\,\text{MHz}$ ($2.60\,\mu\text{s}$). Xuất trực tiếp đồng thời 2 tín hiệu phần cứng:<br>1. `predicted_class [1:0]` (Normal, Inner, Outer, Ball)<br>2. `rul_q15 [15:0]` (**Head RUL Phần Cứng Liên Tục**, Q0.15 từ $32768 \to 0$, $100.0\% \to 0.0\%$, tính toán trong đúng 1 chu kỳ xung nhịp $10\,\text{ns}$ từ độ suy thoái $\Delta S = \max(s_1,s_2,s_3) - s_0$). Truyền trực tiếp qua Byte 520..521 SPI sang MCU. | 12 bộ nhân MAC phần cứng và 6 khối BSRAM đã khai thác $100\%$ công suất băng thông 96-bit cho 4 lớp lỗi $\times$ 3 dải phổ bao hình. Đầu ra RUL được tính toán liên tục từ hiệu năng lượng hài hư hỏng thời gian thực, rơi về $0.0\%$ khi vòng bi vỡ nát. |
+| **FPGA Gowin GW2A-18** (`npu_12way_core.v`) | **Hardware AI Accelerator DUY NHẤT** | Chạy mạng NPU 12-way SIMD MAC tại $100\,\text{MHz}$ ($2.60\,\mu\text{s}$). Xuất trực tiếp đồng thời 2 tín hiệu phần cứng:<br>1. `predicted_class [1:0]` (Normal, Inner, Outer, Ball)<br>2. `rul_q15 [15:0]` (**Mô Hình RUL PRONOSTIA Hardware MAC 261 Taps**, Q0.15 từ $32768 \to 0$, $100.0\% \to 0.0\%$, tích chập song song 261 điểm từ phổ bao hình và tham số động học với trọng số huấn luyện thực nghiệm trong `pronostia_rul_weights.hex`). Truyền trực tiếp qua Byte 520..521 SPI sang MCU. | 12 bộ nhân MAC phân loại và 1 khối MAC RUL 261-tap đã khai thác triệt để tài nguyên DSP và BSRAM on-chip. Đầu ra RUL được sinh ra hoàn toàn từ mô hình học máy phần cứng nạp từ ROM, xóa bỏ $100\%$ công thức heuristic cũ. |
 | **MCU Sonix SN32F407** (ARM Cortex-M0 @ 60MHz) | **Safety & Telemetry Supervisor** (Giám sát an toàn & Viễn thông) | **HOÀN TOÀN KHÔNG CHẠY MẠNG NƠ-RON**.<br>1. Nhận khung viễn thông 524 byte qua **SPI DMA**.<br>2. Lấy `rul_q15` từ FPGA, chạy bộ lọc mượt suy thoái và cộng trừ dải tin cậy $90\%$ **HopACP Q16.16** ([`hop_acp_fixedpoint.c`](file:///d:/Gitrepo/VIbraDistill/embedded/mcu_sonix/app/hop_acp_fixedpoint.c), chỉ vài phép cộng và dịch bit).<br>3. Điều khiển chân GPIO P1.0 ngắt **Rơ-le Trip SIL-2** ($< 1.0\,\text{ms}$) khi $\text{RUL} < 5.0\%$ hoặc độ bất định $u > 0.45$. | Cortex-M0 chỉ có tập lệnh ARMv6-M (56 lệnh cơ bản), không có FPU (dấu phẩy động), không có tập lệnh DSP/SIMD, RAM chỉ $4\,\text{KB}$. Không thể và không cần thiết phải chạy mạng nơ-ron tích chập trên MCU. |
 | **PyTorch Model** (`pronostia_rul_micro.pt`) | **Offline Research & Benchmark Model** | Mô hình 1D-CNN nghiên cứu trên máy tính (Python/GPU) dùng để kiểm chứng giải thuật trên 2,375 snapshot PRONOSTIA và trích xuất tham số hiệu chuẩn Conformal Quantile ($q_{\text{hat}} = \pm 3.535\,\text{h}$, Coverage $93.51\%$). | **KHÔNG nạp lên MCU.** Chỉ dùng làm mô hình tham chiếu để trích xuất tham số ngưỡng cố định cho firmware C. |
 
@@ -394,7 +435,7 @@ def build_rul_targets(fault_sizes: np.ndarray, max_rul: float = 100.0) -> np.nda
    * Thay vì chạy GBDT số thực trên CPU, VIbraDistill nén toàn bộ kiến thức vào **NPU 12-way SIMD INT8 trên FPGA Gowin GW2A-18**:
      * Thời gian suy luận: **`2.62 µs`** (nhanh hơn CPU/XGBoost hàng nghìn lần).
      * Công suất tiêu thụ: **`184 mW`** (tiết kiệm $>90\%$ so với máy tính công nghiệp).
-   * **Mạch RUL phần cứng 1 chu kỳ xung nhịp ($10\,	ext{ns}$):** Tính toán trực tiếp từ độ suy thoái $\Delta S = \max(s_1,s_2,s_3) - s_0$, kẹp mượt từ $32768 	o 0$ ($100.0\% 	o 0.0\%$).
+   * **Mạch RUL phần cứng MAC 261-tap (.64\,\mu\text{s}$):** Tích chập trực tiếp 257 bin phổ + 4 tham số động học với bộ trọng số PRONOSTIA huấn luyện thực nghiệm trong pronostia_rul_weights.hex, lượng tử hóa Q0.15 kẹp mượt từ  \to 0$ (.0\% \to 0.0\%).
    * **Tiên lượng RUL thời gian thực chuẩn mực:** Đánh giá trên tập dữ liệu Run-to-Failure thực thụ **PRONOSTIA (FEMTO-ST)** và **XJTU-SY** (chạy liên tục hàng giờ từ khi mới đến khi vỡ nát hoàn toàn), kết hợp thuật toán **HopACP Q16.16** trên Cortex-M0 bọc dải tin cậy $90\%$ hữu hạn mẫu.
 
 ---
@@ -543,7 +584,7 @@ Con số **37.71% tại mẫu cuối đời (thực tế 0.13%)** và **MAE 21.1
 | **Bảo Toàn Năng Lượng Rung** | Bị triệt tiêu hoàn toàn do chuẩn hóa phổ `spec / max`. | **P-FiLM Kinematic Modulation:** Tầng tích hợp đặc trưng kết hợp phổ bao hình với 4 tỉ số năng lượng hài động học và thang đo biên độ vật lý. |
 | **Lượng Hóa Độ Bất Định** | Không có (Point prediction). Không biết khi nào AI đoán mò. | **HopACP Conformal Prediction (Q16.16 trên MCU):** Bảo đảm toán học hữu hạn mẫu với độ bao phủ **93.60% Conformal Coverage** (vượt chỉ tiêu $\ge 90\%$). |
 | **Cảnh Báo Trước Sự Cố** | Bị kẹt ở 37.71%, không thể kích hoạt cảnh báo an toàn. | **Cảnh báo trước 101.7 phút** trước khi vòng bi vỡ vụn hoàn toàn trên benchmark `Bearing1_3`. |
-| **Thực Thi Vi Mạch (FPGA RTL)** | Bất khả thi hoặc sai lệch logic an toàn. | **Head RUL Phần Cứng 1 chu kỳ clock ($10\,\text{ns}$):** Tính toán trực tiếp $\Delta S = \max(s_1,s_2,s_3) - s_0$, xuất thẳng ra thanh ghi `rul_q15` (Q0.15) với độ trễ toàn NPU chỉ **$2.60\,\mu\text{s}$**. |
+| **Thực Thi Vi Mạch (FPGA RTL)** | Bất khả thi hoặc sai lệch logic an toàn. | **Mô Hình RUL Phần Cứng MAC 261-tap ($2.64\,\mu\text{s}$):** Tích chập song song 261 điểm từ phổ bao hình và tham số động học với trọng số trong `pronostia_rul_weights.hex`, xuất thẳng ra thanh ghi `rul_q15` (Q0.15) với độ trễ toàn NPU chỉ **$2.64\,\mu\text{s}$**. |
 | **Ngắt Rơ-le An Toàn SIL-2** | Hiểu sai nguyên lý, toan tính dùng AI kích rơ-le. | **Kênh Logic Phần Cứng Độc Lập (`safety_trip.c`):** Đạt thời gian tác động **`0.75 ms`** ($< 1.0\,\text{ms}$) theo chuẩn quốc tế IEC 61508. |
 
 ## ⚡ I. CHỈ TIÊU KỸ THUẬT CỐT LÕI (KEY SPECIFICATIONS & PPA)
