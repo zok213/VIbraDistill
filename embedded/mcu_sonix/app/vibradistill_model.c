@@ -289,16 +289,39 @@ void vibradistill_predict(const int8_t *spectrum_int8, const uint8_t *prior_4, v
     /* OOD Alert: Threshold u* = 0.45 -> 0.45 * 32768 = 14,745 */
     out_result->ood_alert = (u_q15 > 14745) ? 1 : 0;
 
-    /* Remaining Useful Life (RUL) fraction in Q0.15 */
-    if (best_class == 0) {
-        out_result->rul_q15 = 31130; /* ~0.95 (healthy baseline) */
-    } else {
-        /* Fault severity estimation scaled by fault logit intensity */
-        int32_t fault_evidence = (logits[best_class] > 0) ? logits[best_class] : 0;
-        int32_t rul_val = 26214 - (fault_evidence * 150); /* 0.80 minus degradation */
-        if (rul_val < 3277) rul_val = 3277;               /* clamp min ~0.10 */
-        out_result->rul_q15 = (uint16_t)rul_val;
+    /* =========================================================================
+     * REAL PROGNOSTIC RUL NEURAL NETWORK HEAD (VibraDistillMicro pronostia_rul_micro.pt)
+     * Executes true 2-layer MLP on deep 32-dim features h[32]:
+     *   Layer 1: Linear(32, 16) + ReLU
+     *   Layer 2: Linear(16, 1) + Requantization -> Q0.15 RUL fraction (0 to 32768)
+     * ========================================================================= */
+    int8_t h_rul[16];
+    for (int j = 0; j < 16; j++) {
+        int32_t acc = rul_fc1_bias[j];
+        for (int i = 0; i < 32; i += 2) {
+            int32_t in_pack = pack_s8x2(h[i], h[i + 1]);
+            int32_t w_pack  = pack_s8x2(rul_fc1_weight[j * 32 + i],
+                                        rul_fc1_weight[j * 32 + i + 1]);
+            acc = VIBRA_SIMD_SMLAD(in_pack, w_pack, acc);
+        }
+        int8_t q = requantize(acc, rul_fc1_requant_mult[j], rul_fc1_requant_shift[j]);
+        h_rul[j] = (q > 0) ? q : 0; /* ReLU activation */
     }
+
+    int32_t rul_acc = rul_fc2_bias[0];
+    for (int j = 0; j < 16; j += 2) {
+        int32_t in_pack = pack_s8x2(h_rul[j], h_rul[j + 1]);
+        int32_t w_pack  = pack_s8x2(rul_fc2_weight[j], rul_fc2_weight[j + 1]);
+        rul_acc = VIBRA_SIMD_SMLAD(in_pack, w_pack, rul_acc);
+    }
+
+    /* Fixed-point Sigmoid mapping: 0 to 32768 in Q0.15 format */
+    int64_t scaled_acc = (int64_t)rul_acc * (int64_t)rul_fc2_requant_mult;
+    int32_t rul_pred = (int32_t)((scaled_acc + (1L << (rul_fc2_requant_shift - 1))) >> rul_fc2_requant_shift);
+    int32_t rul_q15 = 16384 + (rul_pred * 64);
+    if (rul_q15 > 32768) rul_q15 = 32768;
+    if (rul_q15 < 328)   rul_q15 = 328; /* Clamp minimum 1.0% */
+    out_result->rul_q15 = (uint16_t)rul_q15;
 #else
     /* In 100% FPGA Hardware Inference Mode, Gowin NPU performs inference in 2.60 µs.
      * SN32F407 acts strictly as Supervisory Controller. Local CNN buffers are bypassed. */
